@@ -1,0 +1,351 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-02-01T00:00:00Z",
+  "zones": [
+    {
+      "zone_id": "mopti",
+      "territory_key": "mali",
+      "name_key": "loc.zone.mopti.name",
+      "zone_type": "conflict_hotspot",
+      "population": 2800000,
+      "base_insurgency": 72,
+      "base_stability": 32,
+      "coords": {
+        "lat": 14.4974,
+        "lon": -4.187
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "dogon",
+        "fulani",
+        "bambara"
+      ],
+      "adjacent_zones": [
+        "segou",
+        "timbuktu",
+        "burkina_north"
+      ],
+      "strategic_value": "high"
+    },
+    {
+      "zone_id": "segou",
+      "territory_key": "mali",
+      "name_key": "loc.zone.segou.name",
+      "zone_type": "urban_center",
+      "population": 800000,
+      "base_insurgency": 45,
+      "base_stability": 50,
+      "coords": {
+        "lat": 13.4317,
+        "lon": -5.6333
+      },
+      "multi_ethnic": false,
+      "ethnic_groups": [
+        "bambara"
+      ],
+      "adjacent_zones": [
+        "mopti",
+        "bamako"
+      ],
+      "strategic_value": "medium"
+    },
+    {
+      "zone_id": "timbuktu",
+      "territory_key": "mali",
+      "name_key": "loc.zone.timbuktu.name",
+      "zone_type": "remote_contested",
+      "population": 120000,
+      "base_insurgency": 78,
+      "base_stability": 28,
+      "coords": {
+        "lat": 16.7735,
+        "lon": -3.0074
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "tuareg",
+        "arab",
+        "songhai"
+      ],
+      "adjacent_zones": [
+        "mopti",
+        "gao",
+        "mauritania_south"
+      ],
+      "strategic_value": "high"
+    },
+    {
+      "zone_id": "gao",
+      "territory_key": "mali",
+      "name_key": "loc.zone.gao.name",
+      "zone_type": "border_region",
+      "population": 250000,
+      "base_insurgency": 70,
+      "base_stability": 35,
+      "coords": {
+        "lat": 16.2717,
+        "lon": -0.04
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "songhai",
+        "tuareg"
+      ],
+      "adjacent_zones": [
+        "timbuktu",
+        "niger_west"
+      ],
+      "strategic_value": "high"
+    },
+    {
+      "zone_id": "bamako",
+      "territory_key": "mali",
+      "name_key": "loc.zone.bamako.name",
+      "zone_type": "capital",
+      "population": 4000000,
+      "base_insurgency": 25,
+      "base_stability": 55,
+      "coords": {
+        "lat": 12.6392,
+        "lon": -8.0029
+      },
+      "multi_ethnic": false,
+      "ethnic_groups": [
+        "bambara",
+        "malinke"
+      ],
+      "adjacent_zones": [
+        "segou"
+      ],
+      "strategic_value": "critical"
+    },
+    {
+      "zone_id": "burkina_north",
+      "territory_key": "burkina_faso",
+      "name_key": "loc.zone.burkina_north.name",
+      "zone_type": "conflict_hotspot",
+      "population": 1500000,
+      "base_insurgency": 68,
+      "base_stability": 35,
+      "coords": {
+        "lat": 14.099,
+        "lon": -1.03
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "fulani",
+        "mossi"
+      ],
+      "adjacent_zones": [
+        "mopti",
+        "burkina_east",
+        "ouagadougou"
+      ],
+      "strategic_value": "high"
+    },
+    {
+      "zone_id": "burkina_east",
+      "territory_key": "burkina_faso",
+      "name_key": "loc.zone.burkina_east.name",
+      "zone_type": "border_region",
+      "population": 1200000,
+      "base_insurgency": 62,
+      "base_stability": 38,
+      "coords": {
+        "lat": 12.0617,
+        "lon": 0.3548
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "gourma",
+        "fulani"
+      ],
+      "adjacent_zones": [
+        "burkina_north",
+        "niger_west"
+      ],
+      "strategic_value": "medium"
+    },
+    {
+      "zone_id": "ouagadougou",
+      "territory_key": "burkina_faso",
+      "name_key": "loc.zone.ouagadougou.name",
+      "zone_type": "capital",
+      "population": 3000000,
+      "base_insurgency": 30,
+      "base_stability": 52,
+      "coords": {
+        "lat": 12.3714,
+        "lon": -1.5197
+      },
+      "multi_ethnic": false,
+      "ethnic_groups": [
+        "mossi"
+      ],
+      "adjacent_zones": [
+        "burkina_north"
+      ],
+      "strategic_value": "critical"
+    },
+    {
+      "zone_id": "niger_west",
+      "territory_key": "niger",
+      "name_key": "loc.zone.niger_west.name",
+      "zone_type": "border_region",
+      "population": 2000000,
+      "base_insurgency": 58,
+      "base_stability": 42,
+      "coords": {
+        "lat": 14.212,
+        "lon": 1.453
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "zarma",
+        "hausa"
+      ],
+      "adjacent_zones": [
+        "gao",
+        "burkina_east",
+        "niamey"
+      ],
+      "strategic_value": "medium"
+    },
+    {
+      "zone_id": "niamey",
+      "territory_key": "niger",
+      "name_key": "loc.zone.niamey.name",
+      "zone_type": "capital",
+      "population": 1400000,
+      "base_insurgency": 22,
+      "base_stability": 58,
+      "coords": {
+        "lat": 13.5137,
+        "lon": 2.1098
+      },
+      "multi_ethnic": false,
+      "ethnic_groups": [
+        "zarma"
+      ],
+      "adjacent_zones": [
+        "niger_west",
+        "niger_south"
+      ],
+      "strategic_value": "critical"
+    },
+    {
+      "zone_id": "niger_south",
+      "territory_key": "niger",
+      "name_key": "loc.zone.niger_south.name",
+      "zone_type": "border_region",
+      "population": 5000000,
+      "base_insurgency": 45,
+      "base_stability": 48,
+      "coords": {
+        "lat": 13.495,
+        "lon": 7.101
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "hausa",
+        "fulani"
+      ],
+      "adjacent_zones": [
+        "niamey",
+        "lake_chad"
+      ],
+      "strategic_value": "medium"
+    },
+    {
+      "zone_id": "lake_chad",
+      "territory_key": "chad",
+      "name_key": "loc.zone.lake_chad.name",
+      "zone_type": "humanitarian_crisis",
+      "population": 2500000,
+      "base_insurgency": 65,
+      "base_stability": 35,
+      "coords": {
+        "lat": 13.45,
+        "lon": 14.5
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "kanuri",
+        "buduma",
+        "fulani"
+      ],
+      "adjacent_zones": [
+        "niger_south",
+        "ndjamena"
+      ],
+      "strategic_value": "high"
+    },
+    {
+      "zone_id": "ndjamena",
+      "territory_key": "chad",
+      "name_key": "loc.zone.ndjamena.name",
+      "zone_type": "capital",
+      "population": 1800000,
+      "base_insurgency": 28,
+      "base_stability": 55,
+      "coords": {
+        "lat": 12.1348,
+        "lon": 15.0557
+      },
+      "multi_ethnic": false,
+      "ethnic_groups": [
+        "sara",
+        "arab"
+      ],
+      "adjacent_zones": [
+        "lake_chad"
+      ],
+      "strategic_value": "critical"
+    },
+    {
+      "zone_id": "mauritania_south",
+      "territory_key": "mauritania",
+      "name_key": "loc.zone.mauritania_south.name",
+      "zone_type": "border_region",
+      "population": 800000,
+      "base_insurgency": 38,
+      "base_stability": 52,
+      "coords": {
+        "lat": 16.661,
+        "lon": -9.617
+      },
+      "multi_ethnic": true,
+      "ethnic_groups": [
+        "moor",
+        "fulani"
+      ],
+      "adjacent_zones": [
+        "timbuktu",
+        "nouakchott"
+      ],
+      "strategic_value": "low"
+    },
+    {
+      "zone_id": "nouakchott",
+      "territory_key": "mauritania",
+      "name_key": "loc.zone.nouakchott.name",
+      "zone_type": "capital",
+      "population": 1200000,
+      "base_insurgency": 18,
+      "base_stability": 62,
+      "coords": {
+        "lat": 18.0735,
+        "lon": -15.9582
+      },
+      "multi_ethnic": false,
+      "ethnic_groups": [
+        "moor"
+      ],
+      "adjacent_zones": [
+        "mauritania_south"
+      ],
+      "strategic_value": "medium"
+    }
+  ]
+}

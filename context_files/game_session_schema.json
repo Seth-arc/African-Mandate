@@ -1,0 +1,148 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "game-session.schema.json",
+    "type": "object",
+    "required": [
+        "act",
+        "turn",
+        "actions_remaining",
+        "resources",
+        "metrics",
+        "ai_state"
+    ],
+    "properties": {
+        "act": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "turn": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "actions_remaining": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+        },
+        "current_territory": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "enum": [
+                "mali",
+                "burkinaFaso",
+                "niger",
+                "chad",
+                "mauritania",
+                null
+            ]
+        },
+        "resources": {
+            "type": "object",
+            "required": [
+                "budget",
+                "politicalCapital",
+                "personnel",
+                "intelPoints",
+                "timeMonths"
+            ],
+            "properties": {
+                "budget": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "politicalCapital": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "personnel": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "intelPoints": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 99
+                },
+                "timeMonths": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "additionalProperties": false
+        },
+        "metrics": {
+            "type": "object",
+            "required": [
+                "stability",
+                "insurgency",
+                "civilianSupport",
+                "globalLegitimacy",
+                "regionalSynergy"
+            ],
+            "properties": {
+                "stability": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "insurgency": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "civilianSupport": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "globalLegitimacy": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "regionalSynergy": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                }
+            },
+            "additionalProperties": false
+        },
+        "ai_state": {
+            "type": "object",
+            "required": [
+                "oppositionPressure",
+                "intelConfidence",
+                "actorSentiments"
+            ],
+            "properties": {
+                "oppositionPressure": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "intelConfidence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "actorSentiments": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-zA-Z0-9_]+$": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

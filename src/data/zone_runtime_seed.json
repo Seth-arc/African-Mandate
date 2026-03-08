@@ -1,0 +1,344 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-03-07T00:00:00Z",
+  "zone_runtime_seed": [
+    {
+      "zone_id": "mopti",
+      "displaced": 55000,
+      "threats": [
+        "JNIM infiltration and shadow governance",
+        "Dogon self-defense militia violence against Fulani communities",
+        "Aid route attacks along the Niger River corridor"
+      ],
+      "incidents": [
+        "Ogossagou Massacre (2019, repeated 2023)",
+        "Mopti Market Bombing (2024)",
+        "Humanitarian Convoy Ambush (2024)"
+      ],
+      "actors_present": [
+        "JNIM",
+        "Dogon self-defense militias",
+        "Fulani community leaders",
+        "Malian government forces"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Central Mali",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Humanitarian Situation"
+      ]
+    },
+    {
+      "zone_id": "segou",
+      "displaced": 40000,
+      "threats": [
+        "JNIM rural infiltration from central Mali",
+        "Pressure on the Niger River agricultural belt",
+        "Inter-communal violence spillover from Mopti"
+      ],
+      "actors_present": [
+        "JNIM",
+        "Dogon self-defense militias",
+        "Fulani community leaders",
+        "Malian government forces"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Central Mali",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Urban Centers"
+      ]
+    },
+    {
+      "zone_id": "timbuktu",
+      "displaced": 28000,
+      "threats": [
+        "JNIM parallel governance networks",
+        "ISGS attacks on Malian patrols and smuggling corridors",
+        "UNESCO heritage sites under threat"
+      ],
+      "incidents": [
+        "Timbuktu IED Campaign (2023-Present)"
+      ],
+      "actors_present": [
+        "JNIM",
+        "ISGS",
+        "Malian government forces"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Northern Mali",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Key Security Incidents"
+      ]
+    },
+    {
+      "zone_id": "gao",
+      "displaced": 35000,
+      "threats": [
+        "JNIM and ISGS competition over smuggling corridors",
+        "Civilian market areas exposed to retaliatory attacks",
+        "Malian military and Wagner operations alienating civilians"
+      ],
+      "incidents": [
+        "Gao Market Attack (2024)"
+      ],
+      "actors_present": [
+        "JNIM",
+        "ISGS",
+        "Malian government forces",
+        "Wagner Group"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Northern Mali",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Humanitarian Situation"
+      ]
+    },
+    {
+      "zone_id": "bamako",
+      "threats": [
+        "Junta-first governance focused on regime survival over reconciliation",
+        "Wagner-backed security posture deepening distrust of central rule",
+        "Northern communities viewing Bamako as an occupying force rather than a mediator"
+      ],
+      "actors_present": [
+        "Mali Transitional Government",
+        "Wagner Group",
+        "ECOWAS envoys"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#State Actors",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Operational Challenges",
+        "context_files/script-with-zones.js#maliJunta"
+      ]
+    },
+    {
+      "zone_id": "burkina_north",
+      "displaced": 30000,
+      "threats": [
+        "Humanitarian blockade cutting aid to northern camps",
+        "Civil unrest and declining support around junta-held northern hubs",
+        "Wagner-linked security expansion near Ouahigouya increasing opacity and abuse risk"
+      ],
+      "incidents": [
+        "Aid Blockade in Dori",
+        "Civil Protests and Army Crackdowns in Ouahigouya",
+        "Siege Conditions in Djibo"
+      ],
+      "actors_present": [
+        "Burkina Faso security forces",
+        "Wagner Group",
+        "JNIM",
+        "Displaced civilians in northern camps"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_NARRATIVE_BOOK.md#Event 1-2: The Dori Blockade",
+        "context_files/NEW_FEATURES_DOCUMENTATION.md#Wagner Group in Burkina Faso",
+        "context_files/script-with-zones.js#dori",
+        "context_files/script-with-zones.js#ouahigouya",
+        "context_files/script-with-zones.js#djibo"
+      ]
+    },
+    {
+      "zone_id": "burkina_east",
+      "displaced": 180000,
+      "threats": [
+        "ISGS territorial expansion and ethnic targeting",
+        "VDP militia abuses against Fulani communities",
+        "Gold mining extortion funding insurgent networks"
+      ],
+      "incidents": [
+        "Solhan Massacre (2021)",
+        "VDP Ethnic Violence (2023-Present)",
+        "Gold Mine Raids (2024)"
+      ],
+      "actors_present": [
+        "ISGS",
+        "Volunteers for Defense of Homeland (VDP)",
+        "Burkina Faso security forces",
+        "Fulani community leaders"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Eastern Burkina Faso",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Humanitarian Situation"
+      ]
+    },
+    {
+      "zone_id": "ouagadougou",
+      "threats": [
+        "Junta consolidation under legitimacy and resource constraints",
+        "Civilian protests growing in urban areas",
+        "Russian security partnership reducing AU leverage and transparency"
+      ],
+      "incidents": [
+        "Urban protest cycles"
+      ],
+      "actors_present": [
+        "General Ibrahim Traore's government",
+        "Wagner Group",
+        "Civil society coalitions"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#State Actors",
+        "context_files/NEW_FEATURES_DOCUMENTATION.md#Wagner Group in Burkina Faso",
+        "context_files/script-with-zones.js#burkinaFaso",
+        "game/src/data/localization_en.json#loc.dialogue.junta.root.line_001"
+      ]
+    },
+    {
+      "zone_id": "niger_west",
+      "displaced": 55000,
+      "threats": [
+        "ISGS cross-border ambushes and IED campaigns",
+        "Refugee influx from Mali straining host communities",
+        "Early JNIM economic infiltration into trade corridors"
+      ],
+      "incidents": [
+        "Military Convoy Ambushes (2023-2024)",
+        "Village Raids (2024)",
+        "IDP Influx (Ongoing)"
+      ],
+      "actors_present": [
+        "ISGS",
+        "JNIM",
+        "Niger security forces",
+        "Malian refugees"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Western Niger",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Humanitarian Situation"
+      ]
+    },
+    {
+      "zone_id": "niamey",
+      "threats": [
+        "Counterterrorism surveillance and rapid-response gaps after French withdrawal",
+        "Competing external and regional security frameworks testing the capital's resilience",
+        "Insurgent networks likely to probe Niger's transition during the post-Barkhane window"
+      ],
+      "incidents": [
+        "French Military Withdrawal"
+      ],
+      "actors_present": [
+        "Niger Transitional Government",
+        "National security forces",
+        "ECOWAS leadership"
+      ],
+      "source_refs": [
+        "context_files/script-with-zones.js#french",
+        "context_files/script-with-zones.js#nigerTransitional"
+      ]
+    },
+    {
+      "zone_id": "niger_south",
+      "displaced": 30000,
+      "threats": [
+        "Ethnic cleansing risk against Fulani communities in the Diffa corridor",
+        "Rapid militia formation and reprisal violence after ISGS attacks",
+        "Minimal state protection across vulnerable southern border communities"
+      ],
+      "incidents": [
+        "Ethnic Violence",
+        "Militia Formation",
+        "Mass Displacement"
+      ],
+      "actors_present": [
+        "ISGS",
+        "Fulani Community",
+        "Kanuri community militias",
+        "Niger security forces"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_NARRATIVE_BOOK.md#Event 1-3: The Diffa Powder Keg",
+        "context_files/script-with-zones.js#diffa"
+      ]
+    },
+    {
+      "zone_id": "lake_chad",
+      "displaced": 35000,
+      "threats": [
+        "Boko Haram remnants operating from lake islands",
+        "ISGS spillover from the Niger-Nigeria border",
+        "Lake shrinkage driving resource competition"
+      ],
+      "incidents": [
+        "Island Operations (2023-2024)",
+        "Kidnapping Spree (2024)",
+        "Cross-Border Trade Disruption (Ongoing)"
+      ],
+      "actors_present": [
+        "Boko Haram remnants",
+        "ISGS elements",
+        "Chad military forces",
+        "Displaced fishing communities"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Lake Chad Basin",
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Humanitarian Situation"
+      ]
+    },
+    {
+      "zone_id": "ndjamena",
+      "displaced": 45000,
+      "threats": [
+        "Political instability around delayed elections",
+        "Periodic rebel incursions from the north",
+        "Urban infrastructure strain from rural displacement"
+      ],
+      "incidents": [
+        "Political Protests",
+        "Rebel Incursions",
+        "Infrastructure Strain"
+      ],
+      "actors_present": [
+        "Chad military forces",
+        "Regional peacekeeping partners",
+        "Displaced rural communities"
+      ],
+      "source_refs": [
+        "context_files/script-with-zones.js#ndjamena"
+      ]
+    },
+    {
+      "zone_id": "mauritania_south",
+      "displaced": 5000,
+      "threats": [
+        "Militant infiltration across the Mali-Mauritania frontier",
+        "Surveillance gaps along sparsely monitored crossings",
+        "Cross-border community ties complicating interdiction"
+      ],
+      "incidents": [
+        "Border Crossings",
+        "Intelligence Gathering",
+        "Occasional Attacks"
+      ],
+      "actors_present": [
+        "Mauritania Security Directorate",
+        "Regional intelligence partners",
+        "Border communities"
+      ],
+      "source_refs": [
+        "context_files/NEW_BUILD_ARENA_SAHEL_DESCRIPTION.md#Border Status",
+        "context_files/script-with-zones.js#nema",
+        "context_files/script-with-zones.js#mauritaniaIntel"
+      ]
+    },
+    {
+      "zone_id": "nouakchott",
+      "displaced": 12000,
+      "threats": [
+        "Spillover risk from neighboring conflicts",
+        "Regional instability affecting trade",
+        "Persistent radicalization attempts"
+      ],
+      "incidents": [
+        "Isolated Incidents",
+        "Border Security",
+        "Refugee Influx"
+      ],
+      "actors_present": [
+        "Mauritanian security services",
+        "Regional intelligence partners",
+        "Refugee communities"
+      ],
+      "source_refs": [
+        "context_files/script-with-zones.js#nouakchott"
+      ]
+    }
+  ]
+}

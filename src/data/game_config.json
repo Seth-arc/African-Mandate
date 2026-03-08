@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-02-01T00:00:00Z",
+  "game_config": {
+    "acts": 5,
+    "turns_per_act": 4,
+    "total_turns": 20,
+    "action_slots_per_turn": 3,
+    "turn_duration_months": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1],
+    "time_months_total": 48,
+    "default_action_cooldown_turns": 1,
+    "default_intel_gate": 10,
+    "act_boundaries": {
+      "act1": { "start": 1, "end": 4 },
+      "act2": { "start": 5, "end": 8 },
+      "act3": { "start": 9, "end": 12 },
+      "act4": { "start": 13, "end": 16 },
+      "act5": { "start": 17, "end": 20 }
+    },
+    "starting_resources": {
+      "budget": 15000000,
+      "political_capital": 60,
+      "personnel": 2000,
+      "intel_points": 20,
+      "time_months": 48
+    },
+    "starting_metrics": {
+      "stability": 42,
+      "insurgency": 58,
+      "civilian_support": 38,
+      "global_legitimacy": 50,
+      "regional_synergy": 45
+    },
+    "starting_ai_state": {
+      "opposition_pressure": 0,
+      "intel_confidence": 50
+    },
+    "win_conditions": {
+      "stability": { "operator": ">=", "value": 55 },
+      "insurgency": { "operator": "<=", "value": 45 },
+      "civilian_support": { "operator": ">=", "value": 50 },
+      "global_legitimacy": { "operator": ">=", "value": 55 },
+      "regional_synergy": { "operator": ">=", "value": 55 }
+    },
+    "critical_thresholds": {
+      "stability": { "low": 24 },
+      "insurgency": { "high": 75 },
+      "civilian_support": { "low": 24 },
+      "global_legitimacy": { "low": 24 },
+      "regional_synergy": { "low": 24 }
+    }
+  }
+}

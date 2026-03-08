@@ -1,0 +1,571 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sahel Arena Game Schema",
+  "description": "Schema for African Mandate: Sahel Arena game structure, narrative, and technical requirements.",
+  "type": "object",
+  "properties": {
+                "glossary": {
+                  "type": "object",
+                  "description": "Glossary of schema items for Sahel Arena Game.",
+                  "properties": {
+                    "gameTitle": { "type": "string", "description": "Title of the game." },
+                    "executiveSummary": { "type": "string", "description": "Brief overview of the Sahel crisis and game objectives." },
+                    "threatEnvironment": { "type": "string", "description": "Threat level and regional average score." },
+                    "gameStructure": { "type": "string", "description": "Game acts, branching paths, endings, save system, and tutorial." },
+                    "resources": { "type": "string", "description": "Financial, human, political, material, intelligence, time, and special assets." },
+                    "actors": { "type": "string", "description": "Profiles of state, non-state, community, and external actors." },
+                    "territories": { "type": "string", "description": "Geographic regions with threat levels, metrics, assets, and incidents." },
+                    "threatClassification": { "type": "string", "description": "Threat level scoring and response priorities." },
+                    "assetClassification": { "type": "string", "description": "Strategic asset types, values, and intervention leverage." },
+                    "userExperience": { "type": "string", "description": "Onboarding, situation room, and UI/UX elements." },
+                    "turnMechanics": { "type": "string", "description": "Turn-based logic, urgency windows, and time-based events." },
+                    "scenarioItems": { "type": "string", "description": "Scenario-specific items and one-time assets." },
+                    "resourceAllocation": { "type": "string", "description": "Resource allocation decisions, trade-offs, and consequences." },
+                    "actorRelationships": { "type": "string", "description": "Dynamic relationships, alliances, and influence networks." },
+                    "narrative": { "type": "string", "description": "Narrative sequences, cutscenes, and multi-language content." },
+                    "metricsHistory": { "type": "string", "description": "Historical tracking of metrics by turn and region." },
+                    "uiUx": { "type": "string", "description": "UI/UX elements such as modals, slides, and maps." },
+                    "eventTriggers": { "type": "string", "description": "Event triggers, conditions, and branching outcomes." },
+                    "localization": { "type": "string", "description": "Multi-language support for content and narration." },
+                    "validationConstraints": { "type": "string", "description": "Field constraints and cross-field validation rules." },
+                    "dynamicLogic": { "type": "string", "description": "Formulas for metric changes and AI decision trees." },
+                    "advancedGameplay": { "type": "string", "description": "Deeply nested and conditional structures for advanced mechanics." },
+                    "playerActions": { "type": "string", "description": "Explicit modeling of player actions and feedback loops." },
+                    "simulationAlgorithms": { "type": "string", "description": "Simulation logic and algorithms for scenario progression." }
+                  }
+                },
+            "dynamicLogic": {
+              "type": "object",
+              "properties": {
+                "metricFormulas": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metric": { "type": "string" },
+                      "formula": { "type": "string" },
+                      "inputs": { "type": "array", "items": { "type": "string" } },
+                      "conditions": { "type": "string" }
+                    }
+                  }
+                },
+                "aiDecisionTrees": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "actorId": { "type": "string" },
+                      "decisionTree": {
+                        "type": "object",
+                        "properties": {
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "nodeId": { "type": "string" },
+                                "condition": { "type": "string" },
+                                "action": { "type": "string" },
+                                "nextNode": { "type": "string" }
+                              }
+                            }
+                          },
+                          "startNode": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "advancedGameplay": {
+              "type": "object",
+              "properties": {
+                "nestedStructures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "structureName": { "type": "string" },
+                      "data": { "type": "object" },
+                      "conditions": { "type": "string" }
+                    }
+                  }
+                },
+                "conditionalLogic": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "condition": { "type": "string" },
+                      "outcome": { "type": "string" },
+                      "affectedEntities": { "type": "array", "items": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            },
+            "playerActions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "actionId": { "type": "string" },
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "parameters": { "type": "object" },
+                  "effects": { "type": "object" },
+                  "feedbackLoop": {
+                    "type": "object",
+                    "properties": {
+                      "trigger": { "type": "string" },
+                      "response": { "type": "string" },
+                      "metricImpact": { "type": "object" }
+                    }
+                  }
+                }
+              }
+            },
+            "simulationAlgorithms": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "algorithmId": { "type": "string" },
+                  "description": { "type": "string" },
+                  "inputs": { "type": "array", "items": { "type": "string" } },
+                  "logic": { "type": "string" },
+                  "output": { "type": "string" }
+                }
+              }
+            },
+        "turnMechanics": {
+          "type": "object",
+          "properties": {
+            "turns": { "type": "integer" },
+            "urgencyWindows": { "type": "array", "items": { "type": "string" } },
+            "timeBasedEvents": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "eventId": { "type": "string" },
+                  "triggerTurn": { "type": "integer" },
+                  "deadline": { "type": "integer" },
+                  "availableActions": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "scenarioItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "trigger": { "type": "string" },
+              "effect": { "type": "string" },
+              "usageLimit": { "type": "integer" }
+            }
+          }
+        },
+        "resourceAllocation": {
+          "type": "object",
+          "properties": {
+            "allocationDecisions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "resourceType": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "region": { "type": "string" },
+                  "tradeOff": { "type": "string" },
+                  "consequence": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "actorRelationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actorA": { "type": "string" },
+              "actorB": { "type": "string" },
+              "relationshipType": { "type": "string" },
+              "influenceScore": { "type": "number" },
+              "history": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "narrative": {
+          "type": "object",
+          "properties": {
+            "sequences": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sequenceId": { "type": "string" },
+                  "type": { "type": "string" },
+                  "content": { "type": "string" },
+                  "language": { "type": "string" },
+                  "media": { "type": "string" }
+                }
+              }
+            },
+            "cutscenes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "cutsceneId": { "type": "string" },
+                  "description": { "type": "string" },
+                  "languages": { "type": "array", "items": { "type": "string" } },
+                  "media": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "metricsHistory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "turn": { "type": "integer" },
+              "region": { "type": "string" },
+              "metrics": {
+                "type": "object",
+                "properties": {
+                  "insurgencyLevel": { "type": "number" },
+                  "stability": { "type": "number" },
+                  "civilianSupport": { "type": "number" },
+                  "reconstructionIndex": { "type": "number" },
+                  "economicResilience": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "uiUx": {
+          "type": "object",
+          "properties": {
+            "videoModals": {
+              "type": "array", "items": { "type": "string" }
+            },
+            "onboardingSlides": {
+              "type": "array", "items": { "type": "string" }
+            },
+            "interactiveMaps": {
+              "type": "array", "items": { "type": "string" }
+            }
+          }
+        },
+        "eventTriggers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "eventId": { "type": "string" },
+              "triggerCondition": { "type": "string" },
+              "outcomes": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "localization": {
+          "type": "object",
+          "properties": {
+            "languages": { "type": "array", "items": { "type": "string" } },
+            "content": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "contentId": { "type": "string" },
+                  "language": { "type": "string" },
+                  "text": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "validationConstraints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "constraint": { "type": "string" },
+              "dependentField": { "type": "string" },
+              "rule": { "type": "string" }
+            }
+          }
+        },
+    "gameTitle": { "type": "string" },
+    "executiveSummary": { "type": "string" },
+    "threatEnvironment": {
+      "type": "object",
+      "properties": {
+        "level": { "type": "string" },
+        "regionalAverage": { "type": "number" }
+      }
+    },
+    "gameStructure": {
+      "type": "object",
+      "properties": {
+        "acts": { "type": "integer", "minimum": 1 },
+        "branchingPaths": { "type": "boolean" },
+        "endings": { "type": "array", "items": { "type": "string" } },
+        "saveSystem": {
+          "type": "object",
+          "properties": {
+            "backend": { "type": "string" },
+            "authentication": { "type": "string" }
+          }
+        },
+        "gameOverConditions": {
+          "type": "object",
+          "properties": {
+            "averageStability": { "type": "number" },
+            "averageInsurgencyLevel": { "type": "number" },
+            "globalLegitimacy": { "type": "number" },
+            "regionalSynergy": { "type": "number" },
+            "civilianSupport": { "type": "number" }
+          }
+        },
+        "tutorial": {
+          "type": "object",
+          "properties": {
+            "modalType": { "type": "string" },
+            "canMinimize": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "financial": {
+          "type": "object",
+          "properties": {
+            "budget": { "type": "number" },
+            "externalAid": { "type": "array", "items": { "type": "string" } },
+            "emergencyFunds": { "type": "number" }
+          }
+        },
+        "human": {
+          "type": "object",
+          "properties": {
+            "securityForces": { "type": "integer" },
+            "humanitarianWorkers": { "type": "integer" },
+            "technicalExperts": { "type": "integer" },
+            "advisors": { "type": "integer" },
+            "delegates": { "type": "integer" }
+          }
+        },
+        "politicalCapital": {
+          "type": "object",
+          "properties": {
+            "influence": { "type": "number" },
+            "goodwill": { "type": "number" }
+          }
+        },
+        "materialAssets": {
+          "type": "object",
+          "properties": {
+            "equipment": { "type": "array", "items": { "type": "string" } },
+            "strategicAssets": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "intelligence": {
+          "type": "object",
+          "properties": {
+            "intelPoints": { "type": "number" },
+            "situationReports": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "time": {
+          "type": "object",
+          "properties": {
+            "turns": { "type": "integer" },
+            "urgencyWindows": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "specialAssets": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "resourceFlows": {
+          "type": "object",
+          "properties": {
+            "earned": { "type": "array", "items": { "type": "string" } },
+            "spent": { "type": "array", "items": { "type": "string" } },
+            "lost": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "background": { "type": "string" },
+          "personality": { "type": "string" },
+          "leadership": { "type": "string" },
+          "structure": { "type": "string" },
+          "motivations": { "type": "string" },
+          "internalDynamics": { "type": "string" },
+          "operationalNuances": { "type": "string" },
+          "logo": { "type": "string" },
+          "photo": { "type": "string" }
+                ,
+                "communityRole": { "type": "string" },
+                "alliances": { "type": "array", "items": { "type": "string" } },
+                "vulnerabilities": { "type": "array", "items": { "type": "string" } },
+                "eventParticipation": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "eventId": { "type": "string" },
+                      "role": { "type": "string" }
+                    }
+                  }
+                }
+        }
+      }
+    },
+    "territories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "threatLevel": { "type": "string" },
+          "score": { "type": "number" },
+          "keyThreatsActors": { "type": "string" },
+          "humanitarianSituation": { "type": "string" },
+          "populationAtRisk": { "type": "number" },
+          "administrativeStatus": { "type": "string" },
+          "population": { "type": "number" },
+          "ethnicComposition": { "type": "object" },
+          "urbanization": { "type": "string" },
+          "terrain": { "type": "string" },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "insurgencyLevel": { "type": "number" },
+              "stability": { "type": "number" },
+              "civilianSupport": { "type": "number" },
+              "reconstructionIndex": { "type": "number" },
+              "economicResilience": { "type": "number" }
+            }
+          },
+          "threatLandscape": { "type": "string" },
+          "strategicAssets": { "type": "array", "items": { "type": "string" } },
+          "borderStatus": { "type": "string" },
+          "climateStress": { "type": "string" },
+          "securityIncidents": { "type": "array", "items": { "type": "string" } },
+          "idpCamps": { "type": "array", "items": { "type": "string" } },
+          "foodInsecurity": { "type": "string" },
+          "accessConstraints": { "type": "string" },
+          "operationalChallenges": { "type": "array", "items": { "type": "string" } },
+          "opportunities": { "type": "array", "items": { "type": "string" } }
+                ,
+                "ethnicConflictDrivers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "group": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  }
+                },
+                "assetIcons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string" },
+                      "icon": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  }
+                },
+                "climateEnvironmentalData": {
+                  "type": "object",
+                  "properties": {
+                    "droughtSeverity": { "type": "string" },
+                    "lakeShrinkage": { "type": "string" },
+                    "deforestation": { "type": "string" },
+                    "resourceCompetition": { "type": "string" }
+                  }
+                },
+                "events": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": { "type": "string" },
+                      "type": { "type": "string" },
+                      "description": { "type": "string" },
+                      "casualties": { "type": "integer" }
+                    }
+                  }
+                }
+            "assetClassification": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "assetType": { "type": "string" },
+                  "strategicValue": { "type": "string" },
+                  "insurgentExploitation": { "type": "string" },
+                  "interventionLeverage": { "type": "string" }
+                }
+              }
+            },
+        }
+      }
+    },
+    "threatClassification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "level": { "type": "string" },
+          "scoreRange": { "type": "string" },
+          "criteria": { "type": "string" },
+          "responsePriority": { "type": "string" }
+        }
+      }
+    },
+    "userExperience": {
+      "type": "object",
+      "properties": {
+        "onboarding": { "type": "string" },
+        "situationRoomInterface": { "type": "string" }
+      }
+    }
+  },
+  "required": [
+    "gameTitle",
+    "executiveSummary",
+    "threatEnvironment",
+    "gameStructure",
+    "resources",
+    "actors",
+    "territories",
+    "threatClassification"
+  ]
+}

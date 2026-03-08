@@ -1,0 +1,37 @@
+# African Mandate - Events Registry Template
+#
+# Purpose:
+# - Canonical source of all events used by the game.
+# - Each entry should match the event schema in CONTENT_DATA_REQUIREMENTS.md.
+# - Use failure_on_deadline = true for events that cause immediate loss if missed.
+#
+# Notes:
+# - If an event has a deadline, it must include a penalty_bundle.
+# - For dynamic events (trigger_turn = 0), prefer deadline_offset and compute deadline_turn at trigger time.
+
+events:
+  # Example event (replace with real entries)
+  - event_id: "example_event_id"
+    event_type: "crisis"
+    category: "security"
+    priority: 20
+    trigger_conditions: "global_legitimacy < 45"
+    trigger_turn: 3
+    deadline_turn: 5
+    deadline_offset: null
+    failure_on_deadline: false
+    narrative_text_key: "loc.event.example.title"
+    outcomes:
+      effects:
+        metrics:
+          global_legitimacy: -4
+      followup_events:
+        - "example_followup_event_id"
+      flags:
+        - "example_flag"
+    penalty_bundle:
+      effects:
+        metrics:
+          stability: -3
+      flags:
+        - "example_penalty_flag"

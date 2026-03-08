@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-02-01T00:00:00Z",
+  "intel_reports": [
+    {
+      "report_key": "intel_threat_assessment_mopti",
+      "headline_key": "loc.intel.threat_assessment.mopti.headline",
+      "body_key": "loc.intel.threat_assessment.mopti.body",
+      "urgency": "high",
+      "confidence_level": "medium",
+      "sources": ["sigint_intercept", "local_informant", "satellite_imagery"],
+      "zone_scope": "mopti",
+      "generated_by": "intelligence_threat_assessment",
+      "expiry_turns": 3
+    },
+    {
+      "report_key": "intel_insurgent_movement",
+      "headline_key": "loc.intel.insurgent_movement.headline",
+      "body_key": "loc.intel.insurgent_movement.body",
+      "urgency": "critical",
+      "confidence_level": "high",
+      "sources": ["humint_network", "sigint_intercept"],
+      "zone_scope": null,
+      "generated_by": "intelligence_network_cultivation",
+      "expiry_turns": 2
+    },
+    {
+      "report_key": "intel_border_smuggling",
+      "headline_key": "loc.intel.border_smuggling.headline",
+      "body_key": "loc.intel.border_smuggling.body",
+      "urgency": "high",
+      "confidence_level": "medium",
+      "sources": ["border_patrol", "informant_network"],
+      "zone_scope": null,
+      "generated_by": "security_border_smuggling_surge",
+      "expiry_turns": 3
+    },
+    {
+      "report_key": "intel_wagner_presence",
+      "headline_key": "loc.intel.wagner_presence.headline",
+      "body_key": "loc.intel.wagner_presence.body",
+      "urgency": "high",
+      "confidence_level": "high",
+      "sources": ["sigint_intercept", "diplomatic_channels", "open_source"],
+      "zone_scope": null,
+      "generated_by": "external_wagner_expansion_phase1",
+      "expiry_turns": 4
+    },
+    {
+      "report_key": "intel_climate_drought_warning",
+      "headline_key": "loc.intel.climate_drought.headline",
+      "body_key": "loc.intel.climate_drought.body",
+      "urgency": "medium",
+      "confidence_level": "high",
+      "sources": ["satellite_data", "meteorological_service", "un_agencies"],
+      "zone_scope": null,
+      "generated_by": "intel_briefing_climate_shock_warning",
+      "expiry_turns": 4
+    },
+    {
+      "report_key": "intel_idp_surge_assessment",
+      "headline_key": "loc.intel.idp_surge.headline",
+      "body_key": "loc.intel.idp_surge.body",
+      "urgency": "high",
+      "confidence_level": "high",
+      "sources": ["unhcr_data", "local_ngos", "field_teams"],
+      "zone_scope": null,
+      "generated_by": "humanitarian_idp_surge",
+      "expiry_turns": 3
+    },
+    {
+      "report_key": "intel_corruption_procurement",
+      "headline_key": "loc.intel.corruption_procurement.headline",
+      "body_key": "loc.intel.corruption_procurement.body",
+      "urgency": "high",
+      "confidence_level": "medium",
+      "sources": ["internal_audit", "whistleblower"],
+      "zone_scope": null,
+      "generated_by": "corruption_procurement_leak",
+      "expiry_turns": 2
+    },
+    {
+      "report_key": "intel_splinter_faction",
+      "headline_key": "loc.intel.splinter_faction.headline",
+      "body_key": "loc.intel.splinter_faction.body",
+      "urgency": "medium",
+      "confidence_level": "low",
+      "sources": ["humint_network", "intercepted_communications"],
+      "zone_scope": null,
+      "generated_by": "security_insurgent_splinter_contact",
+      "expiry_turns": 3
+    },
+    {
+      "report_key": "intel_intercommunal_tensions",
+      "headline_key": "loc.intel.intercommunal_tensions.headline",
+      "body_key": "loc.intel.intercommunal_tensions.body",
+      "urgency": "high",
+      "confidence_level": "high",
+      "sources": ["civil_society_network", "local_authorities", "field_teams"],
+      "zone_scope": "mopti",
+      "generated_by": "security_intercommunal_violence",
+      "expiry_turns": 2
+    },
+    {
+      "report_key": "intel_adaptive_insurgency",
+      "headline_key": "loc.intel.adaptive_insurgency.headline",
+      "body_key": "loc.intel.adaptive_insurgency.body",
+      "urgency": "critical",
+      "confidence_level": "high",
+      "sources": ["sigint_analysis", "pattern_recognition", "field_reports"],
+      "zone_scope": null,
+      "generated_by": "intel_briefing_adaptive_insurgency",
+      "expiry_turns": 4
+    }
+  ]
+}

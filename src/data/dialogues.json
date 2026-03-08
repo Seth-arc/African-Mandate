@@ -1,0 +1,441 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-02-01T00:00:00Z",
+  "dialogues": [
+    {
+      "dialogue_id": "dialogue_junta_negotiation",
+      "actor_key": "junta_burkina_traore",
+      "trigger_condition": "junta_dialogue_initiated == true",
+      "unlock_action": "diplomacy_junta_engagement",
+      "available_turns": [5, 6, 7, 8],
+      "node_graph": {
+        "root": {
+          "speaker_key": "junta_burkina_traore",
+          "text_key": "loc.dialogue.junta.root.line_001",
+          "next": "choice_node"
+        },
+        "choice_node": {
+          "type": "choice",
+          "choices": [
+            {
+              "choice_id": "affirm_sovereignty",
+              "label_key": "loc.dialogue.junta.choice.affirm_sovereignty.label",
+              "description_key": "loc.dialogue.junta.choice.affirm_sovereignty.desc",
+              "costs": {
+                "political_capital": 0,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": 8,
+                "metrics": {
+                  "regional_synergy": 3
+                },
+                "flags": ["au_junta_coordination_active"]
+              },
+              "next": "outcome_sovereignty"
+            },
+            {
+              "choice_id": "conditional_support",
+              "label_key": "loc.dialogue.junta.choice.conditional_support.label",
+              "description_key": "loc.dialogue.junta.choice.conditional_support.desc",
+              "costs": {
+                "political_capital": 5,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": 4,
+                "metrics": {
+                  "global_legitimacy": 5
+                },
+                "flags": ["anti_corruption_monitoring_active"]
+              },
+              "next": "outcome_conditional"
+            },
+            {
+              "choice_id": "challenge_narrative",
+              "label_key": "loc.dialogue.junta.choice.challenge_narrative.label",
+              "description_key": "loc.dialogue.junta.choice.challenge_narrative.desc",
+              "costs": {
+                "political_capital": 8,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -6,
+                "metrics": {
+                  "global_legitimacy": 4
+                },
+                "resources": {
+                  "political_capital": 5
+                },
+                "flags": ["junta_challenged"]
+              },
+              "next": "outcome_challenge"
+            },
+            {
+              "choice_id": "tactical_retreat",
+              "label_key": "loc.dialogue.junta.choice.tactical_retreat.label",
+              "description_key": "loc.dialogue.junta.choice.tactical_retreat.desc",
+              "costs": {
+                "political_capital": 0,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -2,
+                "metrics": {
+                  "regional_synergy": -1
+                },
+                "flags": ["junta_dialogue_deferred"]
+              },
+              "next": "outcome_retreat"
+            }
+          ]
+        },
+        "outcome_sovereignty": {
+          "speaker_key": "junta_burkina_traore",
+          "text_key": "loc.dialogue.junta.outcome.sovereignty.line_001",
+          "end": true
+        },
+        "outcome_conditional": {
+          "speaker_key": "junta_burkina_traore",
+          "text_key": "loc.dialogue.junta.outcome.conditional.line_001",
+          "end": true
+        },
+        "outcome_challenge": {
+          "speaker_key": "junta_burkina_traore",
+          "text_key": "loc.dialogue.junta.outcome.challenge.line_001",
+          "end": true
+        },
+        "outcome_retreat": {
+          "speaker_key": "junta_burkina_traore",
+          "text_key": "loc.dialogue.junta.outcome.retreat.line_001",
+          "end": true
+        }
+      }
+    },
+    {
+      "dialogue_id": "dialogue_civil_society_partnership",
+      "actor_key": "civil_society_konate",
+      "trigger_condition": "civil_society_partnership_active == true",
+      "unlock_action": "civil_society_partnership",
+      "available_turns": [5, 6, 7, 8, 9, 10],
+      "node_graph": {
+        "root": {
+          "speaker_key": "civil_society_konate",
+          "text_key": "loc.dialogue.civil_society.root.line_001",
+          "next": "choice_node"
+        },
+        "choice_node": {
+          "type": "choice",
+          "choices": [
+            {
+              "choice_id": "full_partnership",
+              "label_key": "loc.dialogue.civil_society.choice.full_partnership.label",
+              "description_key": "loc.dialogue.civil_society.choice.full_partnership.desc",
+              "costs": {
+                "political_capital": 10,
+                "budget": 500000
+              },
+              "effects": {
+                "actor_relationship": 12,
+                "metrics": {
+                  "civilian_support": 6
+                },
+                "flags": ["civil_society_partnership_full", "community_mediation_unlocked"],
+                "modifiers": {
+                  "tribalism_severity": -0.25
+                }
+              },
+              "next": "outcome_full"
+            },
+            {
+              "choice_id": "limited_collaboration",
+              "label_key": "loc.dialogue.civil_society.choice.limited_collaboration.label",
+              "description_key": "loc.dialogue.civil_society.choice.limited_collaboration.desc",
+              "costs": {
+                "political_capital": 5,
+                "budget": 200000
+              },
+              "effects": {
+                "actor_relationship": 6,
+                "metrics": {
+                  "civilian_support": 3
+                },
+                "flags": ["civil_society_partnership_limited"]
+              },
+              "next": "outcome_limited"
+            },
+            {
+              "choice_id": "security_first_deflection",
+              "label_key": "loc.dialogue.civil_society.choice.security_first.label",
+              "description_key": "loc.dialogue.civil_society.choice.security_first.desc",
+              "costs": {
+                "political_capital": 0,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -8,
+                "metrics": {
+                  "civilian_support": -4
+                },
+                "flags": ["civil_society_rejected"]
+              },
+              "next": "outcome_rejected"
+            },
+            {
+              "choice_id": "request_intelligence",
+              "label_key": "loc.dialogue.civil_society.choice.request_intel.label",
+              "description_key": "loc.dialogue.civil_society.choice.request_intel.desc",
+              "costs": {
+                "political_capital": 3,
+                "budget": 100000
+              },
+              "effects": {
+                "actor_relationship": 3,
+                "metrics": {
+                  "civilian_support": 1
+                },
+                "flags": ["community_intel_source"]
+              },
+              "next": "outcome_intel"
+            }
+          ]
+        },
+        "outcome_full": {
+          "speaker_key": "civil_society_konate",
+          "text_key": "loc.dialogue.civil_society.outcome.full.line_001",
+          "end": true
+        },
+        "outcome_limited": {
+          "speaker_key": "civil_society_konate",
+          "text_key": "loc.dialogue.civil_society.outcome.limited.line_001",
+          "end": true
+        },
+        "outcome_rejected": {
+          "speaker_key": "civil_society_konate",
+          "text_key": "loc.dialogue.civil_society.outcome.rejected.line_001",
+          "end": true
+        },
+        "outcome_intel": {
+          "speaker_key": "civil_society_konate",
+          "text_key": "loc.dialogue.civil_society.outcome.intel.line_001",
+          "end": true
+        }
+      }
+    },
+    {
+      "dialogue_id": "dialogue_ecowas_summit",
+      "actor_key": "regional_ecowas",
+      "trigger_condition": "turn == 5",
+      "available_turns": [5],
+      "node_graph": {
+        "root": {
+          "speaker_key": "au_psc_bensouda",
+          "text_key": "loc.dialogue.ecowas_summit.root.line_001",
+          "next": "choice_node"
+        },
+        "choice_node": {
+          "type": "choice",
+          "choices": [
+            {
+              "choice_id": "full_commitment",
+              "label_key": "loc.dialogue.ecowas.choice.full_commitment.label",
+              "description_key": "loc.dialogue.ecowas.choice.full_commitment.desc",
+              "costs": {
+                "political_capital": 15,
+                "budget": 1000000
+              },
+              "effects": {
+                "actor_relationship": 10,
+                "metrics": {
+                  "regional_synergy": 5,
+                  "global_legitimacy": 3
+                },
+                "flags": ["coalition_compact_committed"]
+              },
+              "next": "outcome_full"
+            },
+            {
+              "choice_id": "pragmatic_engagement",
+              "label_key": "loc.dialogue.ecowas.choice.pragmatic.label",
+              "description_key": "loc.dialogue.ecowas.choice.pragmatic.desc",
+              "costs": {
+                "political_capital": 8,
+                "budget": 500000
+              },
+              "effects": {
+                "actor_relationship": 5,
+                "metrics": {
+                  "regional_synergy": 2
+                },
+                "flags": ["coalition_compact_partial"]
+              },
+              "next": "outcome_pragmatic"
+            },
+            {
+              "choice_id": "sovereignty_defense",
+              "label_key": "loc.dialogue.ecowas.choice.sovereignty.label",
+              "description_key": "loc.dialogue.ecowas.choice.sovereignty.desc",
+              "costs": {
+                "political_capital": 5,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -5,
+                "metrics": {
+                  "regional_synergy": -3
+                },
+                "flags": ["aes_path_opened"]
+              },
+              "next": "outcome_sovereignty"
+            },
+            {
+              "choice_id": "defer_decision",
+              "label_key": "loc.dialogue.ecowas.choice.defer.label",
+              "description_key": "loc.dialogue.ecowas.choice.defer.desc",
+              "costs": {
+                "political_capital": 0,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -3,
+                "metrics": {
+                  "global_legitimacy": -2
+                },
+                "flags": ["coalition_compact_deferred"]
+              },
+              "next": "outcome_defer"
+            }
+          ]
+        },
+        "outcome_full": {
+          "speaker_key": "regional_ecowas",
+          "text_key": "loc.dialogue.ecowas.outcome.full.line_001",
+          "end": true
+        },
+        "outcome_pragmatic": {
+          "speaker_key": "regional_ecowas",
+          "text_key": "loc.dialogue.ecowas.outcome.pragmatic.line_001",
+          "end": true
+        },
+        "outcome_sovereignty": {
+          "speaker_key": "regional_ecowas",
+          "text_key": "loc.dialogue.ecowas.outcome.sovereignty.line_001",
+          "end": true
+        },
+        "outcome_defer": {
+          "speaker_key": "regional_ecowas",
+          "text_key": "loc.dialogue.ecowas.outcome.defer.line_001",
+          "end": true
+        }
+      }
+    },
+    {
+      "dialogue_id": "dialogue_donor_conditionality",
+      "actor_key": "external_donors",
+      "trigger_condition": "donor_conditions_active == true",
+      "available_turns": [15, 16, 17],
+      "node_graph": {
+        "root": {
+          "speaker_key": "external_donors",
+          "text_key": "loc.dialogue.donor.root.line_001",
+          "next": "choice_node"
+        },
+        "choice_node": {
+          "type": "choice",
+          "choices": [
+            {
+              "choice_id": "full_compliance",
+              "label_key": "loc.dialogue.donor.choice.full_compliance.label",
+              "description_key": "loc.dialogue.donor.choice.full_compliance.desc",
+              "costs": {
+                "political_capital": 15,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": 8,
+                "metrics": {
+                  "global_legitimacy": 4
+                },
+                "flags": ["donor_compliance_full"],
+                "sets_audit_status": "pending"
+              },
+              "next": "outcome_compliance"
+            },
+            {
+              "choice_id": "partial_reform",
+              "label_key": "loc.dialogue.donor.choice.partial_reform.label",
+              "description_key": "loc.dialogue.donor.choice.partial_reform.desc",
+              "costs": {
+                "political_capital": 8,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": 2,
+                "metrics": {
+                  "global_legitimacy": 2
+                },
+                "flags": ["donor_partial_compliance"]
+              },
+              "next": "outcome_partial"
+            },
+            {
+              "choice_id": "reject_conditions",
+              "label_key": "loc.dialogue.donor.choice.reject.label",
+              "description_key": "loc.dialogue.donor.choice.reject.desc",
+              "costs": {
+                "political_capital": 0,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -10,
+                "metrics": {
+                  "global_legitimacy": -5
+                },
+                "flags": ["donor_confrontation"]
+              },
+              "next": "outcome_reject"
+            },
+            {
+              "choice_id": "negotiate_timeline",
+              "label_key": "loc.dialogue.donor.choice.negotiate.label",
+              "description_key": "loc.dialogue.donor.choice.negotiate.desc",
+              "costs": {
+                "political_capital": 5,
+                "budget": 0
+              },
+              "effects": {
+                "actor_relationship": -2,
+                "metrics": {
+                  "global_legitimacy": 1
+                },
+                "flags": ["donor_conditions_extended"]
+              },
+              "next": "outcome_negotiate"
+            }
+          ]
+        },
+        "outcome_compliance": {
+          "speaker_key": "external_donors",
+          "text_key": "loc.dialogue.donor.outcome.compliance.line_001",
+          "end": true
+        },
+        "outcome_partial": {
+          "speaker_key": "external_donors",
+          "text_key": "loc.dialogue.donor.outcome.partial.line_001",
+          "end": true
+        },
+        "outcome_reject": {
+          "speaker_key": "external_donors",
+          "text_key": "loc.dialogue.donor.outcome.reject.line_001",
+          "end": true
+        },
+        "outcome_negotiate": {
+          "speaker_key": "external_donors",
+          "text_key": "loc.dialogue.donor.outcome.negotiate.line_001",
+          "end": true
+        }
+      }
+    }
+  ]
+}

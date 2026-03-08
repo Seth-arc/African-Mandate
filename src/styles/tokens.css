@@ -1,0 +1,27 @@
+/* Design tokens. Reference: context_files/gameplay-interface-final.html */
+:root {
+  --bg: #050505;
+  --bg-panel: #111111;
+  --bg-card: #1a1a1a;
+  --bg-elevated: #1f1f1f;
+  --text: #ffffff;
+  --text-secondary: #b8b8b8;
+  --text-muted: #6a6a6a;
+  --gold: #d4af37;
+  --gold-bright: #e5c158;
+  --gold-dark: #b8941f;
+  --sahel: #8e4f17;
+  --alert: #a83232;
+  --alert-glow: rgba(168, 50, 50, 0.4);
+  --success: #2d9659;
+  --success-glow: rgba(45, 150, 89, 0.4);
+  --warning: #e8a523;
+  --border: rgba(212, 175, 55, 0.25);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+}

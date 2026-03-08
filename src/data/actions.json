@@ -1,0 +1,616 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-02-01T00:00:00Z",
+  "actions": [
+    {
+      "action_id": "security_patrol_deployment",
+      "name_key": "loc.action.security.patrol_deployment.name",
+      "description_key": "loc.action.security.patrol_deployment.desc",
+      "category": "security",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 500000, "max": 2000000, "step": 250000, "default": 1000000 },
+        "personnel": { "min": 100, "max": 500, "step": 50, "default": 200 },
+        "political_capital": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 0, "max": 0, "step": 0, "default": 0 }
+      },
+      "cooldown_turns": 1,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "insurgency": -3,
+          "stability": 2
+        },
+        "zone_effects": {
+          "threat_level": -5
+        },
+        "flags": ["patrol_active_in_zone"]
+      },
+      "requirements": {
+        "min_personnel": 100
+      }
+    },
+    {
+      "action_id": "security_targeted_operation",
+      "name_key": "loc.action.security.targeted_operation.name",
+      "description_key": "loc.action.security.targeted_operation.desc",
+      "category": "security",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 1000000, "max": 3000000, "step": 500000, "default": 2000000 },
+        "personnel": { "min": 200, "max": 800, "step": 100, "default": 400 },
+        "political_capital": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "intel_points": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "time_months": { "min": 0, "max": 0, "step": 0, "default": 0 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 20,
+      "effects": {
+        "metrics": {
+          "insurgency": -6,
+          "stability": 3
+        },
+        "zone_effects": {
+          "threat_level": -10
+        },
+        "flags": ["targeted_op_executed"],
+        "risks": {
+          "civilian_harm_chance": 0.15,
+          "civilian_harm_effects": {
+            "civilian_support": -5,
+            "global_legitimacy": -3
+          }
+        }
+      },
+      "requirements": {
+        "min_intel_points": 10,
+        "min_personnel": 200
+      }
+    },
+    {
+      "action_id": "security_border_reinforcement",
+      "name_key": "loc.action.security.border_reinforcement.name",
+      "description_key": "loc.action.security.border_reinforcement.desc",
+      "category": "security",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 1500000, "max": 4000000, "step": 500000, "default": 2500000 },
+        "personnel": { "min": 300, "max": 600, "step": 100, "default": 400 },
+        "political_capital": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "intel_points": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 3,
+      "intel_gate": 10,
+      "effects": {
+        "metrics": {
+          "insurgency": -2,
+          "stability": 2,
+          "regional_synergy": 1
+        },
+        "flags": ["border_reinforced"]
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "diplomacy_junta_engagement",
+      "name_key": "loc.action.diplomacy.junta_engagement.name",
+      "description_key": "loc.action.diplomacy.junta_engagement.desc",
+      "category": "diplomacy",
+      "target_scope": "actor",
+      "target_actors": ["junta_burkina_traore", "junta_mali", "junta_niger"],
+      "costs": {
+        "budget": { "min": 100000, "max": 500000, "step": 100000, "default": 200000 },
+        "personnel": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "political_capital": { "min": 15, "max": 15, "step": 1, "default": 15 },
+        "intel_points": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 5,
+      "effects": {
+        "actor_effects": {
+          "relationship_score": 5
+        },
+        "metrics": {
+          "regional_synergy": 2
+        },
+        "flags": ["junta_dialogue_initiated"]
+      },
+      "unlocks_dialogue": "dialogue_junta_negotiation",
+      "requirements": {
+        "min_political_capital": 15
+      }
+    },
+    {
+      "action_id": "diplomacy_ecowas_coordination",
+      "name_key": "loc.action.diplomacy.ecowas_coordination.name",
+      "description_key": "loc.action.diplomacy.ecowas_coordination.desc",
+      "category": "diplomacy",
+      "target_scope": "actor",
+      "target_actors": ["regional_ecowas"],
+      "costs": {
+        "budget": { "min": 200000, "max": 800000, "step": 200000, "default": 400000 },
+        "personnel": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "political_capital": { "min": 12, "max": 12, "step": 1, "default": 12 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 0,
+      "effects": {
+        "actor_effects": {
+          "relationship_score": 4
+        },
+        "metrics": {
+          "regional_synergy": 3,
+          "global_legitimacy": 2
+        },
+        "flags": ["ecowas_coordination_active"]
+      },
+      "requirements": {
+        "min_political_capital": 12
+      }
+    },
+    {
+      "action_id": "diplomacy_international_outreach",
+      "name_key": "loc.action.diplomacy.international_outreach.name",
+      "description_key": "loc.action.diplomacy.international_outreach.desc",
+      "category": "diplomacy",
+      "target_scope": "actor",
+      "target_actors": ["external_donors"],
+      "costs": {
+        "budget": { "min": 100000, "max": 300000, "step": 50000, "default": 150000 },
+        "personnel": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "political_capital": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 0, "max": 0, "step": 0, "default": 0 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 0,
+      "effects": {
+        "actor_effects": {
+          "relationship_score": 3
+        },
+        "metrics": {
+          "global_legitimacy": 4
+        },
+        "flags": ["international_outreach_active"]
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "humanitarian_aid_distribution",
+      "name_key": "loc.action.humanitarian.aid_distribution.name",
+      "description_key": "loc.action.humanitarian.aid_distribution.desc",
+      "category": "humanitarian",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 1000000, "max": 5000000, "step": 500000, "default": 2000000 },
+        "personnel": { "min": 50, "max": 200, "step": 25, "default": 100 },
+        "political_capital": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 1,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "civilian_support": 4,
+          "stability": 1
+        },
+        "zone_effects": {
+          "displaced": -500
+        },
+        "flags": ["humanitarian_aid_delivered"]
+      },
+      "requirements": {},
+      "corruption_risk": {
+        "condition": "oversight_level.level == 'none'",
+        "flag": "humanitarian_aid_spend_high"
+      }
+    },
+    {
+      "action_id": "humanitarian_idp_camp_support",
+      "name_key": "loc.action.humanitarian.idp_camp_support.name",
+      "description_key": "loc.action.humanitarian.idp_camp_support.desc",
+      "category": "humanitarian",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 2000000, "max": 6000000, "step": 1000000, "default": 3000000 },
+        "personnel": { "min": 100, "max": 300, "step": 50, "default": 150 },
+        "political_capital": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 2, "max": 2, "step": 1, "default": 2 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "civilian_support": 6,
+          "global_legitimacy": 3
+        },
+        "zone_effects": {
+          "displaced": -1000
+        },
+        "flags": ["idp_camp_supported"]
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "humanitarian_corridor_establishment",
+      "name_key": "loc.action.humanitarian.corridor_establishment.name",
+      "description_key": "loc.action.humanitarian.corridor_establishment.desc",
+      "category": "humanitarian",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 3000000, "max": 8000000, "step": 1000000, "default": 5000000 },
+        "personnel": { "min": 200, "max": 500, "step": 100, "default": 300 },
+        "political_capital": { "min": 15, "max": 15, "step": 1, "default": 15 },
+        "intel_points": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "time_months": { "min": 2, "max": 2, "step": 1, "default": 2 }
+      },
+      "cooldown_turns": 4,
+      "intel_gate": 10,
+      "effects": {
+        "metrics": {
+          "civilian_support": 8,
+          "global_legitimacy": 6,
+          "stability": 2
+        },
+        "flags": ["humanitarian_corridor_open", "humanitarian_major_win"]
+      },
+      "requirements": {
+        "flags_required": ["idp_surge_active"]
+      }
+    },
+    {
+      "action_id": "governance_capacity_building",
+      "name_key": "loc.action.governance.capacity_building.name",
+      "description_key": "loc.action.governance.capacity_building.desc",
+      "category": "governance_economic",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 1000000, "max": 3000000, "step": 500000, "default": 1500000 },
+        "personnel": { "min": 50, "max": 150, "step": 25, "default": 75 },
+        "political_capital": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 2, "max": 2, "step": 1, "default": 2 }
+      },
+      "cooldown_turns": 3,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "stability": 3,
+          "global_legitimacy": 2
+        },
+        "flags": ["governance_capacity_enhanced"]
+      },
+      "delay_turns": 2,
+      "delayed_effects": {
+        "metrics": {
+          "stability": 2,
+          "civilian_support": 2
+        }
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "governance_anti_corruption_monitoring",
+      "name_key": "loc.action.governance.anti_corruption_monitoring.name",
+      "description_key": "loc.action.governance.anti_corruption_monitoring.desc",
+      "category": "governance_economic",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 500000, "max": 1500000, "step": 250000, "default": 750000 },
+        "personnel": { "min": 25, "max": 75, "step": 25, "default": 50 },
+        "political_capital": { "min": 12, "max": 12, "step": 1, "default": 12 },
+        "intel_points": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 3,
+      "intel_gate": 5,
+      "effects": {
+        "metrics": {
+          "global_legitimacy": 5
+        },
+        "flags": ["anti_corruption_monitoring_active"],
+        "sets_oversight_level": "basic"
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "governance_integrity_framework",
+      "name_key": "loc.action.governance.integrity_framework.name",
+      "description_key": "loc.action.governance.integrity_framework.desc",
+      "category": "governance_economic",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 1000000, "max": 2500000, "step": 500000, "default": 1500000 },
+        "personnel": { "min": 50, "max": 100, "step": 25, "default": 75 },
+        "political_capital": { "min": 20, "max": 20, "step": 1, "default": 20 },
+        "intel_points": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "time_months": { "min": 2, "max": 2, "step": 1, "default": 2 }
+      },
+      "cooldown_turns": 0,
+      "intel_gate": 10,
+      "effects": {
+        "metrics": {
+          "global_legitimacy": 8,
+          "civilian_support": 2
+        },
+        "flags": ["integrity_framework_active"],
+        "sets_oversight_level": "strong"
+      },
+      "requirements": {
+        "flags_required": ["anti_corruption_monitoring_active"]
+      }
+    },
+    {
+      "action_id": "governance_audit_request",
+      "name_key": "loc.action.governance.audit_request.name",
+      "description_key": "loc.action.governance.audit_request.desc",
+      "category": "governance_economic",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 200000, "max": 500000, "step": 100000, "default": 300000 },
+        "personnel": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "political_capital": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 0,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "global_legitimacy": 2
+        },
+        "flags": [],
+        "sets_audit_status": "pending"
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "climate_drought_resilience",
+      "name_key": "loc.action.climate.drought_resilience.name",
+      "description_key": "loc.action.climate.drought_resilience.desc",
+      "category": "climate",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 1500000, "max": 4000000, "step": 500000, "default": 2500000 },
+        "personnel": { "min": 50, "max": 150, "step": 25, "default": 100 },
+        "political_capital": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 2, "max": 2, "step": 1, "default": 2 }
+      },
+      "cooldown_turns": 3,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "civilian_support": 3,
+          "stability": 2
+        },
+        "flags": ["climate_resilience_deployed"]
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "climate_water_resource_management",
+      "name_key": "loc.action.climate.water_resource_management.name",
+      "description_key": "loc.action.climate.water_resource_management.desc",
+      "category": "climate",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 2000000, "max": 5000000, "step": 1000000, "default": 3000000 },
+        "personnel": { "min": 75, "max": 200, "step": 25, "default": 125 },
+        "political_capital": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 3, "max": 3, "step": 1, "default": 3 }
+      },
+      "cooldown_turns": 4,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "civilian_support": 5,
+          "stability": 3
+        },
+        "zone_effects": {
+          "climate_resilience": 20
+        },
+        "flags": ["water_management_active"]
+      },
+      "delay_turns": 1,
+      "delayed_effects": {
+        "metrics": {
+          "civilian_support": 3
+        }
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "intelligence_network_cultivation",
+      "name_key": "loc.action.intelligence.network_cultivation.name",
+      "description_key": "loc.action.intelligence.network_cultivation.desc",
+      "category": "intelligence",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 500000, "max": 1500000, "step": 250000, "default": 750000 },
+        "personnel": { "min": 25, "max": 75, "step": 25, "default": 50 },
+        "political_capital": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 0,
+      "effects": {
+        "resources": {
+          "intel_points": 15
+        },
+        "flags": ["intel_network_established"]
+      },
+      "delay_turns": 1,
+      "delayed_effects": {
+        "resources": {
+          "intel_points": 10
+        }
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "intelligence_threat_assessment",
+      "name_key": "loc.action.intelligence.threat_assessment.name",
+      "description_key": "loc.action.intelligence.threat_assessment.desc",
+      "category": "intelligence",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 200000, "max": 600000, "step": 100000, "default": 400000 },
+        "personnel": { "min": 10, "max": 30, "step": 10, "default": 20 },
+        "political_capital": { "min": 3, "max": 3, "step": 1, "default": 3 },
+        "intel_points": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "time_months": { "min": 0, "max": 0, "step": 0, "default": 0 }
+      },
+      "cooldown_turns": 1,
+      "intel_gate": 5,
+      "effects": {
+        "generates_report": true
+      },
+      "requirements": {}
+    },
+    {
+      "action_id": "intelligence_source_verification",
+      "name_key": "loc.action.intelligence.source_verification.name",
+      "description_key": "loc.action.intelligence.source_verification.desc",
+      "category": "intelligence",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 100000, "max": 300000, "step": 50000, "default": 200000 },
+        "personnel": { "min": 5, "max": 15, "step": 5, "default": 10 },
+        "political_capital": { "min": 2, "max": 2, "step": 1, "default": 2 },
+        "intel_points": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "time_months": { "min": 0, "max": 0, "step": 0, "default": 0 }
+      },
+      "cooldown_turns": 1,
+      "intel_gate": 8,
+      "effects": {
+        "ai_state": {
+          "intel_confidence": 10
+        }
+      },
+      "requirements": {
+        "flags_required": ["intel_report_generated"]
+      }
+    },
+    {
+      "action_id": "community_led_mediation",
+      "name_key": "loc.action.community.mediation.name",
+      "description_key": "loc.action.community.mediation.desc",
+      "category": "community_mediation",
+      "target_scope": "zone",
+      "costs": {
+        "budget": { "min": 300000, "max": 800000, "step": 100000, "default": 500000 },
+        "personnel": { "min": 20, "max": 50, "step": 10, "default": 30 },
+        "political_capital": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "intel_points": { "min": 5, "max": 5, "step": 1, "default": 5 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 5,
+      "effects": {
+        "metrics": {
+          "civilian_support": 4,
+          "stability": 3
+        },
+        "zone_effects": {
+          "intercommunal_tension": -15
+        },
+        "flags": ["mediation_action_success"]
+      },
+      "requirements": {
+        "flags_required": ["community_mediation_unlocked", "intercommunal_violence_active"]
+      }
+    },
+    {
+      "action_id": "negotiation_splinter_faction",
+      "name_key": "loc.action.negotiation.splinter_faction.name",
+      "description_key": "loc.action.negotiation.splinter_faction.desc",
+      "category": "diplomacy",
+      "target_scope": "actor",
+      "target_actors": ["insurgent_splinter"],
+      "tags": ["negotiation"],
+      "costs": {
+        "budget": { "min": 500000, "max": 1500000, "step": 250000, "default": 1000000 },
+        "personnel": { "min": 10, "max": 30, "step": 10, "default": 20 },
+        "political_capital": { "min": 20, "max": 20, "step": 1, "default": 20 },
+        "intel_points": { "min": 15, "max": 15, "step": 1, "default": 15 },
+        "time_months": { "min": 2, "max": 2, "step": 1, "default": 2 }
+      },
+      "cooldown_turns": 3,
+      "intel_gate": 15,
+      "effects": {
+        "metrics": {
+          "insurgency": -5
+        },
+        "flags": ["splinter_negotiation_active", "mopti_security_ceasefire"]
+      },
+      "requirements": {
+        "flags_required": ["splinter_dialogue_open"],
+        "condition": "insurgency < 50"
+      }
+    },
+    {
+      "action_id": "whistleblower_protection",
+      "name_key": "loc.action.governance.whistleblower_protection.name",
+      "description_key": "loc.action.governance.whistleblower_protection.desc",
+      "category": "governance_economic",
+      "target_scope": "territory",
+      "costs": {
+        "budget": { "min": 100000, "max": 300000, "step": 50000, "default": 200000 },
+        "personnel": { "min": 5, "max": 15, "step": 5, "default": 10 },
+        "political_capital": { "min": 10, "max": 10, "step": 1, "default": 10 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 0, "max": 0, "step": 0, "default": 0 }
+      },
+      "cooldown_turns": 0,
+      "intel_gate": 0,
+      "effects": {
+        "metrics": {
+          "global_legitimacy": 4
+        },
+        "flags": ["whistleblower_protected"]
+      },
+      "requirements": {
+        "flags_required": ["whistleblower_reported"]
+      }
+    },
+    {
+      "action_id": "civil_society_partnership",
+      "name_key": "loc.action.diplomacy.civil_society_partnership.name",
+      "description_key": "loc.action.diplomacy.civil_society_partnership.desc",
+      "category": "diplomacy",
+      "target_scope": "actor",
+      "target_actors": ["civil_society_konate"],
+      "costs": {
+        "budget": { "min": 200000, "max": 500000, "step": 100000, "default": 300000 },
+        "personnel": { "min": 10, "max": 30, "step": 10, "default": 20 },
+        "political_capital": { "min": 8, "max": 8, "step": 1, "default": 8 },
+        "intel_points": { "min": 0, "max": 0, "step": 0, "default": 0 },
+        "time_months": { "min": 1, "max": 1, "step": 1, "default": 1 }
+      },
+      "cooldown_turns": 2,
+      "intel_gate": 0,
+      "effects": {
+        "actor_effects": {
+          "relationship_score": 6
+        },
+        "metrics": {
+          "civilian_support": 3
+        },
+        "flags": ["civil_society_partnership_active"]
+      },
+      "unlocks_dialogue": "dialogue_civil_society_partnership",
+      "requirements": {}
+    }
+  ]
+}

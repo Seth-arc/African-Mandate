@@ -1,0 +1,92 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-02-01T00:00:00Z",
+  "territories": [
+    {
+      "territory_key": "mali",
+      "name_key": "loc.territory.mali.name",
+      "population": 22000000,
+      "coords": {
+        "lat": 17.5707,
+        "lon": -3.9962
+      },
+      "base_metrics": {
+        "stability": 38,
+        "insurgency": 65,
+        "civilian_support": 35
+      },
+      "flag_url": "assets/flags/mali.png",
+      "capital": "Bamako",
+      "region": "sahel_central"
+    },
+    {
+      "territory_key": "burkina_faso",
+      "name_key": "loc.territory.burkina_faso.name",
+      "population": 23000000,
+      "coords": {
+        "lat": 12.2383,
+        "lon": -1.5616
+      },
+      "base_metrics": {
+        "stability": 40,
+        "insurgency": 60,
+        "civilian_support": 38
+      },
+      "flag_url": "assets/flags/burkina_faso.png",
+      "capital": "Ouagadougou",
+      "region": "sahel_central"
+    },
+    {
+      "territory_key": "niger",
+      "name_key": "loc.territory.niger.name",
+      "population": 27000000,
+      "coords": {
+        "lat": 17.6078,
+        "lon": 8.0817
+      },
+      "base_metrics": {
+        "stability": 42,
+        "insurgency": 55,
+        "civilian_support": 40
+      },
+      "flag_url": "assets/flags/niger.png",
+      "capital": "Niamey",
+      "region": "sahel_east"
+    },
+    {
+      "territory_key": "chad",
+      "name_key": "loc.territory.chad.name",
+      "population": 18000000,
+      "coords": {
+        "lat": 15.4542,
+        "lon": 18.7322
+      },
+      "base_metrics": {
+        "stability": 45,
+        "insurgency": 50,
+        "civilian_support": 42
+      },
+      "flag_url": "assets/flags/chad.png",
+      "capital": "N'Djamena",
+      "region": "sahel_east"
+    },
+    {
+      "territory_key": "mauritania",
+      "name_key": "loc.territory.mauritania.name",
+      "population": 5000000,
+      "coords": {
+        "lat": 21.0079,
+        "lon": -10.9408
+      },
+      "base_metrics": {
+        "stability": 55,
+        "insurgency": 35,
+        "civilian_support": 50
+      },
+      "flag_url": "assets/flags/mauritania.png",
+      "capital": "Nouakchott",
+      "region": "sahel_west"
+    }
+  ]
+}

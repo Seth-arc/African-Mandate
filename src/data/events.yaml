@@ -1,0 +1,2530 @@
+events:
+- event_id: security_insurgent_counter_tactics
+  event_type: crisis
+  category: security
+  priority: 20
+  trigger_conditions: category_spam == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.insurgency.counter_tactics.title
+  outcomes:
+    effects:
+      metrics:
+        insurgency: 4
+        stability: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - insurgent_counter_tactics_active
+  penalty_bundle:
+    effects:
+      metrics:
+        insurgency: 2
+        stability: -2
+      resources: {}
+    flags:
+    - insurgent_counter_tactics_ignored
+- event_id: security_insurgent_activity_surge
+  event_type: crisis
+  category: security
+  priority: 25
+  trigger_conditions: stability < 45 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.security.insurgent_activity.title
+  outcomes:
+    effects:
+      metrics:
+        insurgency: 3
+        stability: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - insurgent_activity_surge
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_unrest_spike
+  event_type: crisis
+  category: security
+  priority: 30
+  trigger_conditions: civilian_support < 45
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.security.unrest.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -3
+        stability: -2
+        global_legitimacy: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - unrest_spike
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_intercommunal_violence
+  event_type: crisis
+  category: security
+  priority: 15
+  trigger_conditions: zone.multi_ethnic == true AND zone.civilian_support < 50 AND
+    zone.insurgency > 60
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.tribalism.escalation.line_001a
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -5
+        stability: -3
+        insurgency: 3
+      resources: {}
+    followup_events:
+    - security_intercommunal_mediation_success
+    - security_intercommunal_mediation_failure
+    flags:
+    - intercommunal_violence_active
+  penalty_bundle:
+    effects:
+      metrics:
+        civilian_support: -8
+        stability: -6
+        insurgency: 6
+      resources: {}
+    flags:
+    - intercommunal_escalated
+- event_id: security_intercommunal_mediation_success
+  event_type: crisis
+  category: security
+  priority: 16
+  trigger_conditions: intercommunal_violence_active == true AND mediation_action_success
+    == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.tribalism.mediation_outcome.line_001
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: 6
+        stability: 4
+        insurgency: -4
+      resources: {}
+    followup_events: []
+    flags:
+    - intercommunal_mediation_success
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_intercommunal_mediation_failure
+  event_type: crisis
+  category: security
+  priority: 16
+  trigger_conditions: intercommunal_escalated == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.tribalism.failure.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -8
+        stability: -6
+        insurgency: 6
+      resources: {}
+    followup_events: []
+    flags:
+    - intercommunal_mediation_failure
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_border_fracture_warning
+  event_type: crisis
+  category: security
+  priority: 35
+  trigger_conditions: adjacent_zones_critical >= 2 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.security.border_fracture_warning.title
+  outcomes:
+    effects:
+      metrics:
+        stability: -1
+        insurgency: 2
+      resources: {}
+    followup_events: []
+    flags:
+    - border_fracture_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_border_smuggling_surge
+  event_type: crisis
+  category: security
+  priority: 36
+  trigger_conditions: border_fracture_active == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.security.border_smuggling_surge.title
+  outcomes:
+    effects:
+      metrics:
+        insurgency: 3
+        global_legitimacy: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - border_smuggling_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_ceasefire_breakdown
+  event_type: crisis
+  category: security
+  priority: 25
+  trigger_conditions: mopti_security_ceasefire == true AND rng <= 0.60
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.security.ceasefire_breakdown.title
+  outcomes:
+    effects:
+      metrics:
+        stability: -3
+        civilian_support: -3
+        insurgency: 2
+      resources: {}
+    followup_events: []
+    flags:
+    - ceasefire_breakdown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_zone_threat_escalation
+  event_type: crisis
+  category: security
+  priority: 20
+  trigger_conditions: turn == 2 AND unresolved_crisis_count >= 1
+  trigger_turn: 2
+  deadline_turn: 2
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.security.threat_escalation.title
+  outcomes:
+    effects:
+      metrics:
+        stability: -2
+        insurgency: 2
+      resources: {}
+    followup_events: []
+    flags:
+    - zone_threat_escalated
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: security_insurgent_splinter_contact
+  event_type: crisis
+  category: security
+  priority: 30
+  trigger_conditions: negotiation_actions_in_last_2_turns >= 1 AND insurgency < 50
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.insurgency.splinter_contact.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - security_insurgent_splinter_backlash
+    flags:
+    - splinter_dialogue_open
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags:
+    - splinter_deadline_missed
+    - splinter_negotiation_failed
+- event_id: security_insurgent_splinter_backlash
+  event_type: crisis
+  category: security
+  priority: 25
+  trigger_conditions: splinter_deadline_missed == true OR splinter_negotiation_failed
+    == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.insurgency.splinter_backlash.title
+  outcomes:
+    effects:
+      metrics:
+        insurgency: 4
+        stability: -3
+        civilian_support: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - splinter_backlash_triggered
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: corruption_procurement_leak
+  event_type: crisis
+  category: corruption
+  priority: 20
+  trigger_conditions: resources.political_capital < 40 AND civilian_support < 50
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.procurement_leak.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -5
+        civilian_support: -2
+      resources: {}
+    followup_events:
+    - media_corruption_expose_procurement
+    - external_donor_conditionality
+    flags:
+    - corruption_procurement_leak_active
+    - whistleblower_reported
+  penalty_bundle:
+    effects:
+      metrics:
+        global_legitimacy: -4
+      resources: {}
+    flags:
+    - audit_status_failed
+    - whistleblower_silenced
+- event_id: corruption_ghost_personnel
+  event_type: crisis
+  category: corruption
+  priority: 20
+  trigger_conditions: corruption_flags.ghost_personnel == 'active' OR whistleblower_reported
+    == true
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.ghost_personnel.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -4
+        stability: -1
+      resources: {}
+    followup_events:
+    - corruption_whistleblower_leak
+    - external_donor_conditionality
+    flags:
+    - corruption_ghost_personnel_active
+  penalty_bundle:
+    effects:
+      metrics:
+        global_legitimacy: -6
+      resources: {}
+    flags:
+    - audit_status_failed
+    - whistleblower_ignored
+- event_id: corruption_whistleblower_leak
+  event_type: crisis
+  category: corruption
+  priority: 15
+  trigger_conditions: whistleblower_silenced == true OR whistleblower_ignored == true
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: true
+  narrative_text_key: loc.event.corruption.whistleblower_leak.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -10
+      resources: {}
+    followup_events: []
+    flags:
+    - whistleblower_leak
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: corruption_security_force_abuse_report
+  event_type: crisis
+  category: corruption
+  priority: 20
+  trigger_conditions: security_actions_without_oversight >= 2 in last 3 turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.security_force_abuse.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -5
+        insurgency: 3
+        global_legitimacy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - security_force_abuse_reported
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: corruption_ghost_aid_diversion
+  event_type: crisis
+  category: corruption
+  priority: 25
+  trigger_conditions: humanitarian_aid_spend_high == true AND oversight_level.level
+    == 'none'
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.ghost_aid.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -3
+        insurgency: 2
+        global_legitimacy: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - ghost_aid_diversion_active
+  penalty_bundle:
+    effects:
+      metrics:
+        global_legitimacy: -2
+      resources: {}
+    flags:
+    - ghost_aid_escalated
+- event_id: corruption_exposure_arc
+  event_type: crisis
+  category: corruption
+  priority: 15
+  trigger_conditions: corruption_flags_count_act >= 2 OR audit_status.status == 'failed'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.exposure.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -6
+        regional_synergy: -3
+      resources: {}
+    followup_events:
+    - external_donor_conditionality
+    flags:
+    - corruption_exposure_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: governance_crisis
+  event_type: crisis
+  category: governance
+  priority: 10
+  trigger_conditions: resources.political_capital < 35 AND corruption_unresolved ==
+    true
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: true
+  narrative_text_key: loc.event.governance.crisis.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -6
+        regional_synergy: -4
+        stability: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - governance_crisis_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: audit_initiated
+  event_type: crisis
+  category: corruption
+  priority: 30
+  trigger_conditions: audit_status.status == 'pending'
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.audit_started.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: 2
+      resources: {}
+    followup_events:
+    - integrity_framework_enacted
+    - audit_failed
+    flags:
+    - audit_status_pending
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: audit_failed
+  event_type: crisis
+  category: corruption
+  priority: 15
+  trigger_conditions: audit_status.status == 'failed'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.audit_failed.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -6
+      resources: {}
+    followup_events:
+    - corruption_exposure_arc
+    - external_donor_conditionality
+    flags:
+    - audit_status_failed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: integrity_framework_enacted
+  event_type: crisis
+  category: governance
+  priority: 40
+  trigger_conditions: integrity_framework_active == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.integrity_framework.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: 8
+        civilian_support: 2
+      resources: {}
+    followup_events: []
+    flags:
+    - integrity_framework_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: climate_drought_shock_regional
+  event_type: crisis
+  category: climate
+  priority: 10
+  trigger_conditions: turn == 12 AND climate_actions_in_act2 < 2
+  trigger_turn: 12
+  deadline_turn: 12
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.climate.drought_shock.title
+  outcomes:
+    effects:
+      metrics:
+        stability: -4
+        civilian_support: -4
+        insurgency: 2
+      resources: {}
+    followup_events:
+    - humanitarian_idp_surge
+    flags:
+    - climate_shock_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: humanitarian_idp_surge
+  event_type: crisis
+  category: humanitarian
+  priority: 15
+  trigger_conditions: climate_shock_active == true OR zone.threat_level >= 75
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.humanitarian.idp_surge.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -3
+        stability: -2
+      resources: {}
+    followup_events:
+    - humanitarian_corridor_opening
+    - humanitarian_corridor_failure
+    flags:
+    - idp_surge_active
+  penalty_bundle:
+    effects:
+      metrics:
+        civilian_support: -2
+        global_legitimacy: -2
+      resources: {}
+    flags:
+    - idp_surge_escalated
+- event_id: humanitarian_corridor_opening
+  event_type: crisis
+  category: humanitarian
+  priority: 45
+  trigger_conditions: idp_zones_stabilized >= 2
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.humanitarian.corridor_open.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: 4
+        global_legitimacy: 4
+      resources: {}
+    followup_events: []
+    flags:
+    - corridor_open
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: humanitarian_corridor_failure
+  event_type: crisis
+  category: humanitarian
+  priority: 20
+  trigger_conditions: idp_surge_escalated == true
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: true
+  narrative_text_key: loc.event.humanitarian.corridor_fail.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -4
+        global_legitimacy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - corridor_failed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_ecowas_coordination_summit
+  event_type: narrative
+  category: coalition
+  priority: 5
+  trigger_conditions: turn == 7
+  trigger_turn: 7
+  deadline_turn: 7
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.dialogue.ecowas_summit.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - coalition_compact_success
+    - coalition_compact_failure
+    flags:
+    - ecowas_summit_held
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_aes_consolidation_announcement
+  event_type: crisis
+  category: coalition
+  priority: 20
+  trigger_conditions: actor_sentiments.regional_ecowas.relationship_score < 45 OR
+    junta_allied_count >= 2
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.aes_consolidation.title
+  outcomes:
+    effects:
+      metrics:
+        regional_synergy: -5
+        global_legitimacy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - aes_consolidation_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_regional_security_pact_signed
+  event_type: crisis
+  category: coalition
+  priority: 40
+  trigger_conditions: actor_sentiments.regional_ecowas.relationship_score > 60 AND
+    turn >= 8
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.security_pact.title
+  outcomes:
+    effects:
+      metrics:
+        regional_synergy: 5
+        stability: 2
+        global_legitimacy: 2
+      resources: {}
+    followup_events: []
+    flags:
+    - ecowas_security_pact_signed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_diplomatic_friction
+  event_type: crisis
+  category: coalition
+  priority: 30
+  trigger_conditions: global_legitimacy < 45
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.diplomatic_friction.title
+  outcomes:
+    effects:
+      metrics:
+        regional_synergy: -3
+        global_legitimacy: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - diplomatic_friction_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_international_pressure
+  event_type: crisis
+  category: coalition
+  priority: 25
+  trigger_conditions: turn == 3 AND global_legitimacy < 50
+  trigger_turn: 3
+  deadline_turn: 3
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.international_pressure.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - international_pressure_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_junta_backlash
+  event_type: crisis
+  category: coalition
+  priority: 20
+  trigger_conditions: anti_corruption_monitoring_active == true AND actor_sentiments.junta_burkina_traore.relationship_score
+    < 40
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.junta_backlash.title
+  outcomes:
+    effects:
+      metrics:
+        regional_synergy: -4
+        stability: -2
+        global_legitimacy: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - junta_backlash_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_compact_success
+  event_type: narrative
+  category: coalition
+  priority: 10
+  trigger_conditions: turn == 8 AND coalition_compact == 'success'
+  trigger_turn: 8
+  deadline_turn: 8
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.compact_success.title
+  outcomes:
+    effects:
+      metrics:
+        regional_synergy: 4
+        global_legitimacy: 3
+      resources: {}
+    followup_events: []
+    flags:
+    - coalition_compact_success
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: coalition_compact_failure
+  event_type: narrative
+  category: coalition
+  priority: 10
+  trigger_conditions: turn == 8 AND coalition_compact == 'failure'
+  trigger_turn: 8
+  deadline_turn: 8
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.coalition.compact_failure.title
+  outcomes:
+    effects:
+      metrics:
+        regional_synergy: -4
+        global_legitimacy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - coalition_compact_failure
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: external_wagner_expansion_phase1
+  event_type: crisis
+  category: external
+  priority: 15
+  trigger_conditions: global_legitimacy < 50 AND any_junta_relationship > 60
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.external.wagner_phase1.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -4
+        regional_synergy: -3
+      resources: {}
+    followup_events:
+    - intel_briefing_wagner_influence
+    - external_wagner_expansion_phase2
+    flags:
+    - wagner_expansion_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: external_wagner_expansion_phase2
+  event_type: crisis
+  category: external
+  priority: 10
+  trigger_conditions: wagner_expansion_active == true AND turns_since_phase1 >= 2
+  trigger_turn: 0
+  deadline_turn: null
+  deadline_offset: 2
+  failure_on_deadline: true
+  narrative_text_key: loc.event.external.wagner_phase2.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -5
+        regional_synergy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - wagner_expansion_phase2_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: external_wagner_coexistence_accepted
+  event_type: crisis
+  category: external
+  priority: 20
+  trigger_conditions: wagner_coexistence_accepted == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.external.wagner_coexistence.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -5
+        regional_synergy: -3
+      resources: {}
+    followup_events: []
+    flags:
+    - wagner_coexistence_accepted
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: external_wagner_withdrawal
+  event_type: crisis
+  category: external
+  priority: 40
+  trigger_conditions: wagner_withdrawal_committed == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.external.wagner_withdrawal.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: 6
+        regional_synergy: 4
+      resources: {}
+    followup_events: []
+    flags:
+    - wagner_withdrawal_committed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: external_donor_conditionality
+  event_type: crisis
+  category: external
+  priority: 10
+  trigger_conditions: turn == 15 AND (corruption_flags_count_act >= 2 OR audit_status.status
+    == 'failed' OR global_legitimacy < 45)
+  trigger_turn: 15
+  deadline_turn: 17
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.donor_conditionality.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - external_donor_withdrawal_risk
+    - external_donor_funding_freeze
+    flags:
+    - donor_conditions_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags:
+    - donor_funding_reduced_40
+    - donor_conditions_unmet
+- event_id: external_donor_withdrawal_risk
+  event_type: crisis
+  category: external
+  priority: 10
+  trigger_conditions: donor_confrontation == true
+  trigger_turn: 17
+  deadline_turn: 19
+  deadline_offset: 2
+  failure_on_deadline: false
+  narrative_text_key: loc.event.donor_withdrawal_risk.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -4
+      resources: {}
+    followup_events:
+    - external_donor_funding_freeze
+    flags:
+    - donor_withdrawal_risk
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags:
+    - donor_funding_suspended
+- event_id: external_donor_funding_freeze
+  event_type: crisis
+  category: external
+  priority: 5
+  trigger_conditions: turn == 19 AND donor_conditions_unmet == true
+  trigger_turn: 19
+  deadline_turn: 19
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.event.donor_funding_freeze.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -6
+      resources: {}
+    followup_events: []
+    flags:
+    - donor_funding_suspended
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: external_donor_enhanced_partnership
+  event_type: crisis
+  category: external
+  priority: 45
+  trigger_conditions: donor_compliance_full == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.donor_enhanced_partnership.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: 6
+      resources:
+        budget: 2000000
+    followup_events: []
+    flags:
+    - donor_partnership_enhanced
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: media_corruption_expose_procurement
+  event_type: crisis
+  category: corruption
+  priority: 25
+  trigger_conditions: corruption_procurement_leak_active == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.media_oversight.body_a
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -4
+        civilian_support: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - media_investigation_active
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: media_whistleblower_leak
+  event_type: crisis
+  category: corruption
+  priority: 10
+  trigger_conditions: whistleblower_leak == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.corruption.media_oversight.body_a
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: -10
+      resources: {}
+    followup_events: []
+    flags:
+    - media_whistleblower_leak
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: media_civilian_harm_report
+  event_type: crisis
+  category: security
+  priority: 15
+  trigger_conditions: civilian_harm_incidents >= 1 in last 2 turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.media.civilian_harm.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -5
+        global_legitimacy: -4
+        insurgency: 2
+      resources: {}
+    followup_events: []
+    flags:
+    - media_civilian_harm_report
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: media_positive_humanitarian_coverage
+  event_type: crisis
+  category: humanitarian
+  priority: 50
+  trigger_conditions: humanitarian_corridor_open == true OR humanitarian_major_win
+    == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.media.positive_coverage.title
+  outcomes:
+    effects:
+      metrics:
+        global_legitimacy: 4
+        civilian_support: 3
+      resources: {}
+    followup_events: []
+    flags:
+    - media_positive_coverage
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: media_civil_society_disillusionment
+  event_type: crisis
+  category: humanitarian
+  priority: 30
+  trigger_conditions: civil_society_rejected == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.media.civil_society_disillusionment.title
+  outcomes:
+    effects:
+      metrics:
+        civilian_support: -4
+        global_legitimacy: -2
+      resources: {}
+    followup_events: []
+    flags:
+    - civil_society_disillusionment
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_report_new
+  event_type: intel
+  category: system
+  priority: 60
+  trigger_conditions: intel_report_generated == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.template.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_report_new
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_report_upgraded
+  event_type: intel
+  category: system
+  priority: 60
+  trigger_conditions: intel_report_upgrade == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.report.upgraded.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_report_upgraded
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_report_expired
+  event_type: intel
+  category: system
+  priority: 70
+  trigger_conditions: intel_report_age_turns >= 3
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.report.expired.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_report_expired
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_briefing_adaptive_insurgency
+  event_type: intel
+  category: system
+  priority: 20
+  trigger_conditions: turn == 9
+  trigger_turn: 9
+  deadline_turn: 9
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.briefing.adaptive_insurgency.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_briefing_adaptive_insurgency
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_briefing_wagner_influence
+  event_type: intel
+  category: system
+  priority: 25
+  trigger_conditions: wagner_expansion_active == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.template.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_briefing_wagner_influence
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_briefing_climate_shock_warning
+  event_type: intel
+  category: system
+  priority: 15
+  trigger_conditions: turn == 8 AND climate_actions_in_act2 < 2
+  trigger_turn: 8
+  deadline_turn: 8
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.briefing.climate_warning.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_briefing_climate_shock_warning
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_briefing_border_smuggling
+  event_type: intel
+  category: system
+  priority: 30
+  trigger_conditions: border_fracture_active == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.briefing.border_smuggling.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_briefing_border_smuggling
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: intel_briefing_idp_surge
+  event_type: intel
+  category: system
+  priority: 25
+  trigger_conditions: idp_surge_active == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.intel.briefing.idp_surge.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - intel_briefing_idp_surge
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act1_briefing_opening_crisis
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 1
+  trigger_turn: 1
+  deadline_turn: 1
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.briefing.act1.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act1_briefing_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act1_consequence_of_inaction
+  event_type: narrative
+  category: narrative
+  priority: 5
+  trigger_conditions: turn == 2
+  trigger_turn: 2
+  deadline_turn: 2
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.narrative.act1_consequence.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act1_consequence_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act1_climax_tradeoff
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 4
+  trigger_turn: 4
+  deadline_turn: 4
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.narrative.act1_climax.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act1_climax_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act2_briefing_opening
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 5
+  trigger_turn: 5
+  deadline_turn: 5
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.briefing.act2.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act2_briefing_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act2_climax_compact
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 8
+  trigger_turn: 8
+  deadline_turn: 8
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.narrative.act2_climax.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act2_climax_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act3_briefing_adaptive_insurgency
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 9
+  trigger_turn: 9
+  deadline_turn: 9
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.briefing.act3.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act3_briefing_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_mid_act_accountability_check
+  event_type: narrative
+  category: narrative
+  priority: 5
+  trigger_conditions: turn == 10 AND (stability < 50 OR global_legitimacy < 50 OR
+    civilian_support < 45)
+  trigger_turn: 10
+  deadline_turn: 10
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.narrative.mid_act_check.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - mid_act_check_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act3_compounding_crisis
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 12
+  trigger_turn: 12
+  deadline_turn: 12
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.narrative.act3_compounding.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act3_compounding_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act4_briefing_direction_choice
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 13
+  trigger_turn: 13
+  deadline_turn: 13
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.briefing.act4.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act4_briefing_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act4_consolidation_test
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 16
+  trigger_turn: 16
+  deadline_turn: 16
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.event.narrative.act4_consolidation.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act4_consolidation_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: narrative_act5_briefing_accelerated_clock
+  event_type: narrative
+  category: narrative
+  priority: 1
+  trigger_conditions: turn == 17
+  trigger_turn: 17
+  deadline_turn: 17
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.briefing.act5.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - act5_briefing_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_landing_loaded
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'landing_loaded'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.landing.loaded
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_landing_loaded
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_session_started_new
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'session_started_new'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.action.new_campaign
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_session_started_new
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_session_resumed
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'session_resumed'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.action.continue
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_session_resumed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_telemetry_opt_in_set
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'telemetry_opt_in_set'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.privacy.opt_in
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_telemetry_opt_in_set
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: tutorial_started
+  event_type: tutorial
+  category: ui
+  priority: 80
+  trigger_conditions: turn == 1 AND tutorial_complete == false
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.tutorial.start
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - tutorial_started
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: tutorial_completed
+  event_type: tutorial
+  category: ui
+  priority: 80
+  trigger_conditions: ui_event == 'tutorial_completed'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.action.begin
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - tutorial_complete
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: tutorial_skipped
+  event_type: tutorial
+  category: ui
+  priority: 80
+  trigger_conditions: ui_event == 'tutorial_skipped'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.tutorial.skip
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - tutorial_skipped
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_campaign_start_confirmed
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'campaign_start_confirmed'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.action.begin
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_campaign_start_confirmed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_situation_room_entered
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'situation_room_entered'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.header.actions_remaining.label
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_situation_room_entered
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_action_committed
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'action_committed'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.action.commit
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_action_committed
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_end_turn_clicked
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'end_turn_clicked'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.end_turn.label
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_end_turn_clicked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_act_transition_cutscene_shown
+  event_type: ui
+  category: ui
+  priority: 85
+  trigger_conditions: turn in [4, 8, 12, 16]
+  trigger_turn: 4
+  deadline_turn: 4
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.cutscene.act_transition.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_act_transition_cutscene_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_results_dashboard_shown
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'results_dashboard_shown'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.results.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_results_dashboard_shown
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: ui_leaderboard_opened
+  event_type: ui
+  category: ui
+  priority: 90
+  trigger_conditions: ui_event == 'leaderboard_opened'
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.header.leaderboard
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - ui_leaderboard_opened
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_warning_stability
+  event_type: system
+  category: system
+  priority: 5
+  trigger_conditions: stability <= 24
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.stability_critical
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_warning_stability
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_warning_insurgency
+  event_type: system
+  category: system
+  priority: 5
+  trigger_conditions: insurgency >= 75
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.insurgency_critical
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_warning_insurgency
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_warning_civilian_support
+  event_type: system
+  category: system
+  priority: 5
+  trigger_conditions: civilian_support <= 24
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.civilian_support_critical
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_warning_civilian_support
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_warning_global_legitimacy
+  event_type: system
+  category: system
+  priority: 5
+  trigger_conditions: global_legitimacy <= 24
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.global_legitimacy_critical
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_warning_global_legitimacy
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_warning_regional_synergy
+  event_type: system
+  category: system
+  priority: 5
+  trigger_conditions: regional_synergy <= 24
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.regional_synergy_critical
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_warning_regional_synergy
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_2turn_stability
+  event_type: system
+  category: system
+  priority: 3
+  trigger_conditions: stability <= 24 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.stability_near_fail
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_streak_2turn_stability
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_2turn_insurgency
+  event_type: system
+  category: system
+  priority: 3
+  trigger_conditions: insurgency >= 75 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.insurgency_near_fail
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_streak_2turn_insurgency
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_2turn_civilian_support
+  event_type: system
+  category: system
+  priority: 3
+  trigger_conditions: civilian_support <= 24 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.civilian_support_near_fail
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_streak_2turn_civilian_support
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_2turn_global_legitimacy
+  event_type: system
+  category: system
+  priority: 3
+  trigger_conditions: global_legitimacy <= 24 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.global_legitimacy_near_fail
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_streak_2turn_global_legitimacy
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_2turn_regional_synergy
+  event_type: system
+  category: system
+  priority: 3
+  trigger_conditions: regional_synergy <= 24 for 2 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.regional_synergy_near_fail
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_streak_2turn_regional_synergy
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_3turn_stability
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: stability <= 24 for 3 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_3turn_insurgency
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: insurgency >= 75 for 3 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_3turn_civilian_support
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: civilian_support <= 24 for 3 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_3turn_global_legitimacy
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: global_legitimacy <= 24 for 3 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_streak_3turn_regional_synergy
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: regional_synergy <= 24 for 3 consecutive turns
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_time_months_warning
+  event_type: system
+  category: system
+  priority: 5
+  trigger_conditions: resources.time_months <= 6
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.time_months_low
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - time_months_low_warning
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_time_months_exhausted_loss
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: resources.time_months <= 0 AND turn < 20
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_failure_on_deadline_triggered
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: early_fail_triggered == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: true
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_mandate_revoked
+    flags:
+    - mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: system_critical_zone_persistence_detected
+  event_type: system
+  category: system
+  priority: 2
+  trigger_conditions: turn == 20 AND critical_zone_persists == true
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.warning.critical_zone_persistence
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - critical_zone_persistence
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: endgame_evaluation_start
+  event_type: system
+  category: system
+  priority: 1
+  trigger_conditions: turn == 20
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.results.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - endgame_outcome_strategic_success
+    - endgame_outcome_fragile_success
+    - endgame_outcome_stalemate
+    - endgame_outcome_regional_setback
+    - endgame_outcome_mandate_revoked
+    - scoring_strategic_score_calculated
+    flags:
+    - endgame_evaluation_start
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: endgame_outcome_strategic_success
+  event_type: narrative
+  category: system
+  priority: 1
+  trigger_conditions: turn == 20 AND thresholds_met_all == true AND critical_metrics_in_t19_t20
+    == false AND critical_zone_persists == false
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ending.success.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - scoring_strategic_score_calculated
+    flags:
+    - ending_strategic_success
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: endgame_outcome_fragile_success
+  event_type: narrative
+  category: system
+  priority: 2
+  trigger_conditions: turn == 20 AND thresholds_met_all == true AND (critical_metrics_in_t19_t20
+    == true OR any_positive_metric_high_range == true)
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ending.success.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - scoring_strategic_score_calculated
+    flags:
+    - ending_fragile_success
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: endgame_outcome_stalemate
+  event_type: narrative
+  category: system
+  priority: 3
+  trigger_conditions: turn == 20 AND thresholds_missed_count in [1, 2] AND critical_zone_persists
+    == false
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ending.stalemate.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - scoring_strategic_score_calculated
+    flags:
+    - ending_stalemate
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: endgame_outcome_regional_setback
+  event_type: narrative
+  category: system
+  priority: 4
+  trigger_conditions: turn == 20 AND (thresholds_missed_count >= 3 OR critical_zone_persists
+    == true)
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ending.regional_setback.title
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - scoring_strategic_score_calculated
+    flags:
+    - ending_regional_setback
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: endgame_outcome_mandate_revoked
+  event_type: narrative
+  category: system
+  priority: 1
+  trigger_conditions: early_fail_triggered == true
+  trigger_turn: 0
+  deadline_turn: 0
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ending.fail.diallo.line_001a
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - scoring_strategic_score_calculated
+    flags:
+    - ending_mandate_revoked
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: scoring_strategic_score_calculated
+  event_type: system
+  category: system
+  priority: 10
+  trigger_conditions: turn == 20 AND endgame_evaluated == true
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.results.score
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events:
+    - scoring_strategic_score_v2_calculated
+    flags:
+    - strategic_score_calculated
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
+- event_id: scoring_strategic_score_v2_calculated
+  event_type: system
+  category: system
+  priority: 11
+  trigger_conditions: turn == 20 AND endgame_evaluated == true
+  trigger_turn: 20
+  deadline_turn: 20
+  deadline_offset: null
+  failure_on_deadline: false
+  narrative_text_key: loc.ui.results.score_v2
+  outcomes:
+    effects:
+      metrics: {}
+      resources: {}
+    followup_events: []
+    flags:
+    - strategic_score_v2_calculated
+  penalty_bundle:
+    effects:
+      metrics: {}
+      resources: {}
+    flags: []
