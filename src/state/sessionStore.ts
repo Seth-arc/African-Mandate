@@ -9,11 +9,8 @@ import {
 } from '../services/authService'
 import {
   listCloudSessions,
-  listLocalSessions,
   loadCloudSessionSnapshot,
-  loadLocalSessionSnapshot,
   saveCloudSessionSnapshot,
-  saveLocalSessionSnapshot,
   type SaveMode,
   type SaveReason,
   type SessionSummary,
@@ -41,6 +38,8 @@ interface SessionStoreState {
   loading: boolean
   saving: boolean
   error: string | null
+  entry_gate_active: boolean
+  entry_gate_confirmed: boolean
   auth_mode: AuthMode
   user_id: string | null
   user_email: string | null
@@ -50,6 +49,8 @@ interface SessionStoreState {
   sessions: SessionSummary[]
   initialize: () => Promise<void>
   dispose: () => void
+  beginEntryGate: () => void
+  confirmGuestEntry: () => Promise<void>
   refreshSessions: () => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOutToGuest: () => Promise<void>
@@ -77,12 +78,14 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
   loading: false,
   saving: false,
   error: null,
+  entry_gate_active: false,
+  entry_gate_confirmed: true,
   auth_mode: 'guest',
   user_id: null,
   user_email: null,
   user_display_name: null,
   active_session_id: null,
-  autosave_enabled: true,
+  autosave_enabled: false,
   sessions: [],
 
   initialize: async () => {
@@ -90,10 +93,19 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
     try {
       const identity = await getCurrentIdentity()
       applyIdentity(set, identity)
+      set({ autosave_enabled: identity.auth_mode === 'authenticated' })
 
       if (!authSubscriptionDisposer) {
         authSubscriptionDisposer = subscribeAuthChanges((nextIdentity) => {
-          applyIdentity(set, nextIdentity)
+          set((state) => ({
+            auth_mode: nextIdentity.auth_mode,
+            user_id: nextIdentity.user_id,
+            user_email: nextIdentity.email,
+            user_display_name: nextIdentity.display_name,
+            autosave_enabled: nextIdentity.auth_mode === 'authenticated',
+            entry_gate_confirmed:
+              nextIdentity.auth_mode === 'authenticated' ? true : state.entry_gate_confirmed,
+          }))
           void get().refreshSessions()
         })
       }
@@ -116,13 +128,38 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
     authSubscriptionDisposer = null
   },
 
+  beginEntryGate: () => {
+    set((state) => ({
+      entry_gate_active: true,
+      entry_gate_confirmed: state.auth_mode === 'authenticated',
+      error: null,
+    }))
+  },
+
+  confirmGuestEntry: async () => {
+    set({
+      entry_gate_confirmed: true,
+      autosave_enabled: false,
+      sessions: [],
+      active_session_id: null,
+      error: null,
+    })
+    await get().refreshSessions()
+  },
+
   refreshSessions: async () => {
     const state = get()
     try {
-      const sessions =
-        state.auth_mode === 'authenticated' && state.user_id
-          ? await listCloudSessions(state.user_id)
-          : listLocalSessions()
+      if (state.auth_mode !== 'authenticated' || !state.user_id) {
+        set({
+          sessions: [],
+          active_session_id: null,
+          error: null,
+        })
+        return
+      }
+
+      const sessions = await listCloudSessions(state.user_id)
 
       const activeSessionStillExists =
         state.active_session_id !== null &&
@@ -156,7 +193,12 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
     try {
       await signOut()
       applyIdentity(set, guestIdentity())
-      set({ active_session_id: null })
+      set((state) => ({
+        active_session_id: null,
+        autosave_enabled: false,
+        sessions: [],
+        entry_gate_confirmed: state.entry_gate_active ? false : state.entry_gate_confirmed,
+      }))
       await get().refreshSessions()
     } catch (error) {
       set({ error: messageFromError(error) })
@@ -170,26 +212,23 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
     set({ saving: true, error: null })
     try {
       const state = get()
+      if (state.entry_gate_active && !state.entry_gate_confirmed) {
+        throw new Error('Choose sign-in or continue as guest before saving sessions.')
+      }
+      if (state.auth_mode !== 'authenticated' || !state.user_id) {
+        throw new Error('Sign in with Google to save sessions.')
+      }
       const currentSummary = state.sessions.find((session) => session.session_id === state.active_session_id)
       const sessionName = currentSummary?.session_name ?? null
 
-      const summary =
-        state.auth_mode === 'authenticated' && state.user_id
-          ? await saveCloudSessionSnapshot({
-              state: runtimeState,
-              session_id: state.active_session_id,
-              session_name: sessionName,
-              user_id: state.user_id,
-              reason,
-              mode,
-            })
-          : saveLocalSessionSnapshot({
-              state: runtimeState,
-              session_id: state.active_session_id,
-              session_name: sessionName,
-              reason,
-              mode,
-            })
+      const summary = await saveCloudSessionSnapshot({
+        state: runtimeState,
+        session_id: state.active_session_id,
+        session_name: sessionName,
+        user_id: state.user_id,
+        reason,
+        mode,
+      })
 
       set({ active_session_id: summary.session_id })
       await get().refreshSessions()
@@ -202,7 +241,9 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
   },
 
   autosaveState: async (runtimeState, reason) => {
-    if (!get().autosave_enabled) return
+    const state = get()
+    if (state.auth_mode !== 'authenticated' || !state.user_id) return
+    if (!state.autosave_enabled) return
     await get().saveState(runtimeState, 'auto', reason)
   },
 
@@ -210,10 +251,13 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const state = get()
-      const nextState =
-        state.auth_mode === 'authenticated' && state.user_id
-          ? await loadCloudSessionSnapshot(sessionId, state.user_id, baseState)
-          : loadLocalSessionSnapshot(sessionId, baseState)
+      if (state.entry_gate_active && !state.entry_gate_confirmed) {
+        throw new Error('Choose sign-in or continue as guest before loading sessions.')
+      }
+      if (state.auth_mode !== 'authenticated' || !state.user_id) {
+        throw new Error('Sign in with Google to load sessions.')
+      }
+      const nextState = await loadCloudSessionSnapshot(sessionId, state.user_id, baseState)
 
       set({ active_session_id: sessionId })
       await get().refreshSessions()
@@ -231,11 +275,12 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
   },
 
   setAutosaveEnabled: (enabled) => {
-    set({ autosave_enabled: enabled })
+    set((state) => ({
+      autosave_enabled: state.auth_mode === 'authenticated' ? enabled : false,
+    }))
   },
 
   clearError: () => {
     set({ error: null })
   },
 }))
-

@@ -1,0 +1,76 @@
+Original prompt: Look at the gameplay-interface-final.html and rework the loading modal flow
+
+- Initialized progress tracking for this turn.
+- Continuing from prior implementation that introduced onboarding loading modal state and sequencing.
+- Implemented onboarding flow auto-advance: when first-time onboarding is pending and access is confirmed, App now closes session_manager automatically so loading -> mission_brief can trigger.
+- Kept guest confirmation non-destructive and status-based in the session modal to avoid racing the auto-close effect.
+- Fixed race: onboarding loading is no longer skipped before mission brief.
+- Ran `npm test -- --run`: 49 tests passed.
+- Ran `npm run typecheck`: fails due pre-existing unused locals in `src/map/MapView.tsx` (TS6133).
+- Browser validation (Playwright direct check): after clicking "Continue as guest", modal sequence is now `Initializing` loading state first, then `Mission brief` after ~2.6s.
+- Captures: `output/web-game/entry-video/shot-0.png`, `output/web-game/flow-verify.png`, `output/web-game/manual-flow-check.png`.
+- Re-ran `npm test -- --run` after final adjustment: still 49/49 passing.
+- Re-ran `npm run typecheck`: same pre-existing TS6133 failures in `src/map/MapView.tsx` only.
+- Fixed full-page game transition issue in landing page: `body.game-active .landing-shell` now uses `display: none` so hidden landing content no longer occupies scroll height.
+- Added `body.game-active { overflow: hidden; }` and invoke `resetLandingScrollPosition()` inside `activateGameInterface()` to keep game viewport anchored at top.
+- Improved Enter Arena transition smoothness in `index.html` with staged classes and prebuffering:
+  - Added `.landing-shell.entering` visual fade/blur (without instant visibility cut).
+  - Added `.intro-video-overlay.preparing` state and smoother video fade/scale-in.
+  - Added loading-text fade class and loading button state.
+  - Added video warmup on load/hover/focus/touch.
+  - Added wait-for-ready gating before full video reveal to avoid abrupt black cuts.
+- Validated with Playwright client captures:
+  - `output/web-game/entry-smoothness/shot-0.png` (video appears smoothly)
+  - `output/web-game/entry-smoothness-fast2/shot-0.png` (immediate post-click frame)
+- Reworked Session Manager access gate to match reference onboarding auth card pattern (Secure Access, Login/Sign Up fields/actions, Google CTA, Continue as Guest).
+- Enforced strict guest persistence policy in session store:
+  - guest sessions list now always empty,
+  - guest save/load calls throw sign-in-required errors,
+  - guest autosave disabled and blocked.
+- Added guest-mode post-confirmation panel text clarifying save/load is disabled.
+- Validation:
+  - `npm test -- --run` passed (49/49).
+  - `npm run typecheck` still only fails due pre-existing TS6133 in `src/map/MapView.tsx`.
+  - Playwright capture of auth modal: `output/web-game/session-auth-modal/shot-0.png`.
+  - Playwright check after guest confirm reported no save/load/autosave controls and guest restriction text present; screenshot: `output/web-game/session-auth-guest-confirmed.png`.
+- Adjusted access-gate modal backdrop to fully opaque black and made entry-gate session modal non-dismissible via backdrop/close button until access mode is selected.
+- Verified with Playwright capture: `output/web-game/session-auth-opaque/shot-0.png` now hides gameplay interface completely.
+- Fixed landing hero asset reliability in `index.html`:
+  - switched hero image source to `/img/hero.png` (public-root path),
+  - added preload hint (`<link rel="preload" as="image" href="/img/hero.png">`),
+  - added eager/high-priority image loading attributes,
+  - added JS fallback to `img/hero.png` on load error.
+- Verified endpoint health on dev server: `http://localhost:5179/img/hero.png` returns 200 image/png.
+- Diagnosed hero disappearing on scroll: `.landing-shell` had `will-change: transform` applied permanently, which changed containing block behavior and caused fixed `.viewport` to scroll away.
+- Fix: moved `will-change` from `.landing-shell` to `.landing-shell.entering` only.
+- Also kept safer camera pan values and larger hero overscan to avoid edge exposure.
+- Verified with Playwright: `.viewport` top stays `0` while scrolling and hero remains visible across all sections (`output/web-game/hero-scroll-debug-fixed2/shot-0..4.png`).
+- Addressed scroll/image alignment regression:
+  - restored hero overscan and camera keyframes to match reference framing profile (subtle drift; desktop/mobile values from index-enhanced),
+  - kept the fixed-viewport bugfix (`will-change` only on `.landing-shell.entering`).
+- Verified via Playwright multi-scroll capture: `output/web-game/hero-scroll-debug-aligned/shot-0..4.png` and viewport top remains 0 while scrolling.
+- Rebalanced scroll camera path to include stronger vertical motion (desktop and mobile):
+  - desktop init now `scale: 1.32, xPercent: -5, yPercent: -10`
+  - keyframes now move through y `-1 -> 7 -> 12 -> 0`
+  - mobile init now `scale: 1.48, xPercent: -2, yPercent: -12`
+  - mobile keyframes now move through y `-3 -> 6 -> 11 -> 0`
+- Verified via Playwright captures: `output/web-game/hero-scroll-debug-vertical/shot-0..4.png`.
+- Fixed viewport remains stable during scroll (`vpTop` stayed 0 at sampled points).
+- New request: make landing scroll storytelling focus on one character/detail per section.
+- Reworked camera rig in `index.html` to an explicit 5-beat shot progression for desktop/mobile:
+  - right shoulder close-up,
+  - central striped-cap figure,
+  - left envoy profile,
+  - lower negotiation corridor,
+  - full reveal.
+- Reduced generic lateral drift by adding stronger zoom and vertical keyframe deltas per beat.
+- Validation runs:
+  - Playwright skill client run (local copy) for scroll-step capture: `output/web-game/story-scroll-check*`.
+  - Deterministic section snapshots via Playwright script at each viewport section: `output/web-game/story-sections-current`, `...-updated`, `...-updated-v2`, `...-updated-v3`, `...-updated-v4`.
+- Latest validated sequence: `output/web-game/story-sections-updated-v4/section-1..5.png`.
+- User follow-up: make direction changes smoother during landing scroll camera movement.
+- Updated camera timelines in `index.html`:
+  - increased ScrollTrigger scrub from `1.5` to `2.1` (desktop + mobile),
+  - replaced hard direction flips (`ease: none`) with eased transitions (`sine.inOut`),
+  - inserted intermediate bridge keyframes between major beats to create curved motion rather than abrupt vector changes.
+- Validation: ran deterministic section screenshot pass at `output/web-game/story-sections-smooth-v1/section-1..5.png`.

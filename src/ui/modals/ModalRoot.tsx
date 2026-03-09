@@ -54,6 +54,7 @@ const MODAL_STYLE = {
 } as const
 
 function modalTitle(modal: ModalKind): string {
+  if (modal === 'onboarding_loading') return 'Initializing'
   if (modal === 'session_manager') return 'Sessions'
   if (modal === 'action_config') return 'Take Action'
   if (modal === 'territory_overview') return 'Territory overview'
@@ -2098,9 +2099,33 @@ const compactButtonStyle = {
   cursor: 'pointer',
 } as const
 
+function OnboardingLoadingBody(): ReactNode {
+  return (
+    <div className="onboarding-loading-shell">
+      <div className="onboarding-loading-kicker">African Union Command Network</div>
+      <div className="onboarding-loading-title">Establishing Theater Link</div>
+      <div className="onboarding-loading-subtitle">Calibrating mandate systems and regional intelligence feeds...</div>
+      <div className="onboarding-loading-bar">
+        <span />
+      </div>
+      <div className="onboarding-loading-checklist">
+        <span>Authenticating guest operations channel</span>
+        <span>Syncing Sahel territory telemetry</span>
+        <span>Preparing mission command overlays</span>
+      </div>
+      <div className="onboarding-loading-dots">
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
+  )
+}
+
 function ModalBody(): ReactNode {
   const modal = useUiStore((s) => s.modal)
 
+  if (modal === 'onboarding_loading') return <OnboardingLoadingBody />
   if (modal === 'session_manager') {
     return <SessionManagerBody />
   }
@@ -2131,6 +2156,32 @@ function ModalBody(): ReactNode {
 export function ModalRoot(): ReactNode {
   const modal = useUiStore((s) => s.modal)
   const closeModal = useUiStore((s) => s.closeModal)
+  const entryGateRequiresChoice = useSessionStore((s) => s.entry_gate_active && !s.entry_gate_confirmed)
+  const isBlockingEntryGate = modal === 'session_manager' && entryGateRequiresChoice
+  const isBlockingLoading = modal === 'onboarding_loading'
+  const isBlockingModal = isBlockingLoading || isBlockingEntryGate
+  const backdropStyle = isBlockingModal ? { ...BACKDROP_STYLE, background: '#000' } : BACKDROP_STYLE
+  const modalStyle = isBlockingEntryGate
+    ? {
+        ...MODAL_STYLE,
+        width: 'min(560px, 92vw)',
+        maxHeight: '90vh',
+        overflow: 'hidden',
+      }
+    : isBlockingLoading
+      ? {
+          ...MODAL_STYLE,
+          width: 'min(640px, 92vw)',
+          maxHeight: '88vh',
+          overflow: 'hidden',
+          background: 'linear-gradient(180deg, rgba(10,10,10,0.96), rgba(6,6,6,0.98))',
+          border: '1px solid rgba(212, 175, 55, 0.28)',
+        }
+      : MODAL_STYLE
+  const modalContentClassName = `modal-content${isBlockingLoading ? ' modal-content-loading' : ''}${
+    isBlockingEntryGate ? ' modal-content-entry-gate' : ''
+  }`
+  const heading = modal === 'session_manager' && entryGateRequiresChoice ? 'Secure Access' : modalTitle(modal)
 
   if (modal === 'none') return null
 
@@ -2139,30 +2190,39 @@ export function ModalRoot(): ReactNode {
       className="modal-backdrop"
       role="dialog"
       aria-modal="true"
-      style={BACKDROP_STYLE}
+      style={backdropStyle}
       onClick={(event) => {
+        if (isBlockingModal) return
         if (event.target === event.currentTarget) closeModal()
       }}
     >
-      <div className="modal-content" style={MODAL_STYLE} onClick={(event) => event.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem' }}>{modalTitle(modal)}</h2>
-          <button
-            type="button"
-            onClick={closeModal}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '1.25rem',
-              lineHeight: 1,
-            }}
-            aria-label="Close"
-          >
-            x
-          </button>
-        </div>
+      <div
+        className={modalContentClassName}
+        style={modalStyle}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {!isBlockingLoading && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem' }}>{heading}</h2>
+            {!isBlockingModal && (
+              <button
+                type="button"
+                onClick={closeModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '1.25rem',
+                  lineHeight: 1,
+                }}
+                aria-label="Close"
+              >
+                x
+              </button>
+            )}
+          </div>
+        )}
         <ModalBody />
       </div>
     </div>

@@ -1,19 +1,1143 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>African Mandate — Sahel Arena</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>African Mandate</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="image" href="/img/hero.png">
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #050505;
+            --text: #ffffff;
+            --gold: #D4AF37;
+            --sahel: #8E4F17;
+            --alert: #A83232;
+            --overlay-bg: rgba(5, 5, 5, 0.95);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #root {
+            min-height: 100vh;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.7s ease;
+        }
+
+        body.game-active #root {
+            display: block;
+            opacity: 1;
+        }
+
+        .landing-shell {
+            transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease, filter 0.8s ease;
+        }
+
+        .landing-shell.entering {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.015);
+            filter: blur(6px);
+            will-change: opacity, transform, filter;
+        }
+
+        body.game-active .landing-shell {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            display: none;
+        }
+
+        body.game-active {
+            overflow: hidden;
+        }
+
+        .intro-video-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1500;
+            background: #000;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.6s ease, visibility 0.6s ease, background-color 0.5s ease;
+            will-change: opacity;
+        }
+
+        .intro-video-overlay.preparing {
+            opacity: 0.55;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .intro-video-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .intro-video-overlay.leaving {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-video-overlay.fade-to-black {
+            background: #000;
+        }
+
+        .intro-video-overlay.fade-to-black .intro-video {
+            opacity: 0;
+            transform: scale(1.03);
+            filter: brightness(0.24) saturate(0.85) blur(1.5px);
+        }
+
+        .intro-video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            opacity: 0;
+            transform: scale(1.02);
+            transition: opacity 0.75s ease, transform 1.2s ease, filter 0.55s ease;
+            will-change: opacity, transform, filter;
+            filter: brightness(0.88) saturate(1.02);
+        }
+
+        .intro-video-overlay.ready .intro-video {
+            opacity: 1;
+            transform: scale(1);
+            filter: brightness(1) saturate(1.04);
+        }
+
+        .intro-video-loading {
+            position: absolute;
+            left: 50%;
+            bottom: 8vh;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+            opacity: 1;
+            transition: opacity 0.25s ease;
+        }
+
+        .intro-video-loading.hidden {
+            opacity: 0;
+        }
+
+        .cta-btn.is-loading {
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        /* --- CUSTOM SCROLLBAR --- */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--sahel);
+            border-radius: 2px;
+        }
+
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: var(--sahel) transparent;
+        }
+
+        /* --- UI OVERLAY (Restored from CSS definitions) --- */
+        .ui-header {
+            position: fixed;
+            top: 2rem;
+            left: 3rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            mix-blend-mode: difference;
+            pointer-events: none;
+            /* Let clicks pass through to content */
+        }
+
+        .ui-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin: 0;
+            color: #fff;
+        }
+
+        .ui-status {
+            font-size: 0.7rem;
+            color: var(--gold);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--alert);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* --- VIEWPORT --- */
+        .viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            will-change: transform;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Optimization: Changed from div background to img tag for better control */
+        .hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Ensure the image is large enough to be panned without showing edges */
+            min-width: 120vw;
+            min-height: 120vh;
+        }
+
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 3;
+            /* Optimized grain: usually lighter to load via CSS radial gradients if possible, 
+               but kept SVG for specific texture preference. */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* --- CONTENT TRACK --- */
+        .track {
+            position: relative;
+            z-index: 10;
+        }
+
+        .section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 8vw;
+            box-sizing: border-box;
+        }
+
+        .content-box {
+            max-width: 650px;
+            mix-blend-mode: difference;
+            color: #fff;
+        }
+
+        /* Restored .label usage */
+        .label {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.95rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            color: var(--gold);
+            font-weight: 700;
+            opacity: 0;
+            /* Initial state for GSAP */
+        }
+
+        .label::before {
+            content: '';
+            width: 40px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        /* Specific override for white labels if needed */
+        .label.dark {
+            color: #333;
+        }
+
+        .label.dark::before {
+            background: #333;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            line-height: 0.95;
+            margin: 0 0 2rem 0;
+            font-weight: 400;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        .mask-line {
+            display: block;
+            overflow: hidden;
+        }
+
+        .mask-line.subtitle {
+            font-size: 0.6em;
+            margin-top: 0.5rem;
+        }
+
+        .title-divider {
+            display: block;
+            width: 60px;
+            height: 2px;
+            background: var(--sahel);
+            margin: 1rem auto;
+        }
+
+        .mask-inner {
+            display: block;
+            transform: translateY(110%);
+        }
+
+        p {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(20px);
+            color: #ffffff;
+            font-weight: 300;
+            margin: 0;
+            max-width: 550px;
+        }
+
+        strong {
+            color: #fff;
+            font-weight: 800;
+        }
+
+        /* Layout Positioning */
+        .left-align {
+            justify-content: flex-start;
+        }
+
+        .right-align {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .right-align .label {
+            flex-direction: row-reverse;
+        }
+
+        .center-align {
+            justify-content: center;
+            text-align: center;
+        }
+
+        .center-align .label {
+            justify-content: center;
+        }
+
+        .center-align .label::before {
+            width: 20px;
+        }
+
+        .center-align .label::after {
+            content: '';
+            width: 20px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        .center-align p {
+            margin: 0 auto;
+        }
+
+        .center-align .button-group {
+            justify-content: center;
+        }
+
+        /* BUTTONS */
+        .button-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 3.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            justify-content: inherit;
+        }
+
+        .cta-btn {
+            padding: 1rem 2.5rem;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 160px;
+            background: transparent;
+        }
+
+        /* Accessibility: Focus states */
+        .cta-btn:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 4px;
+        }
+
+        .cta-btn.primary {
+            background: #fff;
+            border: 2px solid #fff;
+            color: #000;
+        }
+
+        .cta-btn.primary:hover {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .cta-btn.secondary {
+            border: 2px solid #fff;
+            color: #fff;
+        }
+
+        .cta-btn.secondary:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--overlay-bg);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            max-width: 600px;
+            width: 90%;
+            padding: 4rem;
+            position: relative;
+            transform: translateY(30px) scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            border-color: var(--gold);
+        }
+
+        .modal-close::before,
+        .modal-close::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 1px;
+            background: #fff;
+            transition: background 0.3s ease;
+        }
+
+        .modal-close::before {
+            transform: rotate(45deg);
+        }
+
+        .modal-close::after {
+            transform: rotate(-45deg);
+        }
+
+        .modal-close:hover::before,
+        .modal-close:hover::after {
+            background: var(--gold);
+        }
+
+        .modal-label {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .modal-label::before {
+            content: '';
+            width: 30px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            line-height: 1.1;
+            margin: 0 0 1.5rem 0;
+            font-weight: 400;
+            color: #fff;
+        }
+
+        .modal-divider {
+            width: 50px;
+            height: 2px;
+            background: var(--gold);
+            margin: 2rem 0;
+        }
+
+        .modal-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #aaa;
+            margin: 0 0 1rem 0;
+            opacity: 1;
+        }
+
+        .modal-text strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .ui-header {
+                top: 1.5rem;
+                left: 1.5rem;
+            }
+
+            h2 {
+                font-size: 3rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .section {
+                padding: 0 6vw;
+                justify-content: flex-start;
+            }
+
+            /* Alignments collapse to left on mobile */
+            .right-align,
+            .center-align {
+                text-align: left;
+                justify-content: flex-start;
+            }
+
+            .right-align .label,
+            .center-align .label {
+                justify-content: flex-start;
+                flex-direction: row;
+            }
+
+            .center-align .label::after {
+                display: none;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .modal {
+                padding: 2rem;
+            }
+            .modal-credit {
+    margin-top: 3rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    opacity: 0.8;
+}
+        }
+    </style>
+</head>
+
+<body>
+    <div class="landing-shell" id="landingShell">
+
+
+    <div class="viewport">
+        <div class="image-container" id="cam">
+            <img id="heroImage" src="/img/hero.png" alt="Sahel Desert Landscape" class="hero-img" loading="eager" fetchpriority="high" decoding="async">
+        </div>
+        <div class="grain"></div>
+    </div>
+
+    <div class="track">
+
+        <section class="section left-align">
+            <div class="content-box">
+                <div class="label">01 // The Situation</div>
+                <h2>
+                    <span class="mask-line"><span class="mask-inner">State of</span></span>
+                    <span class="mask-line"><span class="mask-inner">Délitement</span></span>
+                </h2>
+                <p>The ink on the map no longer reflects the ground. Insurgencies control the trade routes. Climate erodes the arable land. The state is retreating, leaving a three-million-square-kilometer vacuum.</p>
+            </div>
+        </section>
+
+        <section class="section left-align">
+            <div class="content-box">
+                <div class="label">02 // The Players</div>
+                <h2>
+                    <span class="mask-line"><span class="mask-inner">Transactional</span></span>
+                    <span class="mask-line"><span class="mask-inner">Power</span></span>
+                </h2>
+                <p>Transitional governments demand legitimacy. Non-state actors control the resources. Foreign proxies fill the voids left by retreating Western forces.</p>
+            </div>
+        </section>
+
+        <section class="section right-align">
+            <div class="content-box">
+                <div class="label">03 // The Stakes</div>
+                <h2>
+                    <span class="mask-line"><span class="mask-inner">Collateral</span></span>
+                    <span class="mask-line"><span class="mask-inner">Geography</span></span>
+                </h2>
+                <p>Policy failures compound into humanitarian collapse. <strong>11 million
+                        civilians</strong> are caught between expanding deserts and expanding conflicts. If the Sahel breaks, the shockwaves will not respect international borders.</p>
+            </div>
+        </section>
+
+        <section class="section center-align">
+            <div class="content-box">
+                <div class="label">04 // The Strategy</div>
+                <h2>
+                    <span class="mask-line"><span class="mask-inner">The Limits</span></span>
+                    <span class="mask-line"><span class="mask-inner">of Force</span></span>
+                </h2>
+                <p>Kinetic operations secure territory, but they cannot govern it. You cannot airstrike a drought. Stability will require unpalatable compromises across security, economics, and climate policy.</p>
+            </div>
+        </section>
+
+        <section class="section center-align">
+            <div class="content-box">
+                <div class="label">05 // Mission Start</div>
+                <h2>
+                    <span class="mask-line"><span class="mask-inner">African Mandate</span></span>
+                    <span class="title-divider"></span>
+                    <span class="mask-line subtitle"><span class="mask-inner">Sahel Arena</span></span>
+                </h2>
+                <p>A signature in Addis Ababa cannot stop the dust.</p>
+
+                <div class="button-group">
+                    <button class="cta-btn primary" id="enterArenaBtn">Enter the Arena</button>
+                    <button class="cta-btn secondary" id="aboutBtn">About</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="modal-overlay" id="aboutModal">
+<div class="modal">
+    <button class="modal-close" id="modalClose" aria-label="Close Modal"></button>
+    <span class="modal-label">Briefing // Experience Overview</span>
+    <h3 class="modal-title">African Mandate:<br>Sahel Arena</h3>
+    <div class="modal-divider"></div>
+    
+    <p class="modal-text">
+        A geopolitical simulation of state fragility and asymmetric crisis. You have been appointed as the African Union Special Envoy to the Sahel. Your mandate is stabilization; your reality is a compounding cycle of climate collapse, insurgent expansion, and military coups.
+    </p>
+    <p class="modal-text">
+        You must negotiate with transitional juntas, manage non-state actors, and allocate severely limited resources across a deteriorating landscape. You cannot solve every problem. You must choose which crises to mitigate, which factions to leverage, and which compromises to swallow.
+    </p>
+    <p class="modal-text">
+        <strong>11 million civilians</strong> are collateral to your policies. The continent's security architecture rests on what you build—or what you allow to burn.
+    </p>
+</div>
+    </div>
+    </div>
+
+    <div class="intro-video-overlay" id="introVideoOverlay" aria-hidden="true">
+        <video id="introVideo" class="intro-video" preload="auto" playsinline>
+            <source src="/assets/vid/African_Mandate_opening_scene.mp4" type="video/mp4">
+        </video>
+        <div class="intro-video-loading" id="introVideoLoading">Loading opening scene...</div>
+    </div>
+
+    <div id="root" aria-live="polite"></div>
     <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+    <script>
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
+        function resetLandingScrollPosition() {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }
+
+        resetLandingScrollPosition();
+        window.addEventListener('load', resetLandingScrollPosition);
+        window.addEventListener('pageshow', resetLandingScrollPosition);
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. SCROLL SMOOTHING
+        const lenis = new Lenis({
+            duration: 1.8,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smooth: true
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+
+        // 2. CAMERA RIG (OPTIMIZED with MatchMedia)
+        // [FIX] Using MatchMedia ensures the image movement makes sense on both Mobile and Desktop
+        const cam = document.getElementById('cam');
+        let mm = gsap.matchMedia();
+
+        mm.add("(min-width: 800px)", () => {
+            // DESKTOP ANIMATION: explicit shot list by section.
+            // Beat 1: right shoulder/upper back, tight and high.
+            gsap.set(cam, { scale: 1.7, xPercent: -15, yPercent: -20 });
+
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: ".track",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 2.1,
+                }
+            });
+
+            tl
+                // Beat 2: central striped-cap figure.
+                .to(cam, { scale: 1.66, xPercent: -2, yPercent: -4, duration: 0.95, ease: "sine.inOut" }, "players")
+                // Transition: arc toward left envoy (avoids hard direction flip).
+                .to(cam, { scale: 1.62, xPercent: 4, yPercent: -7, duration: 0.55, ease: "sine.inOut" })
+                // Beat 3: left envoy face and hat details.
+                .to(cam, { scale: 1.58, xPercent: 9, yPercent: -8, duration: 0.75, ease: "sine.inOut" }, "stakes")
+                // Transition: descend gradually before the lower-corridor beat.
+                .to(cam, { scale: 1.56, xPercent: 7, yPercent: 6, duration: 0.55, ease: "sine.inOut" })
+                // Beat 4: lower corridor toward arms/handshake zone.
+                .to(cam, { scale: 1.54, xPercent: 4, yPercent: 24, duration: 0.9, ease: "sine.inOut" }, "strategy")
+                // Transition: lift toward reveal instead of snapping back upward.
+                .to(cam, { scale: 1.34, xPercent: 2, yPercent: 12, duration: 0.8, ease: "sine.inOut" })
+                // Beat 5: mission reveal with fuller context.
+                .to(cam, { scale: 1.0, xPercent: 0, yPercent: 0, duration: 1.4, ease: "sine.inOut" }, "reveal");
+        });
+
+        mm.add("(max-width: 799px)", () => {
+            // MOBILE ANIMATION: same shot list with tighter crop.
+            gsap.set(cam, { scale: 1.8, xPercent: -12, yPercent: -18 });
+
+            const tlMobile = gsap.timeline({
+                scrollTrigger: {
+                    trigger: ".track",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 2.1,
+                }
+            });
+
+            tlMobile
+                .to(cam, { scale: 1.72, xPercent: -2, yPercent: -4, duration: 0.95, ease: "sine.inOut" })
+                .to(cam, { scale: 1.68, xPercent: 3, yPercent: -7, duration: 0.55, ease: "sine.inOut" })
+                .to(cam, { scale: 1.64, xPercent: 8, yPercent: -8, duration: 0.75, ease: "sine.inOut" })
+                .to(cam, { scale: 1.6, xPercent: 6, yPercent: 6, duration: 0.55, ease: "sine.inOut" })
+                .to(cam, { scale: 1.56, xPercent: 3, yPercent: 24, duration: 0.9, ease: "sine.inOut" })
+                .to(cam, { scale: 1.38, xPercent: 2, yPercent: 12, duration: 0.8, ease: "sine.inOut" })
+                .to(cam, { scale: 1.0, xPercent: 0, yPercent: 0, duration: 1.4, ease: "sine.inOut" });
+        });
+
+
+        // 3. TEXT & BUTTON ANIMATION
+        const sections = document.querySelectorAll('.section');
+
+        sections.forEach((section, i) => {
+            const label = section.querySelector('.label');
+            const lines = section.querySelectorAll('.mask-inner');
+            const p = section.querySelector('p');
+            const btnGroup = section.querySelector('.button-group');
+
+            const textTl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top 60%",
+                    end: "bottom 60%",
+                    toggleActions: "play reverse play reverse"
+                }
+            });
+
+            // [FIX] Check if label exists before animating to prevent errors
+            if (label) {
+                textTl.to(label, { opacity: 1, duration: 0.5 });
+            }
+
+            textTl
+                .to(lines, { y: "0%", duration: 1, stagger: 0.1, ease: "power4.out" }, "-=0.2")
+                .to(p, { opacity: 1, y: 0, duration: 1, ease: "power2.out" }, "-=0.8");
+
+            if (btnGroup) {
+                textTl.to(btnGroup, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: "back.out(1.7)"
+                }, "-=0.5");
+            }
+        });
+
+
+        // 4. ENTRY + MODAL FUNCTIONALITY
+        const enterArenaBtn = document.getElementById('enterArenaBtn');
+        const aboutBtn = document.getElementById('aboutBtn');
+        const aboutModal = document.getElementById('aboutModal');
+        const modalClose = document.getElementById('modalClose');
+        const landingShell = document.getElementById('landingShell');
+        const heroImage = document.getElementById('heroImage');
+        const introVideoOverlay = document.getElementById('introVideoOverlay');
+        const introVideo = document.getElementById('introVideo');
+        const introVideoLoading = document.getElementById('introVideoLoading');
+        let introCompleted = false;
+        let introTransitionInProgress = false;
+        const enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Enter the Arena';
+
+        function setEnterButtonLoading(isLoading) {
+            if (!enterArenaBtn) return;
+            enterArenaBtn.classList.toggle('is-loading', isLoading);
+            enterArenaBtn.disabled = isLoading;
+            enterArenaBtn.textContent = isLoading ? 'Initializing...' : enterArenaDefaultLabel;
+        }
+
+        function setIntroLoadingVisible(isVisible, message = 'Loading opening scene...') {
+            if (!introVideoLoading) return;
+            introVideoLoading.textContent = message;
+            introVideoLoading.style.display = 'block';
+            introVideoLoading.classList.toggle('hidden', !isVisible);
+            if (!isVisible) {
+                window.setTimeout(() => {
+                    if (!introVideoLoading) return;
+                    if (introVideoLoading.classList.contains('hidden')) {
+                        introVideoLoading.style.display = 'none';
+                    }
+                }, 260);
+            }
+        }
+
+        function warmIntroVideoBuffer() {
+            if (!introVideo) return;
+            try {
+                introVideo.preload = 'auto';
+                if (introVideo.readyState < 2) {
+                    introVideo.load();
+                }
+            } catch (error) {
+                // Warmup should never block user flow.
+            }
+        }
+
+        function waitForVideoReady(timeoutMs = 2200) {
+            return new Promise((resolve) => {
+                if (!introVideo) {
+                    resolve(false);
+                    return;
+                }
+                if (introVideo.readyState >= 2) {
+                    resolve(true);
+                    return;
+                }
+
+                let settled = false;
+                const finish = (isReady) => {
+                    if (settled) return;
+                    settled = true;
+                    introVideo.removeEventListener('canplay', onReady);
+                    introVideo.removeEventListener('loadeddata', onReady);
+                    resolve(isReady);
+                };
+                const onReady = () => finish(true);
+
+                introVideo.addEventListener('canplay', onReady, { once: true });
+                introVideo.addEventListener('loadeddata', onReady, { once: true });
+                window.setTimeout(() => finish(introVideo.readyState >= 2), timeoutMs);
+            });
+        }
+
+        if (heroImage) {
+            heroImage.addEventListener('error', () => {
+                if (heroImage.dataset.fallbackApplied === '1') return;
+                heroImage.dataset.fallbackApplied = '1';
+                heroImage.src = 'img/hero.png';
+            });
+        }
+
+        function dispatchGameEntryFlow() {
+            const launch = () => {
+                window.dispatchEvent(new CustomEvent('african-mandate:start-flow'));
+            };
+
+            if (window.__africanMandateAppReady === true) {
+                launch();
+                return;
+            }
+
+            let attempts = 0;
+            const maxAttempts = 40;
+            const timer = setInterval(() => {
+                attempts += 1;
+                if (window.__africanMandateAppReady === true || attempts >= maxAttempts) {
+                    clearInterval(timer);
+                    launch();
+                }
+            }, 100);
+        }
+
+        function activateGameInterface() {
+            document.body.classList.add('game-active');
+            if (landingShell) {
+                landingShell.classList.remove('entering');
+            }
+            resetLandingScrollPosition();
+            dispatchGameEntryFlow();
+        }
+
+        function completeIntro() {
+            if (introCompleted) return;
+            introCompleted = true;
+            introTransitionInProgress = false;
+            setEnterButtonLoading(false);
+            setIntroLoadingVisible(false);
+
+            if (!introVideoOverlay || !introVideo) {
+                activateGameInterface();
+                lenis.stop();
+                return;
+            }
+
+            introVideoOverlay.classList.remove('preparing', 'leaving');
+            introVideoOverlay.classList.add('active', 'fade-to-black');
+            introVideoOverlay.setAttribute('aria-hidden', 'false');
+
+            window.setTimeout(() => {
+                activateGameInterface();
+                lenis.stop();
+
+                window.setTimeout(() => {
+                    introVideoOverlay.classList.add('leaving');
+                    window.setTimeout(() => {
+                        introVideoOverlay.classList.remove('active', 'ready', 'leaving', 'preparing', 'fade-to-black');
+                        introVideoOverlay.setAttribute('aria-hidden', 'true');
+                        if (introVideo) {
+                            introVideo.pause();
+                            introVideo.currentTime = 0;
+                        }
+                    }, 620);
+                }, 260);
+            }, 420);
+        }
+
+        async function beginArenaEntry() {
+            if (introCompleted || introTransitionInProgress) return;
+            introTransitionInProgress = true;
+            setEnterButtonLoading(true);
+
+            if (!introVideoOverlay || !introVideo) {
+                completeIntro();
+                return;
+            }
+
+            warmIntroVideoBuffer();
+            if (landingShell) {
+                landingShell.classList.add('entering');
+            }
+            setIntroLoadingVisible(true);
+            introVideoOverlay.classList.remove('fade-to-black', 'leaving');
+            introVideoOverlay.classList.add('preparing');
+            introVideoOverlay.setAttribute('aria-hidden', 'false');
+            introVideo.currentTime = 0;
+
+            const markReady = () => {
+                introVideoOverlay.classList.remove('preparing', 'fade-to-black');
+                introVideoOverlay.classList.add('ready');
+                setIntroLoadingVisible(false);
+            };
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    introVideoOverlay.classList.add('active');
+                });
+            });
+
+            const videoReady = await waitForVideoReady();
+            if (videoReady) {
+                markReady();
+            }
+
+            try {
+                await introVideo.play();
+                if (!videoReady) {
+                    markReady();
+                }
+            } catch (error) {
+                introTransitionInProgress = false;
+                setEnterButtonLoading(false);
+                if (landingShell) {
+                    landingShell.classList.remove('entering');
+                }
+                setIntroLoadingVisible(true, 'Tap Enter Arena again to continue');
+                introVideoOverlay.classList.remove('active', 'ready', 'preparing', 'fade-to-black', 'leaving');
+                introVideoOverlay.setAttribute('aria-hidden', 'true');
+                return;
+            }
+        }
+
+        function openModal() {
+            if (!aboutModal) return;
+            aboutModal.classList.add('active');
+            lenis.stop();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            if (!aboutModal) return;
+            aboutModal.classList.remove('active');
+            lenis.start();
+            document.body.style.overflow = '';
+        }
+
+        if (enterArenaBtn) {
+            enterArenaBtn.addEventListener('click', beginArenaEntry);
+            enterArenaBtn.addEventListener('pointerenter', warmIntroVideoBuffer, { once: true });
+            enterArenaBtn.addEventListener('focus', warmIntroVideoBuffer, { once: true });
+            enterArenaBtn.addEventListener('touchstart', warmIntroVideoBuffer, { once: true, passive: true });
+        }
+        if (introVideo) {
+            window.addEventListener('load', warmIntroVideoBuffer, { once: true });
+        }
+        if (aboutBtn) aboutBtn.addEventListener('click', openModal);
+        if (modalClose) modalClose.addEventListener('click', closeModal);
+        if (introVideo) introVideo.addEventListener('ended', completeIntro);
+
+        if (aboutModal) {
+            aboutModal.addEventListener('click', (e) => {
+                if (e.target === aboutModal) closeModal();
+            });
+        }
+
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        const hasSupabaseAuthCallback =
+            searchParams.has('code') ||
+            searchParams.has('access_token') ||
+            searchParams.has('refresh_token') ||
+            hashParams.has('access_token') ||
+            hashParams.has('refresh_token');
+
+        if (hasSupabaseAuthCallback) {
+            introCompleted = true;
+            activateGameInterface();
+            lenis.stop();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && aboutModal && aboutModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+
 </html>

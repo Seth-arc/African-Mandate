@@ -8,6 +8,7 @@ import type { ActionLogEntry, Resources } from './types'
 
 export type ModalKind =
   | 'none'
+  | 'onboarding_loading'
   | 'session_manager'
   | 'action_config'
   | 'territory_overview'

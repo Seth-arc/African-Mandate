@@ -1,0 +1,9 @@
+{
+  "authScrollCheck": {
+    "modalFound": true,
+    "modalOverflowY": "hidden",
+    "modalHasScrollbar": false,
+    "bodyOverflowY": "hidden",
+    "pageHasScrollbar": true
+  }
+}
