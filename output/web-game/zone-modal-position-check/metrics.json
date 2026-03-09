@@ -1,0 +1,55 @@
+{
+  "shell": {
+    "top": 61,
+    "bottom": 1170.453125,
+    "left": 285,
+    "right": 1155,
+    "width": 870,
+    "height": 1109.453125
+  },
+  "header": {
+    "top": 283,
+    "bottom": 324.1875,
+    "left": 285,
+    "right": 1155,
+    "width": 870,
+    "height": 41.1875
+  },
+  "stats": {
+    "top": 340.1875,
+    "bottom": 408.75,
+    "left": 285,
+    "right": 1155,
+    "width": 870,
+    "height": 68.5625
+  },
+  "report": {
+    "top": 424.75,
+    "bottom": 529.0625,
+    "left": 285,
+    "right": 1155,
+    "width": 870,
+    "height": 104.3125
+  },
+  "reportTitle": {
+    "top": 437.265625,
+    "bottom": 452.265625,
+    "left": 299.109375,
+    "right": 1140.890625,
+    "width": 841.78125,
+    "height": 15
+  },
+  "reportText": {
+    "top": 479.453125,
+    "bottom": 536.546875,
+    "left": 299.109375,
+    "right": 849.109375,
+    "width": 550,
+    "height": 57.09375
+  },
+  "reportTextComputed": {
+    "marginTop": "0px",
+    "lineHeight": "19.024px",
+    "position": "static"
+  }
+}

@@ -7,7 +7,14 @@ import '../styles/map.css'
 import { useGameStore } from '../state/gameStore'
 import { useUiStore } from '../state/uiStore'
 import { resolveTerritoryName, resolveZoneName, threatLevelToStatus } from '../state/selectors'
-import type { TerritoryKey, TerritoryState, TerritoryStatus, ZoneState } from '../state/types'
+import type {
+  StrategicValue,
+  TerritoryKey,
+  TerritoryState,
+  TerritoryStatus,
+  ZoneState,
+  ZoneType,
+} from '../state/types'
 
 /* ═══════════════════════════════════════════════
    CONSTANTS
@@ -42,6 +49,14 @@ const LEGACY_KEY_TO_CANONICAL: Record<string, string> = {
   burkinaFaso: 'burkina_faso',
 }
 
+const TERRITORY_FLAG_FALLBACK: Record<TerritoryKey, string> = {
+  mali: '/assets/flags/Flag_of_Mali.svg',
+  burkina_faso: '/assets/flags/Flag_of_Burkina_Faso.svg',
+  niger: '/assets/flags/Flag_of_Niger.svg',
+  chad: '/assets/flags/Flag_of_Chad.svg',
+  mauritania: '/assets/flags/Flag_of_Mauritania.svg',
+}
+
 /* ── Feature type discriminators ── */
 
 const FEATURE_TYPE = {
@@ -51,8 +66,6 @@ const FEATURE_TYPE = {
 } as const
 
 /* ── Zone type visual configuration ── */
-
-type ZoneType = 'capital' | 'conflict_hotspot' | 'border_region' | 'remote_contested' | 'humanitarian_crisis'
 
 interface ZoneTypeConfig {
   label: string
@@ -104,11 +117,17 @@ const ZONE_TYPE_CONFIG: Record<ZoneType, ZoneTypeConfig> = {
     weight: 2.5,
     cssClass: 'map-zone--crisis',
   },
+  urban_center: {
+    label: 'Urban Center',
+    color: '#9370db',
+    fillOpacity: 0.12,
+    dashArray: undefined,
+    weight: 2,
+    cssClass: 'map-zone--urban',
+  },
 }
 
 /* ── Strategic value visual weight ── */
-
-type StrategicValue = 'critical' | 'high' | 'medium' | 'low'
 
 interface StrategicWeight {
   weight: number
@@ -143,7 +162,32 @@ function MapInstanceCapture(): null {
   const map = useMap()
   useEffect(() => {
     SharedMapRef.current = map
+
+    let rafHandle = 0
+    let timeoutA = 0
+    let timeoutB = 0
+    const invalidate = (): void => {
+      map.invalidateSize(false)
+    }
+    const scheduleInvalidate = (): void => {
+      if (rafHandle) window.cancelAnimationFrame(rafHandle)
+      window.clearTimeout(timeoutA)
+      window.clearTimeout(timeoutB)
+      rafHandle = window.requestAnimationFrame(invalidate)
+      timeoutA = window.setTimeout(invalidate, 120)
+      timeoutB = window.setTimeout(invalidate, 420)
+    }
+
+    scheduleInvalidate()
+    window.addEventListener('resize', scheduleInvalidate)
+    window.addEventListener('african-mandate:start-flow', scheduleInvalidate)
+
     return () => {
+      if (rafHandle) window.cancelAnimationFrame(rafHandle)
+      window.clearTimeout(timeoutA)
+      window.clearTimeout(timeoutB)
+      window.removeEventListener('resize', scheduleInvalidate)
+      window.removeEventListener('african-mandate:start-flow', scheduleInvalidate)
       SharedMapRef.current = null
     }
   }, [map])
@@ -282,6 +326,47 @@ function territoryFromState(
   if (!territoryState || !territoryKey) return undefined
   if (!Object.prototype.hasOwnProperty.call(territoryState, territoryKey)) return undefined
   return territoryState[territoryKey as TerritoryKey]
+}
+
+function resolveTerritoryFlagUrls(
+  content: ReturnType<typeof useGameStore.getState>['state']['content'],
+  territoryKey: string | null
+): { primary: string | null; fallback: string | null } {
+  if (!territoryKey) return { primary: null, fallback: null }
+  const fallback =
+    Object.prototype.hasOwnProperty.call(TERRITORY_FLAG_FALLBACK, territoryKey)
+      ? TERRITORY_FLAG_FALLBACK[territoryKey as TerritoryKey]
+      : null
+
+  const territoryRecord = content?.territories.territories.find(
+    (item) => item.territory_key === territoryKey
+  )
+  const primary = territoryRecord?.flag_url
+    ? territoryRecord.flag_url.startsWith('/')
+      ? territoryRecord.flag_url
+      : `/${territoryRecord.flag_url}`
+    : null
+
+  return {
+    primary: primary ?? fallback,
+    fallback,
+  }
+}
+
+function territoryFlagMarkup(
+  content: ReturnType<typeof useGameStore.getState>['state']['content'],
+  territoryKey: string | null,
+  territoryName: string
+): string {
+  const { primary, fallback } = resolveTerritoryFlagUrls(content, territoryKey)
+  if (!primary) return ''
+  if (fallback && fallback !== primary) {
+    return (
+      `<img class="map-tooltip-flag" src="${primary}" alt="${territoryName} flag"` +
+      ` onerror="this.onerror=null;this.src='${fallback}'" />`
+    )
+  }
+  return `<img class="map-tooltip-flag" src="${primary}" alt="${territoryName} flag" />`
 }
 
 /** Inject multiple SVG hatch/fill patterns into the map container */
@@ -469,6 +554,21 @@ function CrisisIcon(): ReactNode {
   )
 }
 
+function UrbanIcon(): ReactNode {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 14.5V2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v12.5" />
+      <line x1="5" y1="4" x2="7" y2="4" />
+      <line x1="9" y1="4" x2="11" y2="4" />
+      <line x1="5" y1="7" x2="7" y2="7" />
+      <line x1="9" y1="7" x2="11" y2="7" />
+      <line x1="5" y1="10" x2="7" y2="10" />
+      <line x1="9" y1="10" x2="11" y2="10" />
+      <path d="M1 14.5h14" />
+    </svg>
+  )
+}
+
 function zoneTypeIcon(zoneType: ZoneType): ReactNode {
   switch (zoneType) {
     case 'capital': return <CapitalIcon />
@@ -476,6 +576,7 @@ function zoneTypeIcon(zoneType: ZoneType): ReactNode {
     case 'border_region': return <BorderIcon />
     case 'remote_contested': return <ContestedIcon />
     case 'humanitarian_crisis': return <CrisisIcon />
+    case 'urban_center': return <UrbanIcon />
     default: return null
   }
 }
@@ -515,7 +616,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }): Reac
 
 function LegendSection({
   title,
-  defaultOpen = true,
+  defaultOpen = false,
   children,
 }: {
   title: string
@@ -667,14 +768,22 @@ function SahelGeoJSONLayer(): null {
             const status: TerritoryStatus = territory?.status ?? 'moderate'
             const isSelected = territoryKey !== null && territoryKey === selectedTerritoryKey
             const isCritical = status === 'critical' || status === 'high'
+            const fillOpacityByStatus: Record<TerritoryStatus, number> = {
+              low: 0.18,
+              moderate: 0.24,
+              high: 0.30,
+              critical: 0.36,
+            }
 
             return {
               color: STATUS_COLORS[status],
-              weight: isSelected ? 3 : 1.5,
+              weight: isSelected ? 3.4 : 2.2,
               fillColor: STATUS_COLORS[status],
-              fillOpacity: isSelected ? 0.25 : isCritical ? 0.14 : 0.08,
-              dashArray: isCritical ? '6 3' : undefined,
-              className: isCritical ? 'map-hatch-overlay' : undefined,
+              fillOpacity: isSelected
+                ? Math.min(fillOpacityByStatus[status] + 0.16, 0.55)
+                : fillOpacityByStatus[status],
+              dashArray: status === 'critical' ? '6 3' : status === 'high' ? '4 3' : undefined,
+              className: `map-territory-status map-territory-status--${status}${isCritical ? ' map-hatch-overlay' : ''}`,
             }
           },
           onEachFeature: (feature, layerNode) => {
@@ -690,17 +799,25 @@ function SahelGeoJSONLayer(): null {
             const insurgency = territory?.insurgency ?? '—'
 
             const props = feature.properties as Record<string, unknown> | null
-            const population = props?.population
+            const population =
+              territory?.population ??
+              (typeof props?.population === 'number' ? props.population : undefined)
             const capital = props?.capital ?? ''
             const zoneIds = (props?.zone_ids as string[]) ?? []
+            const flagHtml = territoryFlagMarkup(content, territoryKey, territoryName)
 
             layerNode.bindTooltip(
               `<div class="map-territory-tooltip">` +
+              `<div class="map-tooltip-title-row">` +
+              `${flagHtml}` +
               `<div class="map-tooltip-title">${territoryName}</div>` +
+              `</div>` +
               `<div class="map-tooltip-row">Status: <span style="color:${STATUS_COLORS[status]}">${status.toUpperCase()}</span></div>` +
               `<div class="map-tooltip-row">Stability: ${stability} &middot; Insurgency: ${insurgency}</div>` +
               (capital ? `<div class="map-tooltip-row map-tooltip-dim">Capital: ${capital}</div>` : '') +
-              (population ? `<div class="map-tooltip-row map-tooltip-dim">Pop: ${Number(population).toLocaleString()}</div>` : '') +
+              (population !== undefined
+                ? `<div class="map-tooltip-row map-tooltip-dim">Pop: ${Number(population).toLocaleString()}</div>`
+                : '') +
               `<div class="map-tooltip-row map-tooltip-dim">Zones: ${zoneIds.length}</div>` +
               `</div>`,
               { direction: 'top', opacity: 0.95, className: 'map-enhanced-tooltip' }
@@ -752,10 +869,15 @@ function ZoneGeoJSONLayer(): null {
   const zoneState = useGameStore((s) => s.state.zone_state)
   const content = useGameStore((s) => s.state.content)
   const mapLayers = useUiStore((s) => s.mapLayers)
+  const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const setSelectedTerritory = useUiStore((s) => s.setSelectedTerritory)
   const setSelectedZone = useUiStore((s) => s.setSelectedZone)
   const openModal = useUiStore((s) => s.openModal)
+  const zonesById = useMemo(
+    () => new Map((content?.zones?.zones ?? []).map((zone) => [zone.zone_id, zone])),
+    [content]
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -799,8 +921,9 @@ function ZoneGeoJSONLayer(): null {
             if (!feature) return {}
 
             const zoneId = zoneIdFromFeature(feature)
-            const zoneType = zoneTypeFromFeature(feature) ?? 'border_region'
-            const strategicValue = strategicValueFromFeature(feature)
+            const zoneData = zoneId ? zonesById.get(zoneId) : undefined
+            const zoneType = zoneData?.zone_type ?? zoneTypeFromFeature(feature) ?? 'border_region'
+            const strategicValue = zoneData?.strategic_value ?? strategicValueFromFeature(feature)
             const typeConfig = ZONE_TYPE_CONFIG[zoneType]
             const stratWeight = STRATEGIC_WEIGHT[strategicValue]
 
@@ -811,7 +934,7 @@ function ZoneGeoJSONLayer(): null {
             const isSelected = zoneId !== null && zoneId === selectedZoneId
 
             /* Critical-only filter */
-            if (mapLayers.criticalOnly && threatLevel < 75) {
+            if (mapLayers.criticalOnly && threatLevel < threatThreshold) {
               return {
                 color: 'transparent',
                 fillColor: 'transparent',
@@ -836,8 +959,8 @@ function ZoneGeoJSONLayer(): null {
               weight: isSelected ? stratWeight.weight + 1 : typeConfig.weight,
               fillColor: fillColor,
               fillOpacity: isSelected
-                ? typeConfig.fillOpacity + stratWeight.fillBoost + 0.12
-                : typeConfig.fillOpacity + stratWeight.fillBoost,
+                ? Math.min((typeConfig.fillOpacity + stratWeight.fillBoost) * 0.55 + 0.12, 0.32)
+                : Math.max((typeConfig.fillOpacity + stratWeight.fillBoost) * 0.55, 0.045),
               dashArray: typeConfig.dashArray,
               className: className,
             }
@@ -847,14 +970,15 @@ function ZoneGeoJSONLayer(): null {
             if (!zoneId) return
 
             const props = feature.properties as Record<string, unknown> | null
-            const territoryKey = (props?.territory_key as string) ?? ''
-            const zoneType = zoneTypeFromFeature(feature) ?? 'border_region'
+            const zoneData = zonesById.get(zoneId)
+            const territoryKey = zoneData?.territory_key ?? ((props?.territory_key as string) ?? '')
+            const zoneType = zoneData?.zone_type ?? zoneTypeFromFeature(feature) ?? 'border_region'
             const typeConfig = ZONE_TYPE_CONFIG[zoneType]
-            const population = props?.population as number | undefined
-            const ethnicGroups = (props?.ethnic_groups as string[]) ?? []
-            const multiEthnic = props?.multi_ethnic === true
-            const strategicValue = (props?.strategic_value as string) ?? 'medium'
-            const adjacentZones = (props?.adjacent_zones as string[]) ?? []
+            const population = zoneData?.population
+            const ethnicGroups = zoneData?.ethnic_groups ?? ((props?.ethnic_groups as string[]) ?? [])
+            const multiEthnic = zoneData?.multi_ethnic ?? (props?.multi_ethnic === true)
+            const strategicValue = zoneData?.strategic_value ?? strategicValueFromFeature(feature)
+            const adjacentZones = zoneData?.adjacent_zones ?? ((props?.adjacent_zones as string[]) ?? [])
 
             /* Runtime state */
             const zoneRuntime = zoneState ? zoneState[zoneId] : undefined
@@ -865,7 +989,8 @@ function ZoneGeoJSONLayer(): null {
             const threatStatus = threatLevelToStatus(threatLevel)
 
             const zoneName = resolveZoneName(content, zoneId)
-            const territoryName = resolveTerritoryName(content, territoryKey)
+            const territoryName = territoryKey ? resolveTerritoryName(content, territoryKey) : 'Unknown territory'
+            const flagHtml = territoryFlagMarkup(content, territoryKey, territoryName)
 
             const ethnicLabel = ethnicGroups.length > 0
               ? ethnicGroups.map((e) => e.charAt(0).toUpperCase() + e.slice(1)).join(', ')
@@ -874,10 +999,16 @@ function ZoneGeoJSONLayer(): null {
             layerNode.bindTooltip(
               `<div class="map-zone-tooltip">` +
               `<div class="map-tooltip-title">${zoneName}</div>` +
+              `<div class="map-tooltip-territory">` +
+              `${flagHtml}` +
+              `<span>${territoryName}</span>` +
+              `</div>` +
               `<div class="map-tooltip-type" style="color:${typeConfig.color}">${typeConfig.label}</div>` +
               `<div class="map-tooltip-row">Threat: <span style="color:${STATUS_COLORS[threatStatus]}">${threatLevel}</span> &middot; Stability: ${stability}</div>` +
               `<div class="map-tooltip-row">Insurgency: ${insurgency}</div>` +
-              (population ? `<div class="map-tooltip-row map-tooltip-dim">Pop: ${population.toLocaleString()}</div>` : '') +
+              (population !== undefined
+                ? `<div class="map-tooltip-row map-tooltip-dim">Pop: ${population.toLocaleString()}</div>`
+                : '') +
               (ethnicLabel ? `<div class="map-tooltip-row map-tooltip-dim">${multiEthnic ? 'Multi-ethnic' : 'Ethnic'}: ${ethnicLabel}</div>` : '') +
               `<div class="map-tooltip-row map-tooltip-dim">Strategic: ${strategicValue} &middot; Adjacent: ${adjacentZones.length}</div>` +
               (displaced > 0 ? `<div class="map-tooltip-row map-tooltip-displaced">Displaced: ${displaced.toLocaleString()}</div>` : '') +
@@ -916,8 +1047,8 @@ function ZoneGeoJSONLayer(): null {
       }
     }
   }, [
-    content, map, mapLayers.zones, mapLayers.criticalOnly, selectedZoneId,
-    setSelectedTerritory, setSelectedZone, openModal, zoneState,
+    content, map, mapLayers.zones, mapLayers.criticalOnly, openModal, selectedZoneId,
+    setSelectedTerritory, setSelectedZone, threatThreshold, zoneState, zonesById,
   ])
 
   return null
@@ -1059,7 +1190,7 @@ function ZonePopupContent({
   zoneType: ZoneType | null
   ethnicGroups: string[]
   population: number | undefined
-  strategicValue: string
+  strategicValue: StrategicValue
   onOpen: () => void
 }): ReactNode {
   const typeConfig = zoneType ? ZONE_TYPE_CONFIG[zoneType] : null
@@ -1148,7 +1279,7 @@ function ZoneMarkers(): ReactNode {
   const content = useGameStore((s) => s.state.content)
   const zones = content?.zones?.zones
   const mapLayers = useUiStore((s) => s.mapLayers)
-  const threatThreshold = 75
+  const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const setSelectedTerritory = useUiStore((s) => s.setSelectedTerritory)
   const setSelectedZone = useUiStore((s) => s.setSelectedZone)
@@ -1169,10 +1300,10 @@ function ZoneMarkers(): ReactNode {
         const status = threatLevelToStatus(zone.threat_level)
         const territoryName = resolveTerritoryName(content, zone.territory_key)
         const isSelected = selectedZoneId === zoneId
-        const zoneType = (zoneData?.zone_type as ZoneType) ?? null
-        const ethnicGroups = (zoneData?.ethnic_groups as string[]) ?? []
-        const population = zoneData?.population as number | undefined
-        const strategicValue = (zoneData?.strategic_value as string) ?? 'medium'
+        const zoneType = zoneData?.zone_type ?? null
+        const ethnicGroups = zoneData?.ethnic_groups ?? []
+        const population = zoneData?.population
+        const strategicValue = zoneData?.strategic_value ?? 'medium'
 
         return (
           <CircleMarker
@@ -1232,6 +1363,7 @@ function ZoneTypeLabelMarkers(): null {
   const content = useGameStore((s) => s.state.content)
   const zones = content?.zones?.zones
   const mapLayers = useUiStore((s) => s.mapLayers)
+  const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
 
   useEffect(() => {
     markersRef.current.forEach((m) => {
@@ -1245,14 +1377,14 @@ function ZoneTypeLabelMarkers(): null {
       const coords = zoneData.coords
       if (!coords) return
 
-      const zoneType = (zoneData.zone_type as ZoneType) ?? null
+      const zoneType = zoneData.zone_type
       if (!zoneType || !(zoneType in ZONE_TYPE_CONFIG)) return
 
       const typeConfig = ZONE_TYPE_CONFIG[zoneType]
       const zoneRuntime = zoneState ? zoneState[zoneData.zone_id] : undefined
       const threatLevel = zoneRuntime?.threat_level ?? 0
 
-      if (mapLayers.criticalOnly && threatLevel < 75) return
+      if (mapLayers.criticalOnly && threatLevel < threatThreshold) return
 
       const iconClass = `map-zone-label-icon map-zone-label-icon--${zoneType}`
       const icon = L.divIcon({
@@ -1277,7 +1409,7 @@ function ZoneTypeLabelMarkers(): null {
       })
       markersRef.current = []
     }
-  }, [map, mapLayers.zones, mapLayers.criticalOnly, zones, zoneState])
+  }, [map, mapLayers.zones, mapLayers.criticalOnly, threatThreshold, zones, zoneState])
 
   return null
 }
@@ -1422,6 +1554,9 @@ function IncidentMarkers(): ReactNode {
 
       const isCritical = zone.threat_level >= 75
       const incidentCount = zone.incidents.length
+      const territoryKey = zoneData?.territory_key ?? null
+      const territoryName = territoryKey ? resolveTerritoryName(content, territoryKey) : 'Unknown territory'
+      const flagHtml = territoryFlagMarkup(content, territoryKey, territoryName)
 
       const icon = L.divIcon({
         className: 'map-incident-marker',
@@ -1434,8 +1569,16 @@ function IncidentMarkers(): ReactNode {
 
       const marker = L.marker([coords.lat, coords.lon], { icon, interactive: true })
       marker.bindTooltip(
-        `<b>${incidentCount > 1 ? 'Incidents' : 'Incident'}</b><br/>Zone: ${resolveZoneName(content, zoneId)}<br/>Count: ${incidentCount}<br/>Threat: ${zone.threat_level}`,
-        { direction: 'top', opacity: 0.95 }
+        `<div class="map-zone-tooltip">` +
+        `<div class="map-tooltip-title">${resolveZoneName(content, zoneId)}</div>` +
+        `<div class="map-tooltip-territory">` +
+        `${flagHtml}` +
+        `<span>${territoryName}</span>` +
+        `</div>` +
+        `<div class="map-tooltip-row">${incidentCount > 1 ? 'Incidents' : 'Incident'}: ${incidentCount}</div>` +
+        `<div class="map-tooltip-row">Threat: ${zone.threat_level}</div>` +
+        `</div>`,
+        { direction: 'top', opacity: 0.95, className: 'map-enhanced-tooltip' }
       )
       marker.addTo(map)
       markersRef.current.push(marker)
@@ -1483,7 +1626,6 @@ function AdjacencyLines(): ReactNode {
     const adjacentZones = (zoneData.adjacent_zones as string[]) ?? []
     const fromRuntime = zoneState[fromId]
     const fromThreat = fromRuntime?.threat_level ?? 0
-    const fromStatus = threatLevelToStatus(fromThreat)
 
     adjacentZones.forEach((toId) => {
       const edgeKey = [fromId, toId].sort().join('--')
@@ -1495,7 +1637,6 @@ function AdjacencyLines(): ReactNode {
 
       const toRuntime = zoneState[toId]
       const toThreat = toRuntime?.threat_level ?? 0
-      const toStatus = threatLevelToStatus(toThreat)
 
       /* Use the higher threat color for the link */
       const maxThreat = Math.max(fromThreat, toThreat)
@@ -1592,68 +1733,6 @@ function ConnectionLines(): ReactNode {
    MINIMAP
    ═══════════════════════════════════════════════ */
 
-function MinimapControl(): null {
-  const map = useMap()
-  const minimapRef = useRef<L.Map | null>(null)
-  const viewportRef = useRef<L.Rectangle | null>(null)
-  const containerRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const container = L.DomUtil.create('div', 'map-minimap-container')
-    container.id = 'minimap-container'
-    map.getContainer().appendChild(container)
-    containerRef.current = container
-
-    L.DomEvent.disableClickPropagation(container)
-    L.DomEvent.disableScrollPropagation(container)
-
-    const minimap = L.map(container, {
-      zoomControl: false,
-      attributionControl: false,
-      dragging: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      touchZoom: false,
-    }).setView(MAP_CENTER, 3)
-
-    L.tileLayer(DARK_TILE_URL, { attribution: '' }).addTo(minimap)
-    minimapRef.current = minimap
-
-    const updateViewport = (): void => {
-      const bounds = map.getBounds()
-      if (viewportRef.current) {
-        viewportRef.current.setBounds(bounds)
-      } else {
-        viewportRef.current = L.rectangle(bounds, {
-          color: '#d4af37',
-          weight: 1.5,
-          fillColor: 'rgba(212, 175, 55, 0.08)',
-          fillOpacity: 1,
-          className: 'map-minimap-viewport',
-          interactive: false,
-        }).addTo(minimap)
-      }
-    }
-
-    updateViewport()
-    map.on('moveend zoomend', updateViewport)
-
-    return () => {
-      map.off('moveend zoomend', updateViewport)
-      if (minimapRef.current) { minimapRef.current.remove(); minimapRef.current = null }
-      if (containerRef.current && containerRef.current.parentNode) {
-        containerRef.current.parentNode.removeChild(containerRef.current)
-        containerRef.current = null
-      }
-      viewportRef.current = null
-    }
-  }, [map])
-
-  return null
-}
-
 /* ═══════════════════════════════════════════════
    FOG OF WAR
    ═══════════════════════════════════════════════ */
@@ -1674,14 +1753,13 @@ function MapLegendControls(): ReactNode {
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const setSelectedTerritory = useUiStore((s) => s.setSelectedTerritory)
   const setSelectedZone = useUiStore((s) => s.setSelectedZone)
+  const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
+  const setMapThreatThreshold = useUiStore((s) => s.setMapThreatThreshold)
   const openModal = useUiStore((s) => s.openModal)
   const content = useGameStore((s) => s.state.content)
   const territoryState = useGameStore((s) => s.state.territory_state)
   const zoneState = useGameStore((s) => s.state.zone_state)
   const currentTurn = useGameStore((s) => s.state.session.turn)
-
-  /* Threat slider local state (falls back to uiStore if wired) */
-  const [threatThreshold, setThreatThreshold] = useState(75)
 
   /* ── Computed aggregates ── */
   const stats = useMemo(() => {
@@ -1692,11 +1770,6 @@ function MapLegendControls(): ReactNode {
     const criticalZones = zones.filter((z) => z.threat_level >= 75).length
     const totalIncidents = zones.reduce((sum, z) => sum + (z.incidents?.length ?? 0), 0)
     const totalDisplaced = zones.reduce((sum, z) => sum + (z.displaced ?? 0), 0)
-    const totalPopulation = zones.reduce((sum, z) => {
-      /* population from content zones if available */
-      const zoneData = content?.zones?.zones?.find((item: { zone_id: string }) => item.zone_id === z.territory_key)
-      return sum
-    }, 0)
 
     const statusCounts: Record<TerritoryStatus, number> = { low: 0, moderate: 0, high: 0, critical: 0 }
     territories.forEach((t) => {
@@ -1704,7 +1777,7 @@ function MapLegendControls(): ReactNode {
     })
 
     return { totalTerritories, totalZones, criticalZones, totalIncidents, totalDisplaced, statusCounts }
-  }, [territoryState, zoneState, content])
+  }, [territoryState, zoneState])
 
   /* ── Zone type counts ── */
   const zoneTypeCounts = useMemo(() => {
@@ -1807,7 +1880,7 @@ function MapLegendControls(): ReactNode {
 
       <div className="map-legend-body">
         {/* ═══ INTEL SUMMARY (Live Stat Counters) ═══ */}
-        <LegendSection title="Intel Summary" defaultOpen={true}>
+        <LegendSection title="Intel Summary" defaultOpen={false}>
           <div className="map-legend-stat-grid">
             <div className="map-legend-stat-card">
               <span className="map-legend-stat-number">{stats.totalTerritories}</span>
@@ -1837,7 +1910,7 @@ function MapLegendControls(): ReactNode {
         </LegendSection>
 
         {/* ═══ LAYERS & FILTERS ═══ */}
-        <LegendSection title="Layers" defaultOpen={true}>
+        <LegendSection title="Layers" defaultOpen={false}>
           <label className="map-legend-toggle">
             <input
               type="checkbox"
@@ -1879,8 +1952,7 @@ function MapLegendControls(): ReactNode {
                 value={threatThreshold}
                 onChange={(e) => {
                   const val = Number(e.target.value)
-                  setThreatThreshold(val)
-                  /* If uiStore has a setThreatThreshold, wire it here */
+                  setMapThreatThreshold(val)
                 }}
               />
             </div>
@@ -1888,7 +1960,7 @@ function MapLegendControls(): ReactNode {
         </LegendSection>
 
         {/* ═══ STATUS KEY (with counts) ═══ */}
-        <LegendSection title="Status Key" defaultOpen={true}>
+        <LegendSection title="Status Key" defaultOpen={false}>
           {(['low', 'moderate', 'high', 'critical'] as TerritoryStatus[]).map((status) => (
             <div className="map-legend-status-row" key={status}>
               <div className="map-legend-status-dot" data-status={status} />
@@ -1912,7 +1984,7 @@ function MapLegendControls(): ReactNode {
         </LegendSection>
 
         {/* ═══ TERRITORY QUICK-LIST (with sparklines) ═══ */}
-        <LegendSection title="Territories" defaultOpen={true}>
+        <LegendSection title="Territories" defaultOpen={false}>
           <div className="map-legend-territory-list">
             {territoryList.map(({ key, territory, sparkValues }) => (
               <div
@@ -1933,7 +2005,7 @@ function MapLegendControls(): ReactNode {
         </LegendSection>
 
         {/* ═══ INCIDENT FEED ═══ */}
-        <LegendSection title="Active Incidents" defaultOpen={true}>
+        <LegendSection title="Active Incidents" defaultOpen={false}>
           <div className="map-legend-feed">
             {incidentFeed.length === 0 ? (
               <div className="map-legend-feed-empty">No active incidents</div>
@@ -1956,7 +2028,7 @@ function MapLegendControls(): ReactNode {
         </LegendSection>
 
         {/* ═══ SELECTION & CONTEXTUAL ACTIONS ═══ */}
-        <LegendSection title="Selection" defaultOpen={true}>
+        <LegendSection title="Selection" defaultOpen={false}>
           <div className="map-selection-summary">
             <div className="map-selection-label">Active Target</div>
             <div className={`map-selection-value${selectionName ? '' : ' is-none'}`}>
@@ -2036,6 +2108,7 @@ export function MapView(): ReactNode {
         center={MAP_CENTER}
         zoom={MAP_ZOOM}
         style={{ height: '100%', width: '100%' }}
+        zoomControl={false}
         scrollWheelZoom
       >
         <MapInstanceCapture />
@@ -2053,7 +2126,6 @@ export function MapView(): ReactNode {
         <ZoneMarkers />
         <ZoneTypeLabelMarkers />
         <IncidentMarkers />
-        <MinimapControl />
       </MapContainer>
     </div>
   )

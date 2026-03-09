@@ -1,5 +1,12 @@
 import { create } from 'zustand'
-import type { ActionDefinition, GameContent, GameState, TerritoryKey } from './types'
+import type {
+  ActionDefinition,
+  GameContent,
+  GameState,
+  StrategicValue,
+  TerritoryKey,
+  ZoneType,
+} from './types'
 import { createInitialState } from './initState'
 import gameConfigJson from '../data/game_config.json'
 import territoriesJson from '../data/territories.json'
@@ -22,11 +29,36 @@ const TERRITORY_KEYS: TerritoryKey[] = [
   'mauritania',
 ]
 
+const ZONE_TYPES: ZoneType[] = [
+  'capital',
+  'conflict_hotspot',
+  'border_region',
+  'remote_contested',
+  'humanitarian_crisis',
+  'urban_center',
+]
+
+const STRATEGIC_VALUES: StrategicValue[] = ['critical', 'high', 'medium', 'low']
+
 function toTerritoryKey(value: string): TerritoryKey {
   if (TERRITORY_KEYS.includes(value as TerritoryKey)) {
     return value as TerritoryKey
   }
   throw new Error(`Unknown territory_key in content: ${value}`)
+}
+
+function toZoneType(value: string): ZoneType {
+  if (ZONE_TYPES.includes(value as ZoneType)) {
+    return value as ZoneType
+  }
+  throw new Error(`Unknown zone_type in content: ${value}`)
+}
+
+function toStrategicValue(value: string): StrategicValue {
+  if (STRATEGIC_VALUES.includes(value as StrategicValue)) {
+    return value as StrategicValue
+  }
+  throw new Error(`Unknown strategic_value in content: ${value}`)
 }
 
 function toTargetScope(value: string): ActionDefinition['target_scope'] {
@@ -65,6 +97,45 @@ function copyNumberRecord(
   )
 }
 
+function validateContentConsistency(content: GameContent): void {
+  const territoryKeys = new Set(content.territories.territories.map((territory) => territory.territory_key))
+  const zoneIds = new Set<string>()
+
+  for (const zone of content.zones.zones) {
+    if (zoneIds.has(zone.zone_id)) {
+      throw new Error(`Duplicate zone_id in content: ${zone.zone_id}`)
+    }
+    zoneIds.add(zone.zone_id)
+
+    if (!territoryKeys.has(zone.territory_key)) {
+      throw new Error(
+        `Zone ${zone.zone_id} references unknown territory_key ${zone.territory_key}`
+      )
+    }
+  }
+
+  for (const zone of content.zones.zones) {
+    for (const adjacentZoneId of zone.adjacent_zones) {
+      if (!zoneIds.has(adjacentZoneId)) {
+        throw new Error(
+          `Zone ${zone.zone_id} has unknown adjacent zone ${adjacentZoneId}`
+        )
+      }
+    }
+  }
+
+  const seedIds = new Set<string>()
+  for (const seed of content.zone_runtime_seed.zone_runtime_seed) {
+    if (seedIds.has(seed.zone_id)) {
+      throw new Error(`Duplicate zone_runtime_seed entry for ${seed.zone_id}`)
+    }
+    seedIds.add(seed.zone_id)
+    if (!zoneIds.has(seed.zone_id)) {
+      throw new Error(`zone_runtime_seed references unknown zone ${seed.zone_id}`)
+    }
+  }
+}
+
 function loadConfig(): GameState['config'] {
   const gc = gameConfigJson.game_config as Record<string, unknown> & GameState['config']
   return {
@@ -83,7 +154,7 @@ function loadConfig(): GameState['config'] {
 
 function loadContent(): GameContent {
   const events = parseEventsYaml(eventsYamlRaw)
-  return {
+  const content: GameContent = {
     territories: {
       ...territoriesJson,
       territories: territoriesJson.territories.map((territory) => ({
@@ -98,6 +169,8 @@ function loadContent(): GameContent {
       zones: zonesJson.zones.map((zone) => ({
         ...zone,
         territory_key: toTerritoryKey(zone.territory_key),
+        zone_type: toZoneType(zone.zone_type),
+        strategic_value: toStrategicValue(zone.strategic_value),
         coords: { ...zone.coords },
         ethnic_groups: [...zone.ethnic_groups],
         adjacent_zones: [...zone.adjacent_zones],
@@ -186,6 +259,9 @@ function loadContent(): GameContent {
     cutscenes: cutscenesJson as GameContent['cutscenes'],
     localization: localizationJson as GameContent['localization'],
   }
+
+  validateContentConsistency(content)
+  return content
 }
 
 interface GameStore {

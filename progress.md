@@ -74,3 +74,173 @@ Original prompt: Look at the gameplay-interface-final.html and rework the loadin
   - replaced hard direction flips (`ease: none`) with eased transitions (`sine.inOut`),
   - inserted intermediate bridge keyframes between major beats to create curved motion rather than abrupt vector changes.
 - Validation: ran deterministic section screenshot pass at `output/web-game/story-sections-smooth-v1/section-1..5.png`.
+- New request: Enter Arena should morph hero image into opening video, then fade to black and show auth modal; guest should show stylized loading, then onboarding modal.
+- Landing flow updates in `index.html`:
+  - Added explicit `fade-to-black` transition state for intro overlay/video.
+  - Updated intro video visual transition timing (video -> black -> reveal entry modal).
+  - Kept transition shield over handoff so auth modal appears after black transition.
+- Entry sequencing updates in `src/app/App.tsx`:
+  - Replaced first-time-only gate timer logic with entry-flow-pending logic.
+  - Entry flow now always runs onboarding loading + mission brief when access mode resolves to guest.
+  - Authenticated path only runs onboarding when not previously seen.
+- Modal behavior updates in `src/ui/modals/ModalRoot.tsx`:
+  - Entry-gate modal now uses non-scroll style (`overflow: hidden`).
+  - Blocking loading and entry-gate backdrops now use full black.
+  - Loading modal chrome/header hidden for a cleaner loading presentation.
+  - Loading modal style tuned for centered, non-scroll presentation.
+- Loading visual updates in `src/styles/layout.css`:
+  - Added stronger stylized loading treatment (command-network kicker, animated progress bar, checklist lines, dots).
+  - Added entry-gate modal sizing/spacing class to keep auth modal compact and scrollbar-free.
+- Validation:
+  - `npm run typecheck` run; only pre-existing TS6133 unused local errors in `src/map/MapView.tsx`.
+  - Playwright end-to-end flow capture: `output/web-game/entry-flow-validation-v2`.
+    - `auth-modal.png` shows black-backed secure access modal after transition.
+    - `guest-loading.png` shows stylized loading stage after guest click.
+    - `onboarding-modal.png` shows mission brief onboarding modal opened.
+    - `result.json` confirms `modalOverflowY: hidden` and `modalHasScrollbar: false`.
+- New request: fix large legend gap near shortcuts, move zoom control off legend, and align legend colors with broader UI theme.
+- Updated `src/map/MapView.tsx`:
+  - added `ZoomControl` import,
+  - disabled default map zoom control on `MapContainer` (`zoomControl={false}`),
+  - added `<ZoomControl position="topright" />` so zoom no longer sits above left legend.
+- Updated `src/styles/map.css`:
+  - remapped map palette variables to global design tokens (`--bg-panel`, `--bg-card`, `--text`, `--text-secondary`, `--border`, etc.) for visual coherence,
+  - reduced legend spacing issue by removing fixed bottom anchoring and setting `max-height` + non-growing body (`.map-legend-body { flex: 0 1 auto; ... }`),
+  - refined header/shortcuts/section-title/zoom control styling with gold-accented theme consistency,
+  - positioned top-right Leaflet control margins for cleaner placement.
+  - adjusted responsive legend sizing to avoid reintroducing the spacing issue on smaller screens.
+- Validation:
+  - Playwright flow+UI capture: `output/web-game/map-legend-ui-check/map-legend.png`.
+  - Metrics: `zoomOverlapLegend: false`, `zoomIsRightOfLegend: true` (`output/web-game/map-legend-ui-check/metrics.json`).
+- `npm run typecheck` still fails only with pre-existing TS6133 unused locals in `src/map/MapView.tsx`.
+- Data-contract hardening pass implemented for map pipeline:
+  - Added shared `mapThreatThreshold` + setter in `uiStore`; critical-only filtering now uses slider value across `ZoneGeoJSONLayer`, `ZoneMarkers`, and `ZoneTypeLabelMarkers`.
+  - Removed broken legend aggregate code that compared `zone_id` to `territory_key` and dropped unused `totalPopulation` dead code.
+  - Territory tooltip population now prefers canonical runtime/content territory population (with GeoJSON fallback only if needed).
+  - Zone polygon styling/tooltip fields now prefer canonical `zones.json` values (type/strategic/population/ethnicity/adjacency), with GeoJSON fallback.
+  - Tightened content schema types in `types.ts`: introduced `ZoneType` and `StrategicValue` unions; `ZoneData` now uses them.
+  - Added loader-level enum conversion + validation in `gameStore.ts` (`toZoneType`, `toStrategicValue`) and consistency checks (duplicate zone IDs, adjacency refs, zone-runtime-seed refs/duplicates).
+- Cleared existing `MapView.tsx` TS6133 dead locals during this pass.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Strict parity pass (requested scope) implemented while preserving canonical data sources:
+  - Territory polygons are now visibly status-colored on-map (higher per-status fill opacity, stronger strokes) in `MapView` so territory areas are readable.
+  - Leaflet zoom controls are hidden in the current build (component removed + CSS hard-hide fallback).
+  - `territory_overview` modal was rebuilt to match reference structure with: territory flag, `Current Situation`, `Key Challenges`, and `Investigate Zones` CTA.
+  - Territory modal content is data-driven from `territory_state`, `zone_state`, and `content.territories` (no external data injection).
+  - Added flag fallback mapping to shipped SVG assets because `territories.json` references PNG paths that are not present in `public/assets/flags`.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- New request: make zone_list and zone_detail modals match context_files/gameplay-interface-final.html style/flow.\n- Rebuilt ZoneListBody in src/ui/modals/ModalRoot.tsx to parity structure: territory-scoped title/subtitle, threat-state zone cards, population/insurgency/displaced stat row, incident tags, Back to Territory + Close actions.\n- Rebuilt ZoneDetailBody in src/ui/modals/ModalRoot.tsx to parity structure: hero/banner block with coordinates, zone header + threat badge, 3 stat blocks, sections (Situation Report, Active Threats, Key Actors Present, Other Actors, Recommended Actions), and Back to Zones action.\n- Added zone-modal helper derivations from existing data sources only (no new content files): threat band mapping, zone type labels, strategic value labels, actor matching, situation summary, and recommended actions synthesis.\n- Updated modal chrome behavior in ModalRoot so zone_list / zone_detail use custom in-body headers and sizing instead of the generic top header.\n- Added comprehensive zone-modal parity styling in src/styles/layout.css: .zones-grid, .zone-card state variants, .zone-threat badges, detail stats, modal sections/lists, actor/support cards, close button, and responsive handling.\n- Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Additional validation: 
+pm run build passed (vite build successful; existing chunk-size warning remains).
+- Post-fix verification after final modal text/coordinate cleanup: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- User reported apparent regression on territory fills / zoom hide / territory modal parity.\n- Verified code paths still existed (MapView status fill styles + zoomControl={false} + map.css zoom hard-hide + TerritoryOverviewBody sections/styles).\n- Ran live Playwright diagnostics and found actual runtime issue: Leaflet SVG overlay initialized at iewBox 0 0 0 0 with territory paths as M0 0 (polygons effectively invisible), not a style revert.\n- Root cause: map initialized while root container was hidden during landing flow; Leaflet size was never invalidated after game activation.\n- Fix: updated MapInstanceCapture in src/map/MapView.tsx to schedule map.invalidateSize(false) on mount, window resize, and frican-mandate:start-flow event.\n- Also locked gameplay shell viewport sizing (.game-shell { height: 100vh; overflow: hidden; }) in src/styles/layout.css to prevent map container oversizing drift.\n- Validation after fix: browser probe now reports m00Count: 0, maxArea: 133144, territoryCount 5, zoneCount 15, and zoom control absent. Screenshot: output/web-game/map-legend-ui-check-latest/map-legend-after-fix-2.png.\n- 
+pm run typecheck passed.
+- Request: remove minimap element/classes (map-minimap-container leaflet-container leaflet-touch leaflet-fade-anim).\n- Removed minimap Leaflet control component from src/map/MapView.tsx and removed <MinimapControl /> mount in MapView.\n- Removed minimap CSS selectors from src/styles/map.css (.map-minimap-container, hover variant, .map-minimap-viewport, and responsive minimap block).\n- Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).\n- Verified no remaining references to MinimapControl, map-minimap-container, or map-minimap-viewport in source.
+- Live browser verification after minimap removal: .map-minimap-container count = 0 and exact class combo .map-minimap-container.leaflet-container.leaflet-touch.leaflet-fade-anim count = 0.
+- User reported zone modal Situation Report copy mispositioned.\n- Root cause: landing-page global p rule in index.html (max-width: 550px, transform/opacity animation defaults) was leaking into game modal paragraphs and constraining modal-text layout in zone detail.\n- Fix in src/styles/layout.css: strengthened .modal-text to neutralize landing-page paragraph defaults (max-width: none, width: 100%, opacity: 1, 	ransform: none, justify-self: stretch).\n- Browser validation: output/web-game/zone-modal-position-check/zone-detail-modal-after-fix.png now shows full-width Situation Report copy; metrics confirm text width tracks section width (eportWidth: 870, 	extWidth: 841.78, maxWidth: none).\n- Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- New request: make modal buttons use the same visual style as navbar buttons.
+- Updated `src/styles/layout.css` to apply `.game-nav-btn` base visual treatment (background/border/typography/radius/hover state) to modal button classes: `.action-config-secondary`, `.action-config-confirm`, `.session-auth-google`, `.session-auth-guest`.
+- Removed the prior confirm gradient and guest link-style presentation so modal action buttons now match navbar button styling consistently.
+- Kept modal-specific layout behavior intact (auth button width/grid behavior and mobile full-width rules).
+- Validation: `npm run typecheck` passed; `npm test -- --run` passed (49/49).
+- New request: map legend should match sidebar-panel styling exactly with no gradients/glow.
+- Updated legend styles in `src/styles/map.css` to align with `.sidebar-panel` tokens:
+  - panel uses `var(--bg-card)`-equivalent surface, `var(--border-subtle)`, radius 6, and `var(--shadow-sm)`.
+  - header and shortcuts bar gradients removed; both now flat surfaces with subtle borders.
+  - title typography aligned to sidebar-panel title style (UI font, uppercase tracking).
+  - turn badge and shortcut keycaps switched to flat panel treatments.
+  - removed legend glow accents (critical status dot glow, slider-thumb glow, alert-card inner glow).
+- Validation: `npm run typecheck` passed.
+- New request: rework map legend shortcuts layout to look neater.
+- Updated `src/styles/map.css` shortcuts section from a single horizontal row to a structured 2-column grid.
+- Each shortcut is now rendered as a compact chip row with aligned keycaps and labels (`grid-template-columns: auto 1fr`, consistent height/padding/border/background).
+- Keycaps now have fixed minimum width and centered text, improving visual alignment (including `Esc`).
+- Added responsive fallback at <=480px to collapse shortcuts to one column for readability.
+- Validation: `npm run typecheck` passed.
+- New request: legend sections should be minimized on interface load.
+- Updated `src/map/MapView.tsx` so every legend section now mounts with `defaultOpen={false}`.
+- Updated `LegendSection` component default from open to collapsed (`defaultOpen = false`) to keep future sections minimized by default.
+- Validation: `npm run typecheck` passed.
+- New request: inspect `public/assets` and `public/img` for zone modal imagery.
+- Verified zone detail modal currently renders a placeholder banner only (`Zone Intelligence View`) and does not load image paths yet in `src/ui/modals/ModalRoot.tsx`.
+- Inventory check:
+  - `public/assets` contains flags (`public/assets/flags/*.svg`) and actor portraits (`public/assets/actors/*.png`) but no per-zone modal banner images.
+  - `public/img` contains country/zone-like PNGs under subfolders (`Mali`, `Burkina Faso`, `Niger`, `Chad`, `Mauritania`).
+- Direct zone-name file matches from `src/data/zones.json` in `public/img` currently: `mopti`, `timbuktu`, `lake_chad`, `ndjamena`, `nouakchott`.
+- Remaining zones without direct filename match: `segou`, `gao`, `bamako`, `burkina_north`, `burkina_east`, `ouagadougou`, `niger_west`, `niamey`, `niger_south`, `mauritania_south`.
+- New request: wire deterministic zone_id -> image map using existing assets and provide missing asset list.
+- Added `ZONE_IMAGE_ASSETS` mapping in `src/ui/modals/ModalRoot.tsx` covering all 15 zones with deterministic `/img/...` paths.
+- Updated `ZoneDetailBody` to render mapped zone images in the banner (`<img class="zone-detail-image-photo" ...>`) with placeholder fallback only when no mapping exists.
+- Added CSS support in `src/styles/layout.css` for image-backed zone banner (`.zone-detail-image-banner.has-image`, `.zone-detail-image-photo`).
+- Coverage check: all `zones.json` zone IDs are mapped (15/15).
+- Validation: `npm run typecheck` passed.
+- Dedicated-asset gaps (proxy image currently used) remain for 10 zones: segou, gao, bamako, burkina_north, burkina_east, ouagadougou, niger_west, niamey, niger_south, mauritania_south.
+- User request: update `ZONE_IMAGE_ASSETS` so six zones use newly added dedicated files.
+- Updated `src/ui/modals/ModalRoot.tsx` mappings for:
+  - burkina_north -> `/img/Burkina Faso/Burkina North - Burkina Faso.png`
+  - burkina_east -> `/img/Burkina Faso/Burkina East - Burkina Faso.png`
+  - ouagadougou -> `/img/Burkina Faso/Ouagadougou - Burkina Faso.png`
+  - niamey -> `/img/Niger/Niamey - Niger.png`
+  - niger_south -> `/img/Niger/Niger South - Niger.png`
+  - mauritania_south -> `/img/Mauritania/Mauritania South - Mauritania.png`
+- Set `dedicated: true` for all six updated entries.
+- Validation:
+  - `npm run typecheck` passed.
+  - Mapping rescan: 15/15 zones mapped, 0 broken mapped paths, no mapped-vs-preferred mismatches.
+  - Remaining zones without dedicated files in assets: mali (`segou`, `gao`, `bamako`) and niger (`niger_west`).
+- User requested rerun of zone modal image mapping scan.
+- Rescan result:
+  - zones in `zones.json`: 15
+  - mapping entries in `ZONE_IMAGE_ASSETS`: 15
+  - unmapped zones: 0
+  - broken mapped image paths: 0
+  - dedicated asset availability in `public/img`: now present for all zones (0 missing).
+- Current map still marks 4 entries as non-dedicated/proxy despite new direct assets now existing:
+  - `bamako` -> currently `/img/Mali/Goundam Urban Center - Mali.png`, direct file exists: `/img/Mali/Bamako - Mali.png`
+  - `gao` -> currently `/img/Mali/Kidal Strategic City - Mali.png`, direct file exists: `/img/Mali/Gao - Mali.png`
+  - `segou` -> currently `/img/Mali/Goundam Urban Center - Mali.png`, direct file exists: `/img/Mali/Segou - Mali.png`
+  - `niger_west` -> currently `/img/Niger/Agadez Desert City - Niger.png`, direct file exists: `/img/Niger/Niger West - Niger.png`
+- User requested the same scan for zone modal key actor avatar images.
+- Scanned zone key-actor pipeline in `ZoneDetailBody` against `zone_runtime_seed.json`, `actors.json`, `localization_en.json`, and `public/assets/actors`.
+- Results:
+  - total zone actor entries: 53
+  - matched to actor records by current name-lookup logic: 12
+  - unmatched actor entries: 41
+  - matched entries with existing portrait file (from `actors.json portrait_url`): 0
+  - matched entries with missing portrait file: 12
+- Current zone modal key-actor UI still renders letter avatars (`.zone-actor-avatar`) and does not consume actor image files yet.
+- Coverage gap remains all territories/zones for image-avatar readiness due actor-name mismatches and missing `portrait_url` files.
+- User requested deterministic `actor_present -> avatar` mapping for zone key actor cards and wiring real images.
+- Added `ACTOR_PRESENT_AVATAR_MAP` + `keyActorAvatarForName()` in `src/ui/modals/ModalRoot.tsx` covering all current `actors_present` strings from `zone_runtime_seed.json`.
+- Updated zone key actor card rendering to show `<img>` avatar when mapped, with initial-letter fallback when missing.
+- Added avatar image styling in `src/styles/layout.css` (`.zone-actor-avatar.has-image`, `.zone-actor-avatar-image`) while preserving card layout.
+- Validation:
+  - `npm run typecheck` passed.
+  - Map coverage scan: all 31 unique `actor_present` strings are mapped (some intentionally `null`), no broken mapped file paths.
+- Current missing image mappings (null entries):
+  - Boko Haram remnants
+  - Border communities
+  - Displaced civilians in northern camps
+  - Displaced fishing communities
+  - Displaced rural communities
+  - Dogon self-defense militias
+  - Fulani Community
+  - Fulani community leaders
+  - ISGS
+  - ISGS elements
+  - Kanuri community militias
+  - Malian refugees
+  - Refugee communities
+  - Volunteers for Defense of Homeland (VDP)

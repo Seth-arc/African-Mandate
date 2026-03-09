@@ -3,6 +3,8 @@ import { useGameStore } from '../../state/gameStore'
 import { useUiStore, type ModalKind } from '../../state/uiStore'
 import { useSessionStore } from '../../state/sessionStore'
 import type {
+  ActorData,
+  ActorSentiment,
   ActionDefinition,
   ActionTarget,
   DialogueChoiceData,
@@ -10,8 +12,12 @@ import type {
   EndingType,
   Metrics,
   Resources,
+  StrategicValue,
   TerritoryKey,
   TerritoryState,
+  ZoneData,
+  ZoneState,
+  ZoneType,
 } from '../../state/types'
 import {
   resolveActionDescription,
@@ -93,14 +99,274 @@ function SectionTitle({ children }: { children: ReactNode }): ReactNode {
   )
 }
 
+const TERRITORY_FLAG_FALLBACK: Record<TerritoryKey, string> = {
+  mali: '/assets/flags/Flag_of_Mali.svg',
+  burkina_faso: '/assets/flags/Flag_of_Burkina_Faso.svg',
+  niger: '/assets/flags/Flag_of_Niger.svg',
+  chad: '/assets/flags/Flag_of_Chad.svg',
+  mauritania: '/assets/flags/Flag_of_Mauritania.svg',
+}
+
+type ZoneImageAsset = {
+  src: string
+  dedicated: boolean
+}
+
+/* Deterministic zone_id -> image mapping using current public/img assets. */
+const ZONE_IMAGE_ASSETS: Record<string, ZoneImageAsset> = {
+  mopti: { src: '/img/Mali/Mopti Trade Hub - Mali.png', dedicated: true },
+  segou: { src: '/img/Mali/Goundam Urban Center - Mali.png', dedicated: false },
+  timbuktu: { src: '/img/Mali/Timbuktu Cultural Center - Mali.png', dedicated: true },
+  gao: { src: '/img/Mali/Kidal Strategic City - Mali.png', dedicated: false },
+  bamako: { src: '/img/Mali/Goundam Urban Center - Mali.png', dedicated: false },
+  burkina_north: { src: '/img/Burkina Faso/Burkina North - Burkina Faso.png', dedicated: true },
+  burkina_east: { src: '/img/Burkina Faso/Burkina East - Burkina Faso.png', dedicated: true },
+  ouagadougou: { src: '/img/Burkina Faso/Ouagadougou - Burkina Faso.png', dedicated: true },
+  niger_west: { src: '/img/Niger/Agadez Desert City - Niger.png', dedicated: false },
+  niamey: { src: '/img/Niger/Niamey - Niger.png', dedicated: true },
+  niger_south: { src: '/img/Niger/Niger South - Niger.png', dedicated: true },
+  lake_chad: { src: '/img/Chad/Lake Chad Basin Strategic Region - Chad.png', dedicated: true },
+  ndjamena: { src: "/img/Chad/N'Djamena Capital City - Chad.png", dedicated: true },
+  mauritania_south: { src: '/img/Mauritania/Mauritania South - Mauritania.png', dedicated: true },
+  nouakchott: { src: '/img/Mauritania/Nouakchott Capital City - Mauritania.png', dedicated: true },
+}
+
+/* Deterministic actor_present -> avatar mapping for zone key-actor cards. */
+const ACTOR_PRESENT_AVATAR_MAP: Record<string, string | null> = {
+  'Boko Haram remnants': null,
+  'Border communities': null,
+  'Burkina Faso security forces': '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
+  'Chad military forces': '/assets/actors/Amb. Halima Djerma Chad Transitional Government.png',
+  'Civil society coalitions': '/assets/actors/Amina Ouedraogo Burkina Civil Society Network.png',
+  'Displaced civilians in northern camps': null,
+  'Displaced fishing communities': null,
+  'Displaced rural communities': null,
+  'Dogon self-defense militias': null,
+  'ECOWAS envoys': '/assets/actors/ECOWAS Commission.png',
+  'ECOWAS leadership': '/assets/actors/ECOWAS Commission.png',
+  'Fulani Community': null,
+  'Fulani community leaders': null,
+  "General Ibrahim Traore's government": '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
+  'ISGS': null,
+  'ISGS elements': null,
+  'JNIM': '/assets/actors/JNIM.png',
+  'Kanuri community militias': null,
+  'Mali Transitional Government': '/assets/actors/Col. Assimi Go%C3%AFta.png',
+  'Malian government forces': '/assets/actors/Col. Assimi Go%C3%AFta.png',
+  'Malian refugees': null,
+  'Mauritania Security Directorate': '/assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
+  'Mauritanian security services': '/assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
+  'National security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
+  'Niger security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
+  'Niger Transitional Government': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
+  'Refugee communities': null,
+  'Regional intelligence partners': '/assets/actors/AU Commissioner.png',
+  'Regional peacekeeping partners': '/assets/actors/AU Commissioner.png',
+  'Volunteers for Defense of Homeland (VDP)': null,
+  'Wagner Group': '/assets/actors/Wagner Group.png',
+}
+
+function keyActorAvatarForName(actorName: string): string | null {
+  return ACTOR_PRESENT_AVATAR_MAP[actorName] ?? null
+}
+
+function formatPopulationCompact(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`
+  return value.toString()
+}
+
+type ZoneThreatBand = 'critical' | 'high' | 'moderate' | 'low'
+
+const ZONE_TYPE_LABELS: Record<ZoneType, string> = {
+  capital: 'Capital',
+  conflict_hotspot: 'Conflict Hotspot',
+  border_region: 'Border Region',
+  remote_contested: 'Remote / Contested',
+  humanitarian_crisis: 'Humanitarian Crisis',
+  urban_center: 'Urban Center',
+}
+
+const STRATEGIC_VALUE_LABELS: Record<StrategicValue, string> = {
+  critical: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+}
+
+function zoneThreatBand(threatLevel: number): ZoneThreatBand {
+  if (threatLevel >= 75) return 'critical'
+  if (threatLevel >= 50) return 'high'
+  if (threatLevel >= 25) return 'moderate'
+  return 'low'
+}
+
+function zoneThreatLabel(band: ZoneThreatBand): string {
+  if (band === 'critical') return 'Critical'
+  if (band === 'high') return 'High'
+  if (band === 'moderate') return 'Moderate'
+  return 'Low'
+}
+
+function zoneCardToneClass(band: ZoneThreatBand): 'critical' | 'stable' | null {
+  if (band === 'critical') return 'critical'
+  if (band === 'moderate' || band === 'low') return 'stable'
+  return null
+}
+
+function zoneTypeLabel(zoneType: ZoneType | undefined): string {
+  if (!zoneType) return 'Operational Zone'
+  return ZONE_TYPE_LABELS[zoneType] ?? 'Operational Zone'
+}
+
+function normalizeTextLookup(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function findActorByDisplayName(
+  actors: ActorData[],
+  content: LoadedContent,
+  actorName: string
+): ActorData | undefined {
+  const normalizedName = normalizeTextLookup(actorName)
+  if (!normalizedName) return undefined
+  return actors.find((actor) => {
+    const resolved = normalizeTextLookup(resolveActorName(content, actor.actor_key))
+    return resolved === normalizedName || resolved.includes(normalizedName) || normalizedName.includes(resolved)
+  })
+}
+
+function formatCoordinate(value: number, positiveLabel: string, negativeLabel: string): string {
+  const label = value >= 0 ? positiveLabel : negativeLabel
+  return `${Math.abs(value).toFixed(2)} ${label}`
+}
+
+function formatZoneCoordinates(zoneData: ZoneData | undefined): string {
+  if (!zoneData) return 'Coordinates unavailable'
+  return `${formatCoordinate(zoneData.coords.lat, 'N', 'S')}, ${formatCoordinate(zoneData.coords.lon, 'E', 'W')}`
+}
+
+function zoneCardDescription(zone: ZoneState, zoneData: ZoneData | undefined): string {
+  const strategicLabel = zoneData ? STRATEGIC_VALUE_LABELS[zoneData.strategic_value] : null
+  const threatSummary = `${zone.threat_level}/100 threat pressure`
+  const displacedSummary =
+    zone.displaced > 0
+      ? `${formatPopulationCompact(zone.displaced)} displaced civilians tracked`
+      : 'no displacement currently logged'
+  const strategicSummary = strategicLabel ? `${strategicLabel}-value zone` : 'active operational zone'
+  return `${strategicSummary} with ${threatSummary}; ${displacedSummary}.`
+}
+
+function inferActorRole(content: LoadedContent, actorData: ActorData | undefined, actorName: string): string {
+  if (actorData) return resolveActorTitle(content, actorData.actor_key)
+  if (/government|forces|army|junta|military/i.test(actorName)) return 'State security actor'
+  if (/jnim|isgs|insurgent|boko/i.test(actorName)) return 'Armed non-state actor'
+  if (/community|civil|leader|society/i.test(actorName)) return 'Community stakeholder'
+  return 'Local stakeholder'
+}
+
+function zoneSituationReport(
+  content: LoadedContent,
+  zone: ZoneState,
+  zoneData: ZoneData | undefined,
+  territoryName: string
+): string {
+  const zoneName = resolveZoneName(content, zone.zone_id)
+  const typeLabel = zoneTypeLabel(zoneData?.zone_type)
+  const strategicLabel = zoneData ? STRATEGIC_VALUE_LABELS[zoneData.strategic_value].toLowerCase() : 'active'
+  const topThreat = zone.threats[0]
+  const incidentCount = zone.incidents.length
+  const displacementText =
+    zone.displaced > 0
+      ? `${formatPopulationCompact(zone.displaced)} displaced civilians are currently tracked.`
+      : 'No displacement has been formally logged in this cycle.'
+  const threatText = topThreat
+    ? `Primary concern is ${topThreat.toLowerCase()}.`
+    : `Threat pressure remains elevated at ${zone.threat_level}/100.`
+  const incidentText =
+    incidentCount > 0
+      ? `${incidentCount} incident${incidentCount === 1 ? '' : 's'} reported in the latest field telemetry.`
+      : 'No incidents have been logged yet, but monitoring remains active.'
+  return `${zoneName} in ${territoryName} is categorized as a ${typeLabel.toLowerCase()} with ${strategicLabel} strategic value. ${threatText} ${incidentText} ${displacementText}`
+}
+
+type RecommendedZoneAction = { title: string; detail: string }
+
+function recommendedZoneActions(
+  content: LoadedContent,
+  zone: ZoneState,
+  zoneData: ZoneData | undefined
+): RecommendedZoneAction[] {
+  const actions: RecommendedZoneAction[] = []
+
+  if (zone.threat_level >= 75) {
+    actions.push({
+      title: 'Emergency Deployment',
+      detail: 'Deploy rapid-response security assets to contain escalation and protect population centers.',
+    })
+  } else if (zone.threat_level >= 50) {
+    actions.push({
+      title: 'Focused Security Operation',
+      detail: 'Coordinate patrols and intelligence-led interdiction to reduce active insurgent pressure.',
+    })
+  } else {
+    actions.push({
+      title: 'Preventive Stabilization',
+      detail: 'Sustain visible security presence and local mediation to prevent threat rebound.',
+    })
+  }
+
+  if (zone.displaced >= 20_000) {
+    actions.push({
+      title: 'Humanitarian Corridors',
+      detail: `Prioritize protected aid routes for approximately ${formatPopulationCompact(zone.displaced)} displaced civilians.`,
+    })
+  }
+
+  if (zone.threats.length > 0) {
+    const leadThreat = zone.threats[0] ?? 'active threat networks'
+    actions.push({
+      title: 'Threat Disruption',
+      detail: `Target ${leadThreat.toLowerCase()} through synchronized intelligence and local security operations.`,
+    })
+  }
+
+  if (zoneData && zoneData.adjacent_zones.length > 0) {
+    const adjacentNames = zoneData.adjacent_zones
+      .slice(0, 2)
+      .map((adjacentZoneId) => resolveZoneName(content, adjacentZoneId))
+      .join(', ')
+    actions.push({
+      title: 'Cross-Zone Coordination',
+      detail: `Synchronize planning with adjacent zones (${adjacentNames}) to limit spillover effects.`,
+    })
+  }
+
+  if (zoneData?.strategic_value === 'critical') {
+    actions.push({
+      title: 'Infrastructure Protection',
+      detail: 'Harden governance and logistics nodes to preserve institutional control and service continuity.',
+    })
+  }
+
+  if (actions.length < 4) {
+    actions.push({
+      title: 'Intelligence Gathering',
+      detail: 'Increase HUMINT and reconnaissance coverage to improve threat attribution and response timing.',
+    })
+  }
+
+  return actions.slice(0, 4)
+}
+
 function TerritoryOverviewBody(): ReactNode {
   const content = useGameStore((s) => s.state.content)
   const territoryState = useGameStore((s) => s.state.territory_state)
   const zoneState = useGameStore((s) => s.state.zone_state)
   const selectedTerritoryKey = useUiStore((s) => s.selectedTerritoryKey)
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
-  const setSelectedZone = useUiStore((s) => s.setSelectedZone)
   const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
 
   const effectiveTerritoryKey =
     selectedTerritoryKey ?? (selectedZoneId ? zoneState?.[selectedZoneId]?.territory_key ?? null : null)
@@ -118,46 +384,139 @@ function TerritoryOverviewBody(): ReactNode {
     return <p style={{ color: 'var(--text-secondary)' }}>No runtime state found for this territory.</p>
   }
 
+  const territoryContent = content.territories.territories.find(
+    (item) => item.territory_key === territory.territory_key
+  )
   const zones = Object.values(zoneState)
-    .filter((zone) => zone.territory_key === effectiveTerritoryKey)
+    .filter((zone) => zone.territory_key === territory.territory_key)
     .sort((a, b) => b.threat_level - a.threat_level)
+  const criticalZoneCount = zones.filter((zone) => zone.threat_level >= 75).length
+  const highZoneCount = zones.filter((zone) => zone.threat_level >= 50 && zone.threat_level < 75).length
+  const totalDisplaced = zones.reduce((sum, zone) => sum + zone.displaced, 0)
+  const totalIncidents = zones.reduce((sum, zone) => sum + zone.incidents.length, 0)
+  const topZone = zones[0]
+  const topZoneName = topZone ? resolveZoneName(content, topZone.zone_id) : null
+  const topThreatLabel = topZone?.threats[0] ?? null
+
+  const flagFromContent = territoryContent?.flag_url
+    ? territoryContent.flag_url.startsWith('/')
+      ? territoryContent.flag_url
+      : `/${territoryContent.flag_url}`
+    : null
+  const fallbackFlag = TERRITORY_FLAG_FALLBACK[territory.territory_key]
+  const flagSrc = flagFromContent ?? fallbackFlag
+
+  const situationParts: string[] = [
+    `${territory.name} is currently assessed as ${territory.status.toUpperCase()}, with stability at ${territory.stability}/100 and insurgency at ${territory.insurgency}/100.`,
+  ]
+  if (criticalZoneCount > 0) {
+    situationParts.push(`${criticalZoneCount} zone${criticalZoneCount === 1 ? '' : 's'} are at CRITICAL threat.`)
+  } else {
+    situationParts.push('No zones are currently flagged at CRITICAL threat.')
+  }
+  if (highZoneCount > 0) {
+    situationParts.push(`${highZoneCount} additional zone${highZoneCount === 1 ? '' : 's'} remain in HIGH threat status.`)
+  }
+  if (topZone && topZoneName) {
+    situationParts.push(`Highest pressure remains in ${topZoneName} (${topZone.threat_level}/100 threat).`)
+  }
+  if (totalDisplaced > 0) {
+    situationParts.push(`${totalDisplaced.toLocaleString()} people are displaced across reported zones.`)
+  }
+
+  const keyChallenges = [
+    {
+      title: 'Security',
+      detail: topZone && topZoneName
+        ? `${topZoneName} is the lead hotspot at ${topZone.threat_level}/100${topThreatLabel ? ` (${topThreatLabel})` : ''}.`
+        : 'No lead hotspot is currently identified from zone telemetry.',
+    },
+    {
+      title: 'Governance',
+      detail: `Territory stability (${territory.stability}/100) is still trailing insurgency pressure (${territory.insurgency}/100).`,
+    },
+    {
+      title: 'Humanitarian',
+      detail: totalDisplaced > 0
+        ? `${totalDisplaced.toLocaleString()} displaced civilians are currently tracked in this territory.`
+        : totalIncidents > 0
+          ? `${totalIncidents} active incident${totalIncidents === 1 ? '' : 's'} are logged despite no displacement record.`
+          : 'No displacement is currently recorded, but incident monitoring must continue.',
+    },
+    {
+      title: 'Operational Scope',
+      detail: `${zones.length} zone${zones.length === 1 ? '' : 's'} require synchronized planning and follow-up.`,
+    },
+  ]
 
   return (
-    <div style={{ display: 'grid', gap: '0.9rem' }}>
-      <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: '1.05rem' }}>{territory.name}</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
-        <span style={chipStyle}>Status {territory.status}</span>
-        <span style={chipStyle}>Stability {territory.stability}</span>
-        <span style={chipStyle}>Insurgency {territory.insurgency}</span>
-        <span style={chipStyle}>Population {territory.population.toLocaleString()}</span>
-      </div>
-      <div>
-        <SectionTitle>Priority zones</SectionTitle>
-        <div style={{ marginBottom: '0.45rem' }}>
-          <button type="button" style={compactButtonStyle} onClick={() => openModal('zone_list')}>
-            Open complete zone list
-          </button>
+    <div className="territory-overview">
+      <div className="territory-overview-header">
+        <div className="territory-overview-flag">
+          {flagSrc ? (
+            <img
+              src={flagSrc}
+              alt={`${territory.name} flag`}
+              onError={(event) => {
+                if (event.currentTarget.src.endsWith(fallbackFlag)) {
+                  event.currentTarget.style.display = 'none'
+                  return
+                }
+                event.currentTarget.src = fallbackFlag
+              }}
+            />
+          ) : (
+            <span>{territory.name.slice(0, 2).toUpperCase()}</span>
+          )}
         </div>
-        {zones.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No zones linked to this territory.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: '0.45rem' }}>
-            {zones.map((zone) => (
-              <button
-                key={zone.zone_id}
-                type="button"
-                style={listButtonStyle}
-                onClick={() => {
-                  setSelectedZone(zone.zone_id)
-                  openModal('zone_detail')
-                }}
-              >
-                <span>{resolveZoneName(content, zone.zone_id)}</span>
-                <span style={{ color: 'var(--gold)' }}>Threat {zone.threat_level}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="territory-overview-heading">
+          <h3 className="territory-overview-title">{territory.name}</h3>
+          <div className="territory-overview-subtitle">Territory Overview</div>
+        </div>
+      </div>
+
+      <div className="territory-stats">
+        <div className="territory-stat">
+          <div className="territory-stat-label">Stability</div>
+          <div className="territory-stat-value">{territory.stability}</div>
+        </div>
+        <div className="territory-stat">
+          <div className="territory-stat-label">Insurgency</div>
+          <div className="territory-stat-value">{territory.insurgency}</div>
+        </div>
+        <div className="territory-stat">
+          <div className="territory-stat-label">Population</div>
+          <div className="territory-stat-value">{formatPopulationCompact(territory.population)}</div>
+        </div>
+        <div className="territory-stat">
+          <div className="territory-stat-label">Critical Zones</div>
+          <div className="territory-stat-value">{criticalZoneCount}</div>
+        </div>
+      </div>
+
+      <div className="territory-overview-section">
+        <h4 className="territory-overview-section-title">Current Situation</h4>
+        <p className="territory-overview-section-text">{situationParts.join(' ')}</p>
+      </div>
+
+      <div className="territory-overview-section">
+        <h4 className="territory-overview-section-title">Key Challenges</h4>
+        <ul className="territory-overview-list">
+          {keyChallenges.map((challenge) => (
+            <li key={challenge.title}>
+              <strong>{challenge.title}:</strong> {challenge.detail}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="territory-overview-actions">
+        <button type="button" className="action-config-confirm" onClick={() => openModal('zone_list')}>
+          Investigate Zones
+        </button>
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
+        </button>
       </div>
     </div>
   )
@@ -170,6 +529,7 @@ function ZoneListBody(): ReactNode {
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const setSelectedZone = useUiStore((s) => s.setSelectedZone)
   const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
 
   if (!content || !zoneState) {
     return <p style={{ color: 'var(--text-secondary)' }}>Loading zone list...</p>
@@ -182,6 +542,8 @@ function ZoneListBody(): ReactNode {
     return <p style={{ color: 'var(--text-secondary)' }}>Select a territory first to list its zones.</p>
   }
 
+  const territoryName = resolveTerritoryName(content, effectiveTerritoryKey)
+  const zoneDataById = new Map(content.zones.zones.map((zone) => [zone.zone_id, zone]))
   const zones = Object.values(zoneState)
     .filter((zone) => zone.territory_key === effectiveTerritoryKey)
     .sort((a, b) => b.threat_level - a.threat_level)
@@ -191,27 +553,80 @@ function ZoneListBody(): ReactNode {
   }
 
   return (
-    <div style={{ display: 'grid', gap: '0.55rem' }}>
-      <SectionTitle>{resolveTerritoryName(content, effectiveTerritoryKey)}</SectionTitle>
-      <div>
-        <button type="button" style={compactButtonStyle} onClick={() => openModal('territory_overview')}>
-          Back to territory overview
+    <div className="zones-modal-shell">
+      <button type="button" className="zone-modal-close" onClick={closeModal} aria-label="Close zone list">
+        x
+      </button>
+      <div className="zones-modal-header">
+        <h3 className="zones-modal-title">{territoryName} - Zones of Interest</h3>
+        <div className="zones-modal-subtitle">Strategic Analysis by Region</div>
+      </div>
+
+      <div className="zones-grid">
+        {zones.map((zone) => {
+          const zoneData = zoneDataById.get(zone.zone_id)
+          const threatBand = zoneThreatBand(zone.threat_level)
+          const toneClass = zoneCardToneClass(threatBand)
+          const threatClass = threatBand === 'low' || threatBand === 'moderate' ? 'stable' : threatBand
+          const incidents = zone.incidents.length > 0 ? zone.incidents.slice(0, 3) : ['No incidents logged']
+
+          return (
+            <button
+              key={zone.zone_id}
+              type="button"
+              className={`zone-card${toneClass ? ` ${toneClass}` : ''}`}
+              onClick={() => {
+                setSelectedZone(zone.zone_id)
+                openModal('zone_detail')
+              }}
+            >
+              <div className="zone-body">
+                <div className="zone-header">
+                  <div>
+                    <div className="zone-name">{resolveZoneName(content, zone.zone_id)}</div>
+                    <div className="zone-type">{zoneTypeLabel(zoneData?.zone_type)}</div>
+                  </div>
+                  <div className={`zone-threat ${threatClass}`}>{zoneThreatLabel(threatBand)}</div>
+                </div>
+
+                <div className="zone-info">
+                  <div className="zone-info-item">
+                    <div className="zone-info-label">Population</div>
+                    <div className="zone-info-value">{formatPopulationCompact(zone.population)}</div>
+                  </div>
+                  <div className="zone-info-item">
+                    <div className="zone-info-label">Insurgency</div>
+                    <div className="zone-info-value">{zone.insurgency}/100</div>
+                  </div>
+                  <div className="zone-info-item">
+                    <div className="zone-info-label">Displaced</div>
+                    <div className="zone-info-value">{formatPopulationCompact(zone.displaced)}</div>
+                  </div>
+                </div>
+
+                <div className="zone-description">{zoneCardDescription(zone, zoneData)}</div>
+
+                <div className="zone-incidents">
+                  {incidents.map((incident, index) => (
+                    <span className="incident-tag" key={`${zone.zone_id}-incident-${index}`}>
+                      {incident}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="zone-modal-actions">
+        <button type="button" className="action-config-secondary" onClick={() => openModal('territory_overview')}>
+          Back to Territory
+        </button>
+        <button type="button" className="action-config-confirm" onClick={closeModal}>
+          Close
         </button>
       </div>
-      {zones.map((zone) => (
-        <button
-          key={zone.zone_id}
-          type="button"
-          style={listButtonStyle}
-          onClick={() => {
-            setSelectedZone(zone.zone_id)
-            openModal('zone_detail')
-          }}
-        >
-          <span>{resolveZoneName(content, zone.zone_id)}</span>
-          <span style={{ color: 'var(--gold)' }}>Threat {zone.threat_level}</span>
-        </button>
-      ))}
     </div>
   )
 }
@@ -219,8 +634,10 @@ function ZoneListBody(): ReactNode {
 function ZoneDetailBody(): ReactNode {
   const content = useGameStore((s) => s.state.content)
   const zoneState = useGameStore((s) => s.state.zone_state)
+  const actorSentiments = useGameStore((s) => s.state.actor_sentiments) as Record<string, ActorSentiment> | undefined
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
 
   if (!content || !zoneState) {
     return <p style={{ color: 'var(--text-secondary)' }}>Loading zone detail...</p>
@@ -235,61 +652,185 @@ function ZoneDetailBody(): ReactNode {
     return <p style={{ color: 'var(--text-secondary)' }}>Selected zone was not found in runtime state.</p>
   }
 
+  const zoneData = content.zones.zones.find((entry) => entry.zone_id === zone.zone_id)
+  const zoneName = resolveZoneName(content, zone.zone_id)
+  const zoneImageAsset = ZONE_IMAGE_ASSETS[zone.zone_id]
+  const zoneImageSrc = zoneImageAsset?.src
+  const territoryName = resolveTerritoryName(content, zone.territory_key)
+  const threatBand = zoneThreatBand(zone.threat_level)
+  const threatClass = threatBand === 'low' || threatBand === 'moderate' ? 'stable' : threatBand
+  const actorEntries = content.actors.actors
+  const keyActorLookup = new Set(zone.actors_present.map((name) => normalizeTextLookup(name)))
+
+  const keyActors = zone.actors_present.map((actorName) => {
+    const actorData = findActorByDisplayName(actorEntries, content, actorName)
+    const relationshipScore = actorData ? actorSentiments?.[actorData.actor_key] : undefined
+    return {
+      name: actorName,
+      avatarSrc: keyActorAvatarForName(actorName),
+      role: inferActorRole(content, actorData, actorName),
+      presence: relationshipScore
+        ? `Relationship ${relationshipScore.relationship_score}/100`
+        : zone.threat_level >= 75
+          ? 'High operational influence'
+          : 'Active stakeholder',
+    }
+  })
+
+  const supportActors = actorEntries
+    .filter((actor) => actor.profile !== 'au_internal')
+    .map((actor) => {
+      const actorName = resolveActorName(content, actor.actor_key)
+      const sentiment = actorSentiments?.[actor.actor_key]
+      const impact = sentiment
+        ? `Relationship: ${sentiment.relationship_label}`
+        : actor.relationship_tracked
+          ? 'Relationship tracked'
+          : 'Context actor'
+      return {
+        actor,
+        name: actorName,
+        role: resolveActorTitle(content, actor.actor_key),
+        impact,
+      }
+    })
+    .filter((entry) => !keyActorLookup.has(normalizeTextLookup(entry.name)))
+    .sort((a, b) => Number(b.actor.relationship_tracked) - Number(a.actor.relationship_tracked))
+    .slice(0, 4)
+
+  const threatEntries = zone.threats.length > 0
+    ? zone.threats
+    : zone.incidents.length > 0
+      ? zone.incidents.map((incident) => `Incident pressure: ${incident}`)
+      : [`Threat pressure remains at ${zone.threat_level}/100 and requires monitoring.`]
+
+  const actions = recommendedZoneActions(content, zone, zoneData)
+
   return (
-    <div style={{ display: 'grid', gap: '0.8rem' }}>
-      <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: '1.05rem' }}>
-        {resolveZoneName(content, zone.zone_id)}
+    <div className="zone-detail-shell">
+      <button type="button" className="zone-modal-close" onClick={closeModal} aria-label="Close zone detail">
+        x
+      </button>
+
+      <div className="zone-image-container">
+        <div className={`zone-detail-image-banner${zoneImageSrc ? ' has-image' : ''}`}>
+          {zoneImageSrc ? (
+            <img
+              className="zone-detail-image-photo"
+              src={zoneImageSrc}
+              alt={`${zoneName} zone intelligence view`}
+              loading="lazy"
+            />
+          ) : (
+            <div className="zone-detail-image-placeholder">Zone Intelligence View</div>
+          )}
+          <div className="zone-image-coords">{formatZoneCoordinates(zoneData)}</div>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-        <button type="button" style={compactButtonStyle} onClick={() => openModal('territory_overview')}>
-          Back to territory overview
+
+      <div className="zone-detail-header-row">
+        <div className="zone-detail-headline">
+          <h3 className="zone-detail-title">{zoneName}</h3>
+          <div className="zone-detail-subtitle">
+            {zoneTypeLabel(zoneData?.zone_type)} - {territoryName}
+            {zoneData ? ` - ${STRATEGIC_VALUE_LABELS[zoneData.strategic_value]} Value` : ''}
+          </div>
+        </div>
+        <div className={`zone-threat ${threatClass}`}>{zoneThreatLabel(threatBand)}</div>
+      </div>
+
+      <div className="zone-detail-stats">
+        <div className="zone-detail-stat">
+          <div className="zone-detail-stat-value">{formatPopulationCompact(zone.population)}</div>
+          <div className="zone-detail-stat-label">Population</div>
+        </div>
+        <div className="zone-detail-stat">
+          <div className="zone-detail-stat-value">{zone.insurgency}</div>
+          <div className="zone-detail-stat-label">Insurgency</div>
+        </div>
+        <div className="zone-detail-stat">
+          <div className="zone-detail-stat-value">{formatPopulationCompact(zone.displaced)}</div>
+          <div className="zone-detail-stat-label">IDPs</div>
+        </div>
+      </div>
+
+      <div className="modal-section">
+        <h3 className="modal-section-title">Situation Report</h3>
+        <p className="modal-text">{zoneSituationReport(content, zone, zoneData, territoryName)}</p>
+      </div>
+
+      <div className="modal-section">
+        <h3 className="modal-section-title">Active Threats</h3>
+        <ul className="modal-list">
+          {threatEntries.map((threat, index) => (
+            <li key={`${zone.zone_id}-threat-${index}`}>{threat}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="modal-section">
+        <h3 className="modal-section-title">Key Actors Present</h3>
+        {keyActors.length === 0 ? (
+          <div className="zone-actors-empty">No key actors listed.</div>
+        ) : (
+          <div className="zone-actors-list">
+            {keyActors.map((actor) => (
+              <div className="zone-actor-item" key={actor.name}>
+                <div className={`zone-actor-avatar${actor.avatarSrc ? ' has-image' : ''}`}>
+                  {actor.avatarSrc ? (
+                    <img
+                      className="zone-actor-avatar-image"
+                      src={actor.avatarSrc}
+                      alt={`${actor.name} avatar`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    actor.name.slice(0, 1).toUpperCase()
+                  )}
+                </div>
+                <div className="zone-actor-info">
+                  <div className="zone-actor-name">{actor.name}</div>
+                  <div className="zone-actor-role">{actor.role}</div>
+                  <div className="zone-actor-presence">{actor.presence}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="modal-section">
+        <h3 className="modal-section-title">Other Actors</h3>
+        {supportActors.length === 0 ? (
+          <div className="zone-support-empty">No supporting actors listed.</div>
+        ) : (
+          <div className="zone-support-actors-list">
+            {supportActors.map((actor) => (
+              <div className="zone-support-actor-item" key={actor.actor.actor_key}>
+                <div className="zone-support-actor-name">{actor.name}</div>
+                <div className="zone-support-actor-role">{actor.role}</div>
+                <div className="zone-support-actor-impact">{actor.impact}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="modal-section">
+        <h3 className="modal-section-title">Recommended Actions</h3>
+        <ul className="modal-list">
+          {actions.map((action) => (
+            <li key={action.title}>
+              <strong>{action.title}:</strong> {action.detail}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="zone-modal-actions">
+        <button type="button" className="action-config-secondary" onClick={() => openModal('zone_list')}>
+          Back to Zones
         </button>
-        <button type="button" style={compactButtonStyle} onClick={() => openModal('zone_list')}>
-          Back to zone list
-        </button>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
-        <span style={chipStyle}>Threat {zone.threat_level}</span>
-        <span style={chipStyle}>Stability {zone.stability}</span>
-        <span style={chipStyle}>Insurgency {zone.insurgency}</span>
-        <span style={chipStyle}>Population {zone.population.toLocaleString()}</span>
-        <span style={chipStyle}>Displaced {zone.displaced.toLocaleString()}</span>
-      </div>
-      <div>
-        <SectionTitle>Threats</SectionTitle>
-        {zone.threats.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No authored threats listed for this zone.</p>
-        ) : (
-          <ul style={listStyle}>
-            {zone.threats.map((threat) => (
-              <li key={threat}>{threat}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div>
-        <SectionTitle>Incidents</SectionTitle>
-        {zone.incidents.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No incidents logged yet.</p>
-        ) : (
-          <ul style={listStyle}>
-            {zone.incidents.map((incident) => (
-              <li key={incident}>{incident}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div>
-        <SectionTitle>Actors Present</SectionTitle>
-        {zone.actors_present.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No actors annotated for this zone.</p>
-        ) : (
-          <ul style={listStyle}>
-            {zone.actors_present.map((actor) => (
-              <li key={actor}>{actor}</li>
-            ))}
-          </ul>
-        )}
       </div>
     </div>
   )
@@ -1462,21 +2003,6 @@ const chipStyle = {
   background: 'var(--bg-panel)',
 } as const
 
-const listButtonStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '0.8rem',
-  width: '100%',
-  padding: '0.45rem 0.55rem',
-  border: '1px solid var(--border-subtle)',
-  borderRadius: '6px',
-  background: 'var(--bg-panel)',
-  color: 'var(--text)',
-  textAlign: 'left',
-  cursor: 'pointer',
-} as const
-
 const listStyle = {
   margin: 0,
   paddingLeft: '1rem',
@@ -2089,16 +2615,6 @@ function ActionConfigBody(): ReactNode {
   )
 }
 
-const compactButtonStyle = {
-  padding: '0.35rem 0.55rem',
-  border: '1px solid var(--border-subtle)',
-  borderRadius: '4px',
-  background: 'var(--bg-panel)',
-  color: 'var(--text-secondary)',
-  fontSize: '0.74rem',
-  cursor: 'pointer',
-} as const
-
 function OnboardingLoadingBody(): ReactNode {
   return (
     <div className="onboarding-loading-shell">
@@ -2159,6 +2675,10 @@ export function ModalRoot(): ReactNode {
   const entryGateRequiresChoice = useSessionStore((s) => s.entry_gate_active && !s.entry_gate_confirmed)
   const isBlockingEntryGate = modal === 'session_manager' && entryGateRequiresChoice
   const isBlockingLoading = modal === 'onboarding_loading'
+  const isTerritoryOverviewModal = modal === 'territory_overview'
+  const isZoneListModal = modal === 'zone_list'
+  const isZoneDetailModal = modal === 'zone_detail'
+  const isZoneModal = isZoneListModal || isZoneDetailModal
   const isBlockingModal = isBlockingLoading || isBlockingEntryGate
   const backdropStyle = isBlockingModal ? { ...BACKDROP_STYLE, background: '#000' } : BACKDROP_STYLE
   const modalStyle = isBlockingEntryGate
@@ -2177,10 +2697,30 @@ export function ModalRoot(): ReactNode {
           background: 'linear-gradient(180deg, rgba(10,10,10,0.96), rgba(6,6,6,0.98))',
           border: '1px solid rgba(212, 175, 55, 0.28)',
         }
+      : isTerritoryOverviewModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(860px, 94vw)',
+            padding: '1.2rem',
+          }
+      : isZoneListModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(1080px, 96vw)',
+            maxHeight: '92vh',
+          }
+      : isZoneDetailModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(920px, 94vw)',
+            maxHeight: '92vh',
+          }
       : MODAL_STYLE
   const modalContentClassName = `modal-content${isBlockingLoading ? ' modal-content-loading' : ''}${
     isBlockingEntryGate ? ' modal-content-entry-gate' : ''
-  }`
+  }${isTerritoryOverviewModal ? ' modal-content-territory-overview' : ''}${
+    isZoneListModal ? ' modal-content-zone-list' : ''
+  }${isZoneDetailModal ? ' modal-content-zone-detail' : ''}`
   const heading = modal === 'session_manager' && entryGateRequiresChoice ? 'Secure Access' : modalTitle(modal)
 
   if (modal === 'none') return null
@@ -2201,7 +2741,7 @@ export function ModalRoot(): ReactNode {
         style={modalStyle}
         onClick={(event) => event.stopPropagation()}
       >
-        {!isBlockingLoading && (
+        {!isBlockingLoading && !isTerritoryOverviewModal && !isZoneModal && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem' }}>{heading}</h2>
             {!isBlockingModal && (

@@ -66,6 +66,8 @@ export interface UiState {
   selectedZoneId: string | null
   /** Map layer/legend toggle state. */
   mapLayers: MapLayerState
+  /** Threat threshold used by critical-only map filtering. */
+  mapThreatThreshold: number
 }
 
 const initialState: UiState = {
@@ -89,6 +91,7 @@ const initialState: UiState = {
     zones: true,
     criticalOnly: false,
   },
+  mapThreatThreshold: 75,
 }
 
 interface UiStore extends UiState {
@@ -112,6 +115,7 @@ interface UiStore extends UiState {
   clearMapSelection: () => void
   setMapLayer: (layer: keyof MapLayerState, enabled: boolean) => void
   toggleMapLayer: (layer: keyof MapLayerState) => void
+  setMapThreatThreshold: (threshold: number) => void
   reset: () => void
 }
 
@@ -222,5 +226,9 @@ export const useUiStore = create<UiStore>((set) => ({
         [layer]: !s.mapLayers[layer],
       },
     })),
+  setMapThreatThreshold: (threshold) =>
+    set({
+      mapThreatThreshold: Math.max(0, Math.min(100, Math.round(threshold))),
+    }),
   reset: () => set(initialState),
 }))

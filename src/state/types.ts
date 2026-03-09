@@ -202,12 +202,22 @@ export interface TerritoryState {
 // Zones (content + runtime state)
 // ---------------------------------------------------------------------------
 
+export type ZoneType =
+  | 'capital'
+  | 'conflict_hotspot'
+  | 'border_region'
+  | 'remote_contested'
+  | 'humanitarian_crisis'
+  | 'urban_center'
+
+export type StrategicValue = 'critical' | 'high' | 'medium' | 'low'
+
 /** One zone from zones.json (content data). */
 export interface ZoneData {
   zone_id: string
   territory_key: TerritoryKey
   name_key: string
-  zone_type: string
+  zone_type: ZoneType
   population: number
   base_insurgency: number
   base_stability: number
@@ -215,7 +225,7 @@ export interface ZoneData {
   multi_ethnic: boolean
   ethnic_groups: string[]
   adjacent_zones: string[]
-  strategic_value: string
+  strategic_value: StrategicValue
 }
 
 /** Wrapper for zones.json. */
