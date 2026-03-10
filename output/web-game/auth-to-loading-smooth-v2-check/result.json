@@ -1,0 +1,18 @@
+{
+  "url": "http://127.0.0.1:4173",
+  "result": {
+    "marks": {
+      "clickAt": 11025,
+      "sessionGoneAt": 11114.600000023842,
+      "loadingVisibleAt": 11114.600000023842,
+      "loadingReadyAt": 11434.199999988079,
+      "videoReadyStateAtVisible": 0,
+      "videoCurrentTimeAtVisible": 0,
+      "shellAnimation": "onboarding-loading-shell-in"
+    },
+    "derived": {
+      "sessionToLoadingGapMs": 0,
+      "loadingVisibleToReadyMs": 319.6
+    }
+  }
+}

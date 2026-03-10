@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="image" href="/img/hero.png">
+    <link rel="preload" as="video" href="/assets/vid/pre-interface%20loading_video.mp4" type="video/mp4">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -1244,9 +1245,11 @@
         const introVideo = document.getElementById('introVideo');
         const introVideoLoading = document.getElementById('introVideoLoading');
         const GLOBAL_MEDIA_VOLUME_SCALE = 0;
+        const PRE_INTERFACE_LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4';
         const GAME_THEME_AUDIO_SRC = '/assets/audio/music/Briefing%20Room%20Runway.mp3';
         const GAME_THEME_TARGET_VOLUME = 0.42;
         let gameThemeAudio = null;
+        let preInterfaceVideoWarmup = null;
         let gameThemeFadeRaf = null;
         let gameThemeFadeToken = 0;
         let introCompleted = false;
@@ -1318,6 +1321,24 @@
             };
 
             gameThemeFadeRaf = requestAnimationFrame(stepFade);
+        }
+
+        function warmPreInterfaceLoadingVideoBuffer() {
+            try {
+                if (!preInterfaceVideoWarmup) {
+                    const preloadVideo = document.createElement('video');
+                    preloadVideo.preload = 'auto';
+                    preloadVideo.muted = true;
+                    preloadVideo.setAttribute('playsinline', 'true');
+                    preloadVideo.src = PRE_INTERFACE_LOADING_VIDEO_SRC;
+                    preInterfaceVideoWarmup = preloadVideo;
+                }
+                if (preInterfaceVideoWarmup.readyState < 2) {
+                    preInterfaceVideoWarmup.load();
+                }
+            } catch (error) {
+                // Warmup should never block user flow.
+            }
         }
 
         function setEnterButtonLoading(isLoading) {
@@ -1398,6 +1419,7 @@
                 if (introVideo.readyState < 2) {
                     introVideo.load();
                 }
+                warmPreInterfaceLoadingVideoBuffer();
             } catch (error) {
                 // Warmup should never block user flow.
             }

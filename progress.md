@@ -1191,3 +1191,43 @@ pm run build passed.
 - Landing heading clipping fix: adjusted `.mask-line` in `index.html` with descender-safe spacing (`padding-bottom: 0.1em; margin-bottom: -0.1em;`) so letters like 'g' are not clipped in lines like "Collateral Geography".
 - Browser verification (`.codex-temp/verify-collateral-geography-fix.mjs`) confirms visible bottom room (`bottomPaddingRoom: 5.78`).
 - Artifacts: `output/web-game/landing-collateral-geography-fix-check/result.json`, `.../collateral-geography-fix.png`.
+- New request: remaining transition glitch between login/signup and pre-interface loading video.
+- Smoothed auth -> loading handoff:
+  - `src/styles/layout.css`: removed `loading-entry-from-gate` backdrop flash animation (now stable black), added modal surface transition properties, and changed `loading-surface-in` keyframes to avoid opacity drop/pop.
+  - `src/ui/modals/ModalRoot.tsx`: loading modal now keeps entry-gate width/height on direct handoff to avoid size jump; onboarding loading readiness now gates on playback (`onPlaying`) with short fallback timer to prevent black-frame hang.
+  - `src/app/App.tsx`: deferred `openModal('onboarding_loading')` by one animation frame after entry confirmation to avoid same-frame modal-class thrash.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New request: dossier articles looked unprofessional.
+- Reworked dossier article presentation in `DossierArticleBody` (`src/ui/modals/ModalRoot.tsx`) to use stronger editorial structure:
+  - added dateline composition (`location | date`),
+  - added byline row (`Filed by`),
+  - upgraded metadata to labeled data cards,
+  - wrapped article content in a dedicated `intel-report-article-wrap`,
+  - switched lead image block to semantic `figure/figcaption`,
+  - split source footer into labeled/value fields.
+- Refined dossier article visual design in `src/styles/layout.css`:
+  - improved headline/subheadline hierarchy and spacing,
+  - introduced kicker row, byline styles, and metadata card styling,
+  - set professional reading measure/line-height for body copy,
+  - improved section title, pullquote, infobox, and list readability,
+  - tuned footer/source treatment,
+  - updated responsive behavior for new metadata grid and article wrapper.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New request: one more sweep on article font and spacing consistency.
+- Performed typography/spacing normalization for dossier feed + full dossier article in `src/styles/layout.css`:
+  - enforced consistent article font stack (`var(--font-sans`) on `.intel-report-modal-shell`,
+  - tightened headline/subheadline measure and tracking,
+  - standardized article body rhythm with `.intel-report-body > * + *` vertical spacing,
+  - normalized section/pullquote/infobox/list spacing and line heights,
+  - aligned button letter spacing,
+  - raised dossier feed text sizes and spacing for consistency with article scale.
+- Responsive follow-up:
+  - adjusted headline/subheadline/body scale at tablet/mobile breakpoints,
+  - kept metadata grid and article wrapper spacing consistent on smaller viewports.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.

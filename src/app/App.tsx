@@ -72,8 +72,15 @@ function App(): ReactNode {
     if (!entryGateConfirmed) return
     if (modal !== 'session_manager') return
 
+    if (typeof window === 'undefined') {
+      setEntryFlowPending(false)
+      openModal('onboarding_loading')
+      return
+    }
+    window.requestAnimationFrame(() => {
+      openModal('onboarding_loading')
+    })
     setEntryFlowPending(false)
-    openModal('onboarding_loading')
   }, [entryFlowPending, entryGateConfirmed, modal, openModal])
 
   useEffect(() => {

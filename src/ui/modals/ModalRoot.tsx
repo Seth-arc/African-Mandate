@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore, type ModalKind } from '../../state/uiStore'
 import { useSessionStore } from '../../state/sessionStore'
@@ -2205,37 +2205,57 @@ function DossierArticleBody(): ReactNode {
     return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Dossier article unavailable.</p>
   }
 
+  const articleDateline = `${selectedArticle.location} | ${selectedArticle.date}`
+
   return (
     <article className="intel-report-modal-shell">
       <div className="intel-report-header">
-        {selectedArticle.urgencyBadge && <div className="intel-report-urgent">{selectedArticle.urgencyBadge}</div>}
-        <div className="intel-report-masthead">{selectedArticle.masthead}</div>
+        <div className="intel-report-kicker-row">
+          <div className="intel-report-masthead">{selectedArticle.masthead}</div>
+          {selectedArticle.urgencyBadge && <div className="intel-report-urgent">{selectedArticle.urgencyBadge}</div>}
+        </div>
         <h1 className="intel-report-headline">{selectedArticle.headline}</h1>
         <p className="intel-report-subheadline">{selectedArticle.subheadline}</p>
+        <div className="intel-report-byline">
+          <span className="intel-report-byline-label">Filed by</span>
+          <span className="intel-report-byline-value">{selectedArticle.source}</span>
+        </div>
         <div className="intel-report-meta">
-          <span>{selectedArticle.date}</span>
-          <span>{selectedArticle.location}</span>
-          <span>{selectedArticle.source}</span>
+          <span className="intel-report-meta-item">
+            <span className="intel-report-meta-label">Dateline</span>
+            <span className="intel-report-meta-value">{articleDateline}</span>
+          </span>
+          <span className="intel-report-meta-item">
+            <span className="intel-report-meta-label">Coverage</span>
+            <span className="intel-report-meta-value">{selectedArticle.location}</span>
+          </span>
+          <span className="intel-report-meta-item">
+            <span className="intel-report-meta-label">Source Network</span>
+            <span className="intel-report-meta-value">{selectedArticle.source}</span>
+          </span>
         </div>
       </div>
 
       <div className="intel-report-content">
-        <div className="intel-report-lead-image">
-          <div className="intel-report-lead-image-placeholder">
-            <img src={selectedArticle.image} alt={selectedArticle.headline} />
-          </div>
-          <div className="intel-report-image-caption">{selectedArticle.imageCaption}</div>
-        </div>
+        <div className="intel-report-article-wrap">
+          <figure className="intel-report-lead-image">
+            <div className="intel-report-lead-image-placeholder">
+              <img src={selectedArticle.image} alt={selectedArticle.headline} />
+            </div>
+            <figcaption className="intel-report-image-caption">{selectedArticle.imageCaption}</figcaption>
+          </figure>
 
-        <div
-          className="intel-report-body"
-          dangerouslySetInnerHTML={{ __html: selectedArticle.contentHtml }}
-        />
+          <div
+            className="intel-report-body"
+            dangerouslySetInnerHTML={{ __html: selectedArticle.contentHtml }}
+          />
+        </div>
       </div>
 
       <div className="intel-report-footer">
         <div className="intel-report-source">
-          <strong>Sources:</strong> {selectedArticle.sources}
+          <div className="intel-report-source-label">Sources</div>
+          <div className="intel-report-source-value">{selectedArticle.sources}</div>
         </div>
         <div className="intel-report-actions">
           <button type="button" className="intel-report-btn close" onClick={() => openModal('dossier')}>
@@ -3732,17 +3752,36 @@ function ActionConfigBody(): ReactNode {
 
 function OnboardingLoadingBody(): ReactNode {
   const closeModal = useUiStore((s) => s.closeModal)
+  const [isReady, setIsReady] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const exitTimerRef = useRef<number | null>(null)
+  const readyFallbackTimerRef = useRef<number | null>(null)
+
+  const markReady = useCallback(() => {
+    setIsReady((current) => (current ? current : true))
+  }, [])
 
   useEffect(() => {
+    const video = videoRef.current
+    if (video && video.readyState >= 3 && !video.paused) {
+      markReady()
+    } else if (video && video.readyState >= 2 && typeof window !== 'undefined') {
+      // Avoid hanging on a black shell if autoplay stalls momentarily.
+      readyFallbackTimerRef.current = window.setTimeout(markReady, 420)
+    }
+
     return () => {
       if (exitTimerRef.current !== null && typeof window !== 'undefined') {
         window.clearTimeout(exitTimerRef.current)
         exitTimerRef.current = null
       }
+      if (readyFallbackTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(readyFallbackTimerRef.current)
+        readyFallbackTimerRef.current = null
+      }
     }
-  }, [])
+  }, [markReady])
 
   const beginRevealExit = (): void => {
     if (isExiting) return
@@ -3768,13 +3807,20 @@ function OnboardingLoadingBody(): ReactNode {
   }
 
   return (
-    <div className={`onboarding-loading-shell${isExiting ? ' is-exiting' : ''}`}>
+    <div className={`onboarding-loading-shell${isReady ? ' is-ready' : ''}${isExiting ? ' is-exiting' : ''}`}>
       <video
+        ref={videoRef}
         className="onboarding-loading-video"
         autoPlay
         muted
         playsInline
         preload="auto"
+        onPlaying={markReady}
+        onCanPlay={() => {
+          if (typeof window !== 'undefined' && readyFallbackTimerRef.current === null) {
+            readyFallbackTimerRef.current = window.setTimeout(markReady, 220)
+          }
+        }}
         onEnded={beginRevealExit}
         onError={beginRevealExit}
       >
@@ -3886,11 +3932,11 @@ export function ModalRoot(): ReactNode {
         maxHeight: '90vh',
         overflow: 'hidden',
       }
-    : isBlockingLoading
+      : isBlockingLoading
       ? {
           ...MODAL_STYLE,
-          width: 'min(640px, 92vw)',
-          maxHeight: '88vh',
+          width: loadingEnteringFromEntryGate ? 'min(560px, 92vw)' : 'min(640px, 92vw)',
+          maxHeight: loadingEnteringFromEntryGate ? '90vh' : '88vh',
           overflow: 'hidden',
           background: 'linear-gradient(180deg, rgba(10,10,10,0.96), rgba(6,6,6,0.98))',
           border: '1px solid rgba(212, 175, 55, 0.28)',
