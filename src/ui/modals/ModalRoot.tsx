@@ -1248,20 +1248,20 @@ function StatusReportBody(): ReactNode {
 }
 
 const ENVOY_ROLE_SUMMARY =
-  'You were appointed by the AU Peace and Security Council to coordinate a regional, African-led stabilization campaign across the Sahel. Your remit combines security coordination, diplomacy, civilian protection, and institutional credibility management.'
+  "You serve as the African Union's lead crisis negotiator and operational strategist in the Sahel. Your mandate is to coordinate regional partners, allocate limited resources, and shape outcomes that will be used to grade mission performance across security, humanitarian access, and political legitimacy."
 
 const ENVOY_BACKGROUND_POINTS = [
-  'University of Dakar: Political Science',
-  'London School of Economics: Conflict, Security, and Development',
-  'Former Senior Advisor to AU Commissioner for Peace and Security',
-  'Known for cross-actor mediation in high-risk regional crises',
+  'You trained in political science at the University of Dakar, building a practical foundation in governance and public accountability.',
+  'At the London School of Economics, you focused on conflict, security, and development, with emphasis on real-world policy tradeoffs.',
+  'You later served as Senior Advisor to the AU Commissioner for Peace and Security, helping coordinate negotiations during high-risk moments.',
+  'Your reputation was built on keeping difficult conversations moving and finding shared ground between actors who rarely trust one another.',
 ]
 
 const ENVOY_MANDATE_POINTS = [
-  'Can coordinate security, diplomacy, and humanitarian interventions across mapped territories',
-  'Can engage state and non-state stakeholders through approved dialogue channels',
-  'Operates under strict resource and time constraints set by mission configuration',
-  'Mission outcome is judged by threshold metrics and fail conditions in campaign rules',
+  'You are expected to balance security operations, diplomacy, and humanitarian access at the same time.',
+  'You can engage both state and non-state stakeholders through authorized dialogue channels.',
+  'Every decision is constrained by limited budget, personnel, political capital, and time.',
+  'Your outcome is judged against campaign thresholds, so short-term gains must support long-term stability.',
 ]
 
 type MissionBriefTimelineItem = {
@@ -1729,6 +1729,7 @@ function MissionBriefBody(): ReactNode {
   const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
   const setSelectedDossierArticle = useUiStore((s) => s.setSelectedDossierArticle)
+  const [bioEnvelopeOpen, setBioEnvelopeOpen] = useState(false)
   const turn = state.session.turn
   const act = getActFromTurn(turn)
   const turnsRemaining = Math.max(state.session.max_turns - turn + 1, 0)
@@ -1810,6 +1811,34 @@ function MissionBriefBody(): ReactNode {
             <div className="mission-brief-role-subtitle">Player Role</div>
             <div className="mission-brief-role-title">Special Envoy for Sahel Stabilization</div>
             <p className="mission-brief-role-text">{ENVOY_ROLE_SUMMARY}</p>
+            <div className={`mission-brief-envelope${bioEnvelopeOpen ? ' is-open' : ''}`}>
+              <button
+                type="button"
+                className="mission-brief-envelope-toggle"
+                onClick={() => setBioEnvelopeOpen((open) => !open)}
+                aria-expanded={bioEnvelopeOpen}
+                aria-controls="mission-brief-player-bio"
+              >
+                <span>Player Bio Envelope</span>
+                <span>{bioEnvelopeOpen ? 'Close' : 'Open'}</span>
+              </button>
+              {bioEnvelopeOpen && (
+                <div className="mission-brief-envelope-panel" id="mission-brief-player-bio">
+                  <div className="mission-brief-envelope-title">Who You Are</div>
+                  <ul className="mission-brief-envelope-list">
+                    {ENVOY_BACKGROUND_POINTS.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                  <div className="mission-brief-envelope-title">How You Lead</div>
+                  <ul className="mission-brief-envelope-list">
+                    {ENVOY_MANDATE_POINTS.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="mission-brief-stats">
@@ -1836,13 +1865,15 @@ function MissionBriefBody(): ReactNode {
         <section className="mission-brief-section">
           <h2 className="mission-brief-section-title">Situation Overview</h2>
           <p className="modal-text">
-            The Sahel faces a compound crisis: insurgent expansion, governance fragmentation, and widening humanitarian
-            displacement across core population corridors.
+            The Sahel region faces an unprecedented convergence of security, governance, and humanitarian crises.
+            Jihadist insurgencies have expanded across Mali, Burkina Faso, and Niger, displacing millions and
+            destabilizing national governments. Military juntas have seized power in multiple countries, expelled
+            Western forces, and invited Russian Wagner Group contractors as alternative security partners.
           </p>
           <p className="modal-text">
-            As the African Union Special Envoy, you are responsible for restoring regional stability through
-            African-led coordination while balancing security operations, political legitimacy, and civilian
-            protection.
+            As the African Union's Special Envoy for Sahel Stabilization, you must navigate this complex landscape to
+            restore stability, protect civilian populations, and preserve African-led solutions to regional challenges.
+            Your decisions will shape the future of the Sahel and test the AU's capacity for effective crisis response.
           </p>
         </section>
 
@@ -1851,7 +1882,6 @@ function MissionBriefBody(): ReactNode {
           <div className="mission-brief-timeline">
             {MISSION_PRIMARY_OBJECTIVES.map((objective) => (
               <div className="mission-brief-timeline-item" key={objective.title}>
-                <div className="mission-brief-timeline-step">{objective.step}</div>
                 <div className="mission-brief-timeline-title">{objective.title}</div>
                 <div className="mission-brief-timeline-description">{objective.description}</div>
               </div>
@@ -1869,7 +1899,6 @@ function MissionBriefBody(): ReactNode {
           <div className="mission-brief-timeline">
             {victoryConditions.map((condition) => (
               <div className="mission-brief-timeline-item" key={condition.key}>
-                <div className="mission-brief-timeline-step">{condition.step}</div>
                 <div className="mission-brief-timeline-heading">
                   <div className="mission-brief-timeline-title">{condition.title}</div>
                   <span className={`mission-brief-status ${condition.onTrack ? 'on-track' : 'at-risk'}`}>
@@ -3300,6 +3329,12 @@ function ActionConfigBody(): ReactNode {
     }
     return selectedActor ? { actor_key: selectedActor } : {}
   })()
+  const resolvedTargetTerritoryKey = resolvedTarget.zone_id
+    ? zoneState[resolvedTarget.zone_id]?.territory_key
+    : resolvedTarget.territory_key
+  const resolvedTargetTerritoryLabel = resolvedTargetTerritoryKey
+    ? resolveTerritoryName(content, resolvedTargetTerritoryKey)
+    : null
 
   const handleTerritoryChange = (value: string): void => {
     const matched = territoryOptions.find((option) => option.value === value)
@@ -3397,6 +3432,12 @@ function ActionConfigBody(): ReactNode {
             <span>Target</span>
             <strong>{formatTargetLabel(content, resolvedTarget)}</strong>
           </div>
+          {resolvedTarget.zone_id && (
+            <div className="action-config-review-row">
+              <span>Territory</span>
+              <strong>{resolvedTargetTerritoryLabel ?? 'N/A'}</strong>
+            </div>
+          )}
           {allocationSpecs.map((spec) => (
             <div className="action-config-review-row" key={spec.key}>
               <span>{spec.label}</span>
@@ -3690,24 +3731,55 @@ function ActionConfigBody(): ReactNode {
 }
 
 function OnboardingLoadingBody(): ReactNode {
+  const closeModal = useUiStore((s) => s.closeModal)
+  const [isExiting, setIsExiting] = useState(false)
+  const exitTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (exitTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(exitTimerRef.current)
+        exitTimerRef.current = null
+      }
+    }
+  }, [])
+
+  const beginRevealExit = (): void => {
+    if (isExiting) return
+    setIsExiting(true)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('african-mandate:theme-fade-out', {
+          detail: { durationMs: 1800 },
+        })
+      )
+    }
+    if (typeof window === 'undefined') {
+      closeModal()
+      return
+    }
+    if (exitTimerRef.current !== null) {
+      window.clearTimeout(exitTimerRef.current)
+    }
+    exitTimerRef.current = window.setTimeout(() => {
+      closeModal()
+      exitTimerRef.current = null
+    }, 420)
+  }
+
   return (
-    <div className="onboarding-loading-shell">
-      <div className="onboarding-loading-kicker">African Union Command Network</div>
-      <div className="onboarding-loading-title">Establishing Theater Link</div>
-      <div className="onboarding-loading-subtitle">Calibrating mandate systems and regional intelligence feeds...</div>
-      <div className="onboarding-loading-bar">
-        <span />
-      </div>
-      <div className="onboarding-loading-checklist">
-        <span>Authenticating guest operations channel</span>
-        <span>Syncing Sahel territory telemetry</span>
-        <span>Preparing mission command overlays</span>
-      </div>
-      <div className="onboarding-loading-dots">
-        <span />
-        <span />
-        <span />
-      </div>
+    <div className={`onboarding-loading-shell${isExiting ? ' is-exiting' : ''}`}>
+      <video
+        className="onboarding-loading-video"
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        onEnded={beginRevealExit}
+        onError={beginRevealExit}
+      >
+        <source src="/assets/vid/pre-interface%20loading_video.mp4" type="video/mp4" />
+      </video>
     </div>
   )
 }
@@ -3765,6 +3837,7 @@ export function ModalRoot(): ReactNode {
   const isDossierArticleModal = modal === 'dossier_article'
   const isRelationshipMatrixModal = modal === 'relationship_matrix'
   const isZoneModal = isZoneListModal || isZoneDetailModal
+  const loadingEnteringFromEntryGate = isBlockingLoading && previousModalRef.current === 'session_manager'
   useEffect(() => {
     if (revealFrameRef.current !== null && typeof window !== 'undefined') {
       window.cancelAnimationFrame(revealFrameRef.current)
@@ -3874,6 +3947,8 @@ export function ModalRoot(): ReactNode {
           }
       : MODAL_STYLE
   const modalContentClassName = `modal-content${isBlockingLoading ? ' modal-content-loading' : ''}${
+    loadingEnteringFromEntryGate ? ' loading-entry-from-gate' : ''
+  }${
     isBlockingEntryGate ? ' modal-content-entry-gate' : ''
   }${isTerritoryOverviewModal ? ' modal-content-territory-overview' : ''}${
     isZoneListModal ? ' modal-content-zone-list' : ''
@@ -3887,12 +3962,13 @@ export function ModalRoot(): ReactNode {
     isMissionBriefModal && missionBriefRevealVisible ? ' mission-brief-visible' : ''
   }`
   const heading = modal === 'session_manager' && entryGateRequiresChoice ? 'Secure Access' : modalTitle(modal)
+  const backdropClassName = `modal-backdrop${loadingEnteringFromEntryGate ? ' loading-entry-from-gate' : ''}`
 
   if (modal === 'none') return null
 
   return (
     <div
-      className="modal-backdrop"
+      className={backdropClassName}
       role="dialog"
       aria-modal="true"
       style={backdropStyle}
@@ -3907,6 +3983,7 @@ export function ModalRoot(): ReactNode {
         onClick={(event) => event.stopPropagation()}
       >
         {!isBlockingLoading &&
+          !isBlockingEntryGate &&
           !isTerritoryOverviewModal &&
           !isZoneModal &&
           !isMissionBriefModal &&

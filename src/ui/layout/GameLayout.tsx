@@ -13,6 +13,7 @@ import { ActorPanel } from '../panels/ActorPanel'
 import { ActionBar } from './ActionBar'
 import { ModalRoot } from '../modals/ModalRoot'
 import { useSessionStore } from '../../state/sessionStore'
+import { useTour } from '../../tour/TourContext'
 
 function territoryFromState(
   territoryState: Record<TerritoryKey, TerritoryState> | undefined,
@@ -37,6 +38,7 @@ export function GameLayout(): ReactNode {
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const authMode = useSessionStore((s) => s.auth_mode)
   const saveSessionState = useSessionStore((s) => s.saveState)
+  const { start: startTour } = useTour()
   const lastObservedTurnRef = useRef<number | null>(null)
   const shownOutcomeRef = useRef<boolean>(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -134,7 +136,7 @@ export function GameLayout(): ReactNode {
 
   const handleTutorial = (): void => {
     setMenuOpen(false)
-    openModal('mission_brief')
+    startTour()
   }
 
   const handleCredits = (): void => {
@@ -159,6 +161,9 @@ export function GameLayout(): ReactNode {
           </a>
         </div>
         <nav className="game-header-nav">
+          <button type="button" className="game-nav-btn" id="btn-onboarding-tour" onClick={() => startTour()}>
+            Onboarding
+          </button>
           <button type="button" className="game-nav-btn" id="btn-mission-brief" onClick={() => openModal('mission_brief')}>
             Mission brief
           </button>

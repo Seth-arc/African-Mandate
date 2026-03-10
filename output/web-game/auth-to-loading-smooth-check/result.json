@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "transition": {
+    "marks": {
+      "clickAt": 10482.399999976158,
+      "sessionGoneAt": 10543.599999964237,
+      "loadingVisibleAt": 10543.599999964237,
+      "loadingShellAnimationName": "onboarding-loading-shell-in",
+      "backdropAnimationName": "loading-backdrop-in",
+      "contentAnimationName": "loading-surface-in"
+    },
+    "derived": {
+      "sessionToLoadingGapMs": 0
+    }
+  }
+}

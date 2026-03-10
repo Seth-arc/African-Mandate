@@ -1,0 +1,24 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "afterPlayClick": {
+    "exists": true,
+    "paused": false,
+    "currentTime": 0.57,
+    "volume": 0.42,
+    "loop": true,
+    "src": "http://127.0.0.1:5174/assets/audio/music/Briefing%20Room%20Runway.mp3"
+  },
+  "duringLoading": {
+    "themePaused": false,
+    "themeCurrentTime": 2.43,
+    "themeVolume": 0.42,
+    "loadingVideoCurrentTime": 0.67,
+    "loadingVideoDuration": 10.04
+  },
+  "afterFade": {
+    "paused": true,
+    "currentTime": 0,
+    "volume": 0.42
+  },
+  "consoleErrors": []
+}

@@ -1,0 +1,17 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "metrics": {
+    "start": 8401.299999952316,
+    "loaderExitStart": 18570.399999976158,
+    "loaderGone": 19014.799999952316,
+    "veilStart": 19029.099999964237,
+    "veilGone": 19803.799999952316,
+    "tourVisible": 19803.799999952316
+  },
+  "derived": {
+    "loaderExitLeadMs": 444.4,
+    "veilLeadMs": 774.7,
+    "tourAfterLoaderMs": 789
+  },
+  "consoleErrors": []
+}

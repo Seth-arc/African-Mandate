@@ -1,0 +1,14 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "transitionMetrics": {
+    "start": 8759.199999988079,
+    "exitStarted": 18975.399999976158,
+    "loaderGone": 19421.30000001192,
+    "tourVisible": 19849
+  },
+  "derived": {
+    "exitLeadMs": 445.9,
+    "tourAfterLoaderMs": 427.7
+  },
+  "consoleErrors": []
+}

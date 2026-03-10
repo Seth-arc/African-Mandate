@@ -25,9 +25,11 @@ const GEOJSON_URL = '/assets/sahel_countries.geojson'
 const MAP_CENTER: [number, number] = [15, 0]
 const MAP_ZOOM = 5
 
-/** CartoDB Dark Matter — military-grade dark basemap */
-const DARK_TILE_URL =
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+/** CartoDB Dark Matter — split into base + labels for explicit layer ordering */
+const DARK_TILE_BASE_URL =
+  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
+const DARK_TILE_LABELS_URL =
+  'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
 const DARK_TILE_ATTR =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
 
@@ -205,6 +207,18 @@ function MapInstanceCapture(): null {
   return null
 }
 
+/** Ensure labels are drawn in a dedicated pane above territory/zone fills. */
+function MapPaneSetup(): null {
+  const map = useMap()
+  useEffect(() => {
+    const pane = map.getPane('topLabelsPane') ?? map.createPane('topLabelsPane')
+    pane.style.zIndex = '625'
+    pane.style.pointerEvents = 'none'
+    pane.classList.add('map-top-labels-pane')
+  }, [map])
+  return null
+}
+
 /* ═══════════════════════════════════════════════
    SOUND EFFECTS (Tactical Audio Cues)
    ═══════════════════════════════════════════════ */
@@ -214,7 +228,7 @@ function playZoneTerritoryHoverSound(): void {
 }
 
 function playZoneTerritoryClickSound(): void {
-  playUiSfx('active_button_hover')
+  playUiSfx('active_button_click')
 }
 
 /* ═══════════════════════════════════════════════
@@ -1929,9 +1943,10 @@ export function MapView(): ReactNode {
         scrollWheelZoom
       >
         <MapInstanceCapture />
+        <MapPaneSetup />
         <TileLayer
           attribution={DARK_TILE_ATTR}
-          url={DARK_TILE_URL}
+          url={DARK_TILE_BASE_URL}
         />
         <NeighbourGeoJSONLayer />
         <SahelGeoJSONLayer />
@@ -1943,6 +1958,12 @@ export function MapView(): ReactNode {
         <ZoneMarkers />
         <ZoneTypeLabelMarkers />
         <IncidentMarkers />
+        <TileLayer
+          attribution={DARK_TILE_ATTR}
+          url={DARK_TILE_LABELS_URL}
+          pane="topLabelsPane"
+          className="map-top-labels-layer"
+        />
       </MapContainer>
     </div>
   )

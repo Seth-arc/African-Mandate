@@ -1,0 +1,22 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "before": {
+    "shellFound": true,
+    "videoFound": true,
+    "contentOverlayFound": false,
+    "titleOverlayFoundInLoading": false,
+    "videoDuration": 10.04,
+    "videoCurrentTime": 0.34,
+    "videoLoop": false,
+    "videoPaused": false,
+    "videoReadyState": 4
+  },
+  "waitMs": 11290,
+  "after": {
+    "loadingStillVisible": false,
+    "loadingModalStillVisible": false,
+    "tourVisible": true,
+    "currentModalClass": null
+  },
+  "consoleErrors": []
+}

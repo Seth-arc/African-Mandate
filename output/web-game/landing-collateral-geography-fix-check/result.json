@@ -1,0 +1,11 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "metrics": {
+    "found": true,
+    "targetBottom": 438.95,
+    "lineBottom": 444.73,
+    "bottomPaddingRoom": 5.78,
+    "linePaddingBottom": "8px",
+    "lineMarginBottom": "-8px"
+  }
+}

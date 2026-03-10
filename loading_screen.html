@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mandate Protocol</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --gold:       #c9a84c;
+      --gold-dim:   #5e4e28;
+      --gold-ghost: rgba(201,168,76,0.10);
+      --warm:       #e8dcc8;
+      --bg:         #0a0908;
+      --muted:      #2e2820;
+      --mid:        #6a5f4e;
+      --red:        #b84840;
+      --red-dim:    #3a1a18;
+    }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+    }
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; display: block; }
+    .vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 42%,
+        transparent 12%, rgba(10,9,8,0.48) 55%, rgba(10,9,8,0.90) 100%);
+    }
+    .grain {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.033;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+    .scanlines {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+    }
+    #static-overlay {
+      position: fixed; inset: 0; z-index: 20; pointer-events: none; opacity: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.95' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 120px 120px;
+      mix-blend-mode: screen;
+    }
+    /* Corner brackets */
+    .corner {
+      position: fixed; z-index: 15; pointer-events: none;
+      width: 26px; height: 26px; opacity: 0;
+    }
+    .corner::before, .corner::after { content: ''; position: absolute; background: var(--gold); }
+    .corner::before { width: 100%; height: 1px; }
+    .corner::after  { width: 1px;  height: 100%; }
+    .corner-tl { top: 26px; left: 26px; }
+    .corner-tl::before { top: 0; left: 0; }
+    .corner-tl::after  { top: 0; left: 0; }
+    .corner-tr { top: 26px; right: 26px; }
+    .corner-tr::before { top: 0; right: 0; }
+    .corner-tr::after  { top: 0; right: 0; }
+    .corner-bl { bottom: 26px; left: 26px; }
+    .corner-bl::before { bottom: 0; left: 0; }
+    .corner-bl::after  { bottom: 0; left: 0; }
+    .corner-br { bottom: 26px; right: 26px; }
+    .corner-br::before { bottom: 0; right: 0; }
+    .corner-br::after  { bottom: 0; right: 0; }
+    /* Scan line */
+    #scan-line {
+      position: fixed; top: 0; left: 0; width: 100%; height: 1px; z-index: 16;
+      background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.3) 20%, var(--gold) 45%, #fff8e0 50%, var(--gold) 55%, rgba(201,168,76,0.3) 80%, transparent 100%);
+      box-shadow: 0 0 14px 2px rgba(201,168,76,0.35);
+      opacity: 0; pointer-events: none;
+    }
+    /* Intel layer */
+    #intel-layer {
+      position: fixed; inset: 0; z-index: 10;
+      display: grid;
+      grid-template-columns: 250px 1fr 250px;
+      grid-template-rows: 76px 1fr 84px;
+      padding: 38px 42px;
+      pointer-events: none;
+    }
+    #intel-layer.glitch-exit { animation: glitch-exit 0.5s forwards; }
+    @keyframes glitch-exit {
+      0%   { opacity: 1; transform: none; filter: none; }
+      18%  { transform: translateX(-4px) skewX(-1deg); filter: brightness(1.8) saturate(0); }
+      35%  { transform: translateX(5px); opacity: 0.6; }
+      55%  { transform: translateX(-3px); filter: invert(0.8) brightness(2); opacity: 0.35; }
+      75%  { transform: translateX(2px); opacity: 0.15; }
+      100% { opacity: 0; transform: none; filter: none; }
+    }
+    /* TOP-LEFT */
+    #coord-block { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 6px; }
+    #coord-line  { font-size: 8.5px; letter-spacing: 5px; color: var(--gold); text-transform: uppercase; opacity: 0; }
+    #auth-line   { font-size: 8px; letter-spacing: 4px; color: var(--mid); text-transform: uppercase; opacity: 0; }
+    #auth-line.confirmed { color: var(--gold); }
+    /* TOP-CENTER */
+    #class-header {
+      grid-column: 2; grid-row: 1;
+      display: flex; align-items: flex-start; justify-content: center; padding-top: 3px;
+      opacity: 0;
+    }
+    #class-span {
+      font-size: 7.5px; letter-spacing: 6px; color: var(--red); text-transform: uppercase;
+      border: 1px solid var(--red-dim); padding: 4px 14px;
+    }
+    /* TOP-RIGHT */
+    #signal-block {
+      grid-column: 3; grid-row: 1;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 5px; opacity: 0;
+    }
+    #signal-block .sig-label { font-size: 7.5px; letter-spacing: 4px; color: var(--mid); text-transform: uppercase; }
+    .sig-bars { display: flex; gap: 3px; align-items: flex-end; height: 13px; }
+    .sig-bar { width: 4px; background: var(--gold-dim); animation: sig-pulse 2.2s ease-in-out infinite; }
+    .sig-bar:nth-child(1) { height: 4px; animation-delay: 0s; }
+    .sig-bar:nth-child(2) { height: 7px; animation-delay: 0.2s; }
+    .sig-bar:nth-child(3) { height: 10px; animation-delay: 0.4s; }
+    .sig-bar:nth-child(4) { height: 12px; animation-delay: 0.6s; }
+    .sig-bar:nth-child(5) { height: 8px;  animation-delay: 0.8s; }
+    @keyframes sig-pulse { 0%,100% { background: var(--gold-dim); } 50% { background: var(--gold); box-shadow: 0 0 4px var(--gold); } }
+    /* MIDDLE-LEFT: nations */
+    #nation-block {
+      grid-column: 1; grid-row: 2;
+      display: flex; flex-direction: column; justify-content: center; gap: 11px; padding-bottom: 28px;
+    }
+    .nation-row { opacity: 0; display: flex; flex-direction: column; gap: 2px; }
+    .nation-name { font-size: 7.5px; letter-spacing: 5px; color: var(--mid); text-transform: uppercase; }
+    .nation-status { font-size: 10px; letter-spacing: 1.5px; color: var(--warm); }
+    .nation-status.crit { color: var(--red); }
+    .nation-status.warn { color: var(--gold); }
+    /* MIDDLE-RIGHT: metrics */
+    #metrics-block {
+      grid-column: 3; grid-row: 2;
+      display: flex; flex-direction: column; justify-content: center; gap: 9px; padding-bottom: 28px;
+      opacity: 0;
+    }
+    .metric-row { display: flex; flex-direction: column; gap: 3px; }
+    .metric-label { font-size: 7px; letter-spacing: 4px; color: var(--mid); text-transform: uppercase; display: flex; justify-content: space-between; }
+    .metric-val { color: var(--warm); }
+    .metric-val.crit { color: var(--red); }
+    .metric-track { height: 2px; background: var(--muted); position: relative; }
+    .metric-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; }
+    .metric-fill.gold  { background: var(--gold); }
+    .metric-fill.red   { background: var(--red); }
+    .metric-fill.amber { background: #c08030; }
+    /* BOTTOM */
+    #bottom-row {
+      grid-column: 1 / -1; grid-row: 3;
+      display: flex; align-items: center; opacity: 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim), transparent); }
+    #theater-label { font-size: 7px; letter-spacing: 6px; color: var(--gold-dim); text-transform: uppercase; padding: 0 20px; white-space: nowrap; }
+    /* Threat ticker */
+    #threat-ticker {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 14; height: 21px;
+      background: var(--red-dim); border-top: 1px solid rgba(184,72,64,0.25);
+      display: flex; align-items: center; overflow: hidden; opacity: 0;
+    }
+    .ticker-label { font-size: 7px; letter-spacing: 5px; color: var(--red); padding: 0 18px; white-space: nowrap; border-right: 1px solid rgba(184,72,64,0.25); }
+    #ticker-track { flex: 1; overflow: hidden; position: relative; }
+    #ticker-text { position: absolute; white-space: nowrap; font-size: 7px; letter-spacing: 3px; color: rgba(184,72,64,0.65); animation: ticker-scroll 30s linear infinite; }
+    @keyframes ticker-scroll { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+    /* Narrative layer */
+    #narrative-layer {
+      position: fixed; inset: 0; z-index: 11;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none; gap: 0;
+    }
+    .narr-line {
+      font-family: 'Cormorant Garamond', serif; font-weight: 300;
+      color: var(--warm); opacity: 0; text-align: center;
+      letter-spacing: 3px; line-height: 1;
+    }
+    #narr-1 { font-size: clamp(24px, 3.4vw, 46px); margin-bottom: 10px; }
+    #narr-2 { font-size: clamp(24px, 3.4vw, 46px); margin-bottom: 10px; }
+    #narr-3 { font-size: clamp(24px, 3.4vw, 46px); margin-bottom: 34px; }
+    #narr-4 {
+      font-size: clamp(12px, 1.4vw, 17px); font-style: italic; font-weight: 300;
+      color: rgba(201,168,76,0.6); letter-spacing: 4px;
+    }
+    /* Commission */
+    #commission-layer {
+      position: fixed; inset: 0; z-index: 12;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none; gap: 32px;
+    }
+    #commission-text {
+      font-size: clamp(9px, 1.0vw, 12px); letter-spacing: 10px;
+      color: var(--warm); text-transform: uppercase; opacity: 0;
+    }
+    #progress-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0; }
+    #progress-track { width: min(240px, 48vw); height: 1px; background: var(--gold-ghost); position: relative; }
+    #progress-fill {
+      position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+      background: var(--gold);
+    }
+    #progress-fill::after {
+      content: ''; position: absolute; right: -1px; top: -3px;
+      width: 2px; height: 7px; background: #fff8d0;
+      box-shadow: 0 0 8px 2px rgba(201,168,76,0.9);
+    }
+    #progress-label { font-size: 7px; letter-spacing: 5px; color: var(--gold-dim); text-transform: uppercase; }
+    #fade-cover { position: fixed; inset: 0; z-index: 99; background: var(--bg); opacity: 0; pointer-events: none; }
+    .cursor {
+      display: inline-block; width: 6px; height: 0.85em; vertical-align: text-bottom;
+      background: currentColor; margin-left: 2px;
+      animation: blink 0.85s step-end infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+  <div class="scanlines"></div>
+  <div id="static-overlay"></div>
+  <div id="scan-line"></div>
+
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <div id="intel-layer">
+    <div id="coord-block">
+      <div id="coord-line">14&#176;31&#8242;N &nbsp;/ &nbsp;1&#176;22&#8242;W</div>
+      <div id="auth-line">&#9632; AUTHENTICATION REQUIRED<span class="cursor"></span></div>
+    </div>
+    <div id="class-header">
+      <span id="class-span">SAHEL THEATER &nbsp;// &nbsp;CLASSIFICATION: CRITICAL</span>
+    </div>
+    <div id="signal-block">
+      <span class="sig-label">SIGNAL LIVE</span>
+      <div class="sig-bars">
+        <div class="sig-bar"></div><div class="sig-bar"></div>
+        <div class="sig-bar"></div><div class="sig-bar"></div>
+        <div class="sig-bar"></div>
+      </div>
+    </div>
+
+    <div id="nation-block">
+      <div class="nation-row" id="n0"><span class="nation-name">MAURITANIA</span><span class="nation-status warn" id="ns0"></span></div>
+      <div class="nation-row" id="n1"><span class="nation-name">MALI</span><span class="nation-status crit" id="ns1"></span></div>
+      <div class="nation-row" id="n2"><span class="nation-name">BURKINA FASO</span><span class="nation-status crit" id="ns2"></span></div>
+      <div class="nation-row" id="n3"><span class="nation-name">NIGER</span><span class="nation-status crit" id="ns3"></span></div>
+      <div class="nation-row" id="n4"><span class="nation-name">CHAD</span><span class="nation-status warn" id="ns4"></span></div>
+    </div>
+
+    <div id="metrics-block">
+      <div class="metric-row"><div class="metric-label">Stability <span class="metric-val">42</span></div><div class="metric-track"><div class="metric-fill amber" id="mf0"></div></div></div>
+      <div class="metric-row"><div class="metric-label">Insurgency <span class="metric-val crit">58</span></div><div class="metric-track"><div class="metric-fill red" id="mf1"></div></div></div>
+      <div class="metric-row"><div class="metric-label">Civ. Support <span class="metric-val">38</span></div><div class="metric-track"><div class="metric-fill amber" id="mf2"></div></div></div>
+      <div class="metric-row"><div class="metric-label">Legitimacy <span class="metric-val">50</span></div><div class="metric-track"><div class="metric-fill gold" id="mf3"></div></div></div>
+      <div class="metric-row"><div class="metric-label">Synergy <span class="metric-val">45</span></div><div class="metric-track"><div class="metric-fill gold" id="mf4"></div></div></div>
+    </div>
+
+    <div id="bottom-row">
+      <div class="divider-line"></div>
+      <span id="theater-label">WEST AFRICA &mdash; SAHEL OPERATIONAL THEATER</span>
+      <div class="divider-line"></div>
+    </div>
+  </div>
+
+  <div id="threat-ticker">
+    <span class="ticker-label">THREAT FEED</span>
+    <div id="ticker-track">
+      <span id="ticker-text">
+        INSURGENT MOVEMENT DETECTED &mdash; MOPTI CORRIDOR &nbsp;&#9632;&nbsp;
+        BORDER SMUGGLING SURGE &mdash; NORTHERN MALI &nbsp;&#9632;&nbsp;
+        WAGNER PRESENCE EXPANDING &mdash; SAHEL REGION &nbsp;&#9632;&nbsp;
+        IDP SURGE &mdash; 847K DISPLACED, NORTHERN ZONES &nbsp;&#9632;&nbsp;
+        GOVERNMENT SUSPENSION &mdash; BURKINA FASO &nbsp;&#9632;&nbsp;
+        CLIMATE DROUGHT WARNING &mdash; LAKE CHAD BASIN &nbsp;&#9632;&nbsp;
+        SPLINTER FACTION CONTACT &mdash; LOW CONFIDENCE &nbsp;&#9632;&nbsp;
+        INTERCOMMUNAL TENSIONS RISING &mdash; CRITICAL &nbsp;&#9632;&nbsp;
+      </span>
+    </div>
+  </div>
+
+  <div id="narrative-layer">
+    <div class="narr-line" id="narr-1">Five governments.</div>
+    <div class="narr-line" id="narr-2">Thirty contested zones.</div>
+    <div class="narr-line" id="narr-3">One mandate to hold what remains.</div>
+    <div class="narr-line" id="narr-4">The dust does not wait for consensus.</div>
+  </div>
+
+  <div id="commission-layer">
+    <div id="commission-text">YOUR AUTHORITY BEGINS NOW</div>
+    <div id="progress-wrap">
+      <div id="progress-track"><div id="progress-fill"></div></div>
+      <div id="progress-label">Initiating mandate protocol</div>
+    </div>
+  </div>
+
+  <div id="fade-cover"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  THREE.JS
+// ═══════════════════════════════════════════════
+const W = window.innerWidth, H = window.innerHeight;
+const canvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x0a0908, 1);
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(56, W / H, 0.1, 100);
+camera.position.set(0, 3.5, 11);
+camera.lookAt(0, -0.5, 0);
+
+// Terrain noise
+function pn(x, y) {
+  return (
+    Math.sin(x * 2.1 + 0.4) * Math.cos(y * 1.8 + 0.3) * 0.45 +
+    Math.sin(x * 4.3 + y * 3.1) * 0.22 +
+    Math.cos(x * 0.9 + y * 4.8) * 0.18 +
+    Math.sin(x * 7.1 - y * 2.4) * 0.09 +
+    Math.cos(x * 1.5 + y * 1.2) * 0.06
+  );
+}
+
+// Terrain
+const terrGeo = new THREE.PlaneGeometry(26, 15, 88, 52);
+terrGeo.rotateX(-Math.PI * 0.36);
+const tPos = terrGeo.attributes.position;
+const tZ = new Float32Array(tPos.count);
+for (let i = 0; i < tPos.count; i++) {
+  tZ[i] = pn(tPos.getX(i) * 0.28, tPos.getY(i) * 0.28) * 1.5;
+  tPos.setZ(i, 0);
+}
+tPos.needsUpdate = true;
+const terrMat = new THREE.MeshBasicMaterial({ color: 0x3d2e10, wireframe: true, transparent: true, opacity: 0 });
+const terrain = new THREE.Mesh(terrGeo, terrMat);
+terrain.position.set(0, -3.2, 0);
+scene.add(terrain);
+const terrState = { r: 0 };
+
+// Dust
+function mkDust(n, sz, col, sx, sy, sr) {
+  const pos = new Float32Array(n * 3), vel = [];
+  for (let i = 0; i < n; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * sx;
+    pos[i*3+1] = (Math.random() - 0.5) * sy;
+    pos[i*3+2] = (Math.random() - 0.5) * sr;
+    vel.push({ x: (0.15 + Math.random() * 0.5) * 0.009, y: (Math.random()-0.5)*0.003 });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({ size: sz, color: col, transparent: true, opacity: 0, sizeAttenuation: true });
+  const pts = new THREE.Points(geo, mat);
+  return { pts, mat, geo, vel, pos };
+}
+const d1 = mkDust(2200, 0.019, 0xc9a84c, 34, 20, 10);
+const d2 = mkDust(900,  0.009, 0xe8d4a0, 30, 18,  8);
+const d3 = mkDust(320,  0.038, 0x8a6030, 28, 16,  6);
+[d1,d2,d3].forEach(d => scene.add(d.pts));
+
+// Nodes
+const NDS = [[-4.0,0.4],[-1.4,0.7],[-0.2,-0.3],[1.9,0.5],[3.9,0.3]];
+const ndGrp = new THREE.Group(), cMats = [], rMats = [];
+NDS.forEach(([x,y]) => {
+  const cm = new THREE.MeshBasicMaterial({ color:0xc9a84c, transparent:true, opacity:0 });
+  const c  = new THREE.Mesh(new THREE.SphereGeometry(0.05,12,12), cm);
+  c.position.set(x,y,0.1);
+  const r1m = new THREE.MeshBasicMaterial({ color:0xc9a84c, transparent:true, opacity:0, side:THREE.DoubleSide });
+  const r1  = new THREE.Mesh(new THREE.RingGeometry(0.09,0.115,28), r1m);
+  r1.position.copy(c.position);
+  const r2m = new THREE.MeshBasicMaterial({ color:0xc9a84c, transparent:true, opacity:0, side:THREE.DoubleSide });
+  const r2  = new THREE.Mesh(new THREE.RingGeometry(0.16,0.175,28), r2m);
+  r2.position.copy(c.position);
+  ndGrp.add(c,r1,r2);
+  cMats.push(cm); rMats.push(r1m,r2m);
+});
+scene.add(ndGrp);
+
+// Connection lines
+const EDGES = [[0,1],[1,2],[1,3],[2,3],[3,4]];
+const lMats = [];
+EDGES.forEach(([a,b]) => {
+  const lm = new THREE.LineBasicMaterial({ color:0x5e4e28, transparent:true, opacity:0 });
+  ndGrp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(NDS[a][0],NDS[a][1],0.1),
+    new THREE.Vector3(NDS[b][0],NDS[b][1],0.1)
+  ]), lm));
+  lMats.push(lm);
+});
+
+let clk = 0;
+(function loop() {
+  requestAnimationFrame(loop);
+  clk += 0.01;
+  const rv = terrState.r;
+  for (let i = 0; i < tPos.count; i++) {
+    tPos.setZ(i, tZ[i] * rv + Math.sin(tPos.getX(i) * 0.8 + clk * 0.4) * 0.03 * rv);
+  }
+  tPos.needsUpdate = true;
+  [d1,d2,d3].forEach(d => {
+    for (let i = 0; i < d.pos.length/3; i++) {
+      d.pos[i*3] += d.vel[i].x; d.pos[i*3+1] += d.vel[i].y;
+      if (d.pos[i*3] > 17) d.pos[i*3] = -17;
+      if (d.pos[i*3] <-17) d.pos[i*3] =  17;
+    }
+    d.geo.attributes.position.needsUpdate = true;
+  });
+  camera.position.x = Math.sin(clk * 0.12) * 0.3;
+  camera.position.y = 3.5 + Math.cos(clk * 0.09) * 0.08;
+  camera.lookAt(0,-0.5,0);
+  renderer.render(scene, camera);
+})();
+
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
+const SC = '&#9617;&#9618;&#9619;&#9608;&#9604;&#9600;&#9632;&#9633;&#9670;&#9679;&#9656;&#9711;';
+const SCH = '▒░▓█▄▀■□◆●○◘';
+
+function scrambleResolve(el, finalText, dur) {
+  return new Promise(res => {
+    const t0 = performance.now();
+    const len = finalText.length;
+    (function fr(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      let out = '';
+      for (let i = 0; i < len; i++) {
+        const c = finalText[i];
+        if (c === ' ' || c === '/' || c === ':' || c === '—') { out += c; continue; }
+        out += (i / len < p) ? c : SCH[Math.floor(Math.random() * SCH.length)];
+      }
+      el.textContent = out;
+      if (p < 1) requestAnimationFrame(fr); else { el.textContent = finalText; res(); }
+    })(t0);
+  });
+}
+
+function typeIn(el, text, spd) {
+  return new Promise(res => {
+    let i = 0; el.textContent = '';
+    const id = setInterval(() => {
+      el.textContent += text[i++];
+      if (i >= text.length) { clearInterval(id); res(); }
+    }, spd || 26);
+  });
+}
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+// ═══════════════════════════════════════════════
+//  MASTER SEQUENCE
+// ═══════════════════════════════════════════════
+async function run() {
+
+  // Phase 0 — Brackets
+  gsap.to('.corner', { opacity: 1, duration: 0.4, stagger: 0.14, ease: 'power2.out' });
+
+  // Phase 1 — Coord + scan
+  await wait(450);
+  gsap.to('#coord-line', { opacity: 1, duration: 0.4 });
+  await wait(280);
+  gsap.to('#scan-line', { opacity: 1, duration: 0.04 });
+  gsap.to('#scan-line', { top: '100%', duration: 1.4, ease: 'power1.inOut' });
+  await wait(1500);
+  gsap.to('#scan-line', { opacity: 0, duration: 0.2 });
+
+  // Auth appears, confirms
+  gsap.to('#auth-line', { opacity: 1, duration: 0.3 });
+  await wait(1000);
+  gsap.to('#static-overlay', { opacity: 0.2, duration: 0.06 });
+  gsap.to('#static-overlay', { opacity: 0,   duration: 0.18, delay: 0.06 });
+  await wait(80);
+  const authEl = document.getElementById('auth-line');
+  authEl.classList.add('confirmed');
+  authEl.innerHTML = '&#9632; AUTHENTICATION CONFIRMED';
+
+  // Phase 2 — Classification + signal
+  await wait(380);
+  gsap.to('#signal-block', { opacity: 1, duration: 0.5 });
+  await wait(260);
+  gsap.to('#class-header', { opacity: 1, duration: 0.25 });
+  scrambleResolve(document.getElementById('class-span'), 'SAHEL THEATER  //  CLASSIFICATION: CRITICAL', 850);
+
+  // Phase 3 — Terrain assembles
+  await wait(480);
+  gsap.to(terrMat, { opacity: 0.13, duration: 2.3, ease: 'power1.in' });
+  gsap.to(terrState, { r: 1, duration: 2.5, ease: 'power2.out' });
+  gsap.to(d1.mat, { opacity: 0.29, duration: 2.0, delay: 0.6, ease: 'power1.in' });
+  gsap.to(d2.mat, { opacity: 0.17, duration: 1.8, delay: 1.0, ease: 'power1.in' });
+  gsap.to(d3.mat, { opacity: 0.10, duration: 2.2, delay: 1.5, ease: 'power1.in' });
+
+  // Phase 4 — Nation nodes
+  await wait(1400);
+  const nations = [
+    'Borders unsecured',
+    '847k displaced — active crisis',
+    'Government suspended',
+    'Insurgency active',
+    'Humanitarian collapse'
+  ];
+  for (let i = 0; i < 5; i++) {
+    if (i > 0) await wait(520);
+    gsap.to(`#n${i}`, { opacity: 1, duration: 0.4 });
+    gsap.to(cMats[i], { opacity: 0.9, duration: 0.5 });
+    gsap.to(rMats[i*2],   { opacity: 0.30, duration: 0.6, delay: 0.1 });
+    gsap.to(rMats[i*2+1], { opacity: 0.11, duration: 0.8, delay: 0.2 });
+    typeIn(document.getElementById('ns' + i), nations[i], 22);
+  }
+  await wait(360);
+  lMats.forEach((m, i) => gsap.to(m, { opacity: 0.20, duration: 0.5, delay: i * 0.11 }));
+
+  // Node ambient pulse
+  cMats.forEach((m, i) => gsap.to(m, { opacity: 0.35, duration: 1.6 + i*0.2, delay: 0.4, ease:'sine.inOut', yoyo:true, repeat:-1 }));
+  rMats.forEach((m, i) => gsap.to(m, { opacity: 0.05, duration: 2.0, delay: 0.3 + i*0.1, ease:'sine.inOut', yoyo:true, repeat:-1 }));
+
+  // Phase 5 — Metrics + ticker
+  await wait(560);
+  gsap.to('#metrics-block', { opacity: 1, duration: 0.5 });
+  const pcts = [42,58,38,50,45];
+  ['mf0','mf1','mf2','mf3','mf4'].forEach((id, i) => {
+    setTimeout(() => gsap.to('#'+id, { width: pcts[i]+'%', duration: 0.9, ease:'power2.out' }), i*170);
+  });
+  await wait(300);
+  gsap.to('#bottom-row', { opacity: 1, duration: 0.6 });
+  await wait(550);
+  gsap.to('#threat-ticker', { opacity: 1, duration: 0.5 });
+
+  // Phase 6 — Breathe
+  await wait(1900);
+
+  // Phase 7 — Glitch exit intel
+  gsap.to('#static-overlay', { opacity: 0.25, duration: 0.07 });
+  gsap.to('#static-overlay', { opacity: 0,    duration: 0.22, delay: 0.07 });
+  await wait(100);
+  document.getElementById('intel-layer').classList.add('glitch-exit');
+  gsap.to('#threat-ticker', { opacity: 0, duration: 0.35 });
+
+  await wait(620);
+  gsap.to(terrMat, { opacity: 0.21, duration: 1.3 });
+  gsap.to(d1.mat,  { opacity: 0.40, duration: 1.3 });
+
+  // Phase 8 — Narrative lines
+  await wait(720);
+  const nls = ['#narr-1','#narr-2','#narr-3','#narr-4'];
+  const nd  = [0, 1100, 2200, 3700];
+  nls.forEach((sel, i) => setTimeout(() => gsap.to(sel, { opacity: 1, duration: 1.0, ease:'power2.out' }), nd[i]));
+
+  // Phase 9 — Commission
+  await wait(5600);
+  gsap.to(nls, { opacity: 0, duration: 0.85, ease:'power2.in' });
+  await wait(1000);
+
+  gsap.to('#commission-text', { opacity: 1, duration: 0.75, ease:'power2.out' });
+  await wait(820);
+  gsap.to('#progress-wrap', { opacity: 1, duration: 0.4 });
+  gsap.to('#progress-fill', { width: '100%', duration: 2.0, ease:'power1.inOut' });
+  await wait(2200);
+
+  // Phase 10 — Blackout
+  gsap.to('#fade-cover', { opacity: 1, duration: 0.95, ease:'power2.in' });
+  await wait(980);
+  document.dispatchEvent(new CustomEvent('mandateReady'));
+}
+
+window.addEventListener('load', () => setTimeout(run, 280));
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "baseUrl": "http://127.0.0.1:5174",
+  "beforePlay": {
+    "hasWaveform": true,
+    "bars": 18,
+    "wavePlaying": false,
+    "hasAudio": true,
+    "audioPaused": true,
+    "audioCurrentTime": 0
+  },
+  "playAttempt": {
+    "attempted": true,
+    "ok": true,
+    "reason": null
+  },
+  "afterPlay": {
+    "wavePlaying": true,
+    "audioPaused": false,
+    "audioCurrentTime": 1.14,
+    "audioReadyState": 4,
+    "audioNetworkState": 1
+  },
+  "consoleErrors": []
+}

@@ -1,0 +1,47 @@
+{
+  "step0": {
+    "label": "step0-video",
+    "title": "Opening Brief",
+    "dialog": {
+      "top": 228.53125,
+      "left": 260,
+      "width": 920,
+      "height": 442.921875
+    },
+    "focus": null
+  },
+  "step1": {
+    "label": "step1-command",
+    "title": "Command Rail",
+    "dialog": {
+      "top": 74.5,
+      "left": 804,
+      "width": 620,
+      "height": 230.03125
+    },
+    "focus": {
+      "top": 13.5,
+      "left": 915.890625,
+      "width": 505.515625,
+      "height": 47
+    }
+  },
+  "step2": {
+    "label": "step2-metrics",
+    "title": "Campaign Vital Signs",
+    "dialog": {
+      "top": 90.140625,
+      "left": 774.21875,
+      "width": 620,
+      "height": 230.03125
+    },
+    "focus": {
+      "top": 17.359375,
+      "left": 850.765625,
+      "width": 491.1875,
+      "height": 97.25
+    }
+  },
+  "movedAfterVideo": true,
+  "movedWithNextFocus": true
+}

@@ -1,0 +1,8 @@
+{
+  "dialogBackground": "rgb(26, 26, 26)",
+  "dialogBorderRadius": "8px",
+  "dialogBorderColor": "rgba(212, 175, 55, 0.25)",
+  "rootFontFamily": "Inter, sans-serif",
+  "buttonFontFamily": "Inter, sans-serif",
+  "buttonBackground": "rgb(26, 26, 26)"
+}

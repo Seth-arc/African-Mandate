@@ -1,0 +1,18 @@
+{
+  "baseUrl": "http://127.0.0.1:5174",
+  "baseline": {
+    "hasCustomControls": true,
+    "hasNativeControlsAttribute": false,
+    "controlsList": "nodownload noplaybackrate",
+    "nativeDisplay": "none",
+    "nativeHeight": "54px",
+    "downloadLinksInAudioWrap": 0,
+    "wavePlayingBefore": false
+  },
+  "afterPlay": {
+    "wavePlayingAfter": true,
+    "audioPausedAfter": false,
+    "audioCurrentTimeAfter": 0.8
+  },
+  "consoleErrors": []
+}

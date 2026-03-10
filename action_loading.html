@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispatch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold:         #c9a84c;
+      --gold-dim:     #5e4e28;
+      --gold-ghost:   rgba(201,168,76,0.08);
+      --gold-mid:     rgba(201,168,76,0.35);
+      --warm:         #e8dcc8;
+      --warm-dim:     rgba(232,220,200,0.45);
+      --bg:           #080706;
+      --muted:        #252018;
+      --mid:          #6a5f4e;
+      --red:          #b84840;
+      --red-dim:      rgba(184,72,64,0.18);
+      --green:        #4a9060;
+      --green-dim:    rgba(74,144,96,0.15);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ── Canvas ── */
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; }
+
+    /* ── Atmospheric layers ── */
+    .vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 50%,
+        transparent 0%,
+        rgba(8,7,6,0.30) 40%,
+        rgba(8,7,6,0.85) 100%);
+    }
+    .scanlines {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: repeating-linear-gradient(0deg,
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px);
+    }
+    .grain {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0.038;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 160px 160px;
+    }
+
+    /* ── Static burst overlay ── */
+    #static-overlay {
+      position: fixed; inset: 0; z-index: 25; pointer-events: none; opacity: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 100px 100px;
+      mix-blend-mode: screen;
+    }
+
+    /* ── Frame corners — tighter, more tactical ── */
+    .fc {
+      position: fixed; z-index: 15; pointer-events: none;
+      width: 18px; height: 18px;
+    }
+    .fc::before, .fc::after { content:''; position:absolute; background: var(--gold); }
+    .fc::before { width:100%; height:1px; }
+    .fc::after  { width:1px; height:100%; }
+    .fc-tl { top:22px; left:22px; }
+    .fc-tl::before { top:0; left:0; } .fc-tl::after { top:0; left:0; }
+    .fc-tr { top:22px; right:22px; }
+    .fc-tr::before { top:0; right:0; } .fc-tr::after { top:0; right:0; }
+    .fc-bl { bottom:22px; left:22px; }
+    .fc-bl::before { bottom:0; left:0; } .fc-bl::after { bottom:0; left:0; }
+    .fc-br { bottom:22px; right:22px; }
+    .fc-br::before { bottom:0; right:0; } .fc-br::after { bottom:0; right:0; }
+
+    /* ── Horizontal rule lines, top and bottom ── */
+    .h-rule {
+      position: fixed; left: 22px; right: 22px; height: 1px; z-index: 14;
+      background: linear-gradient(90deg, transparent, var(--gold-dim) 12%, var(--gold-dim) 88%, transparent);
+      opacity: 0;
+    }
+    #rule-top    { top: 22px; }
+    #rule-bottom { bottom: 22px; }
+
+    /* ── Transmission header ── */
+    #tx-header {
+      position: fixed; top: 32px; left: 0; right: 0; z-index: 16;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 44px;
+      opacity: 0;
+    }
+    .tx-left, .tx-right {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .tx-right { align-items: flex-end; }
+    .tx-field {
+      font-size: 7.5px; letter-spacing: 4px; color: var(--mid);
+      text-transform: uppercase; line-height: 1;
+    }
+    .tx-field .val { color: var(--warm); }
+    .tx-field .val.urgent { color: var(--red); }
+    .tx-field .val.ok     { color: var(--green); }
+    #tx-center {
+      display: flex; align-items: center; gap: 14px;
+    }
+    #tx-status-label {
+      font-size: 8px; letter-spacing: 6px; color: var(--gold);
+      text-transform: uppercase;
+    }
+    #tx-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 7px 2px rgba(201,168,76,0.6);
+      animation: tx-blink 0.65s ease-in-out infinite;
+    }
+    @keyframes tx-blink {
+      0%,100% { opacity: 1; box-shadow: 0 0 7px 2px rgba(201,168,76,0.6); }
+      50%     { opacity: 0.15; box-shadow: none; }
+    }
+
+    /* ── Action context strip ── */
+    #action-strip {
+      position: fixed; top: 74px; left: 0; right: 0; z-index: 16;
+      display: flex; justify-content: center; align-items: center;
+      gap: 28px; opacity: 0;
+    }
+    .as-pill {
+      font-size: 7px; letter-spacing: 5px; color: var(--mid);
+      text-transform: uppercase;
+      border: 1px solid var(--muted);
+      padding: 4px 12px;
+    }
+    .as-pill .pill-val { color: var(--warm); }
+    .as-divider {
+      width: 1px; height: 14px; background: var(--gold-dim);
+    }
+
+    /* ── Central transmission block ── */
+    #center-block {
+      position: fixed; inset: 0; z-index: 16;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0; pointer-events: none;
+    }
+
+    /* Waveform canvas sits inside center */
+    #wave-canvas {
+      display: block;
+      width: min(620px, 80vw);
+      height: 90px;
+      opacity: 0;
+    }
+
+    #dispatch-label {
+      font-size: 8px; letter-spacing: 8px; color: var(--gold-dim);
+      text-transform: uppercase; margin-top: 26px; opacity: 0;
+    }
+
+    #action-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(28px, 4vw, 54px);
+      letter-spacing: 8px;
+      color: var(--warm);
+      text-transform: uppercase;
+      opacity: 0;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    #action-zone {
+      font-size: 8.5px; letter-spacing: 6px; color: rgba(201,168,76,0.5);
+      text-transform: uppercase; margin-top: 8px; opacity: 0;
+    }
+
+    /* Consequence fragments — appear mid-wait, feeding dread */
+    #consequence-block {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 5px; margin-top: 30px;
+    }
+    .cfrag {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic; font-weight: 300;
+      font-size: clamp(11px, 1.3vw, 15px);
+      letter-spacing: 3px; color: rgba(232,220,200,0.0);
+      text-align: center; line-height: 1.5;
+    }
+
+    /* Resolution ring — animated SVG */
+    #res-ring-wrap {
+      position: fixed; inset: 0; z-index: 13;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    #res-ring {
+      width: min(280px, 42vw);
+      height: min(280px, 42vw);
+      opacity: 0;
+    }
+    #res-ring circle.track {
+      fill: none; stroke: var(--gold-dim); stroke-width: 0.6; opacity: 0.4;
+    }
+    #res-ring circle.sweep {
+      fill: none; stroke: var(--gold);
+      stroke-width: 0.6;
+      stroke-dasharray: 0 400;
+      stroke-linecap: round;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      opacity: 0;
+    }
+    #res-ring circle.sweep2 {
+      fill: none; stroke: rgba(201,168,76,0.18);
+      stroke-width: 1.8;
+      stroke-dasharray: 0 400;
+      stroke-linecap: round;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      opacity: 0;
+    }
+    #res-ring line.cross {
+      stroke: var(--gold-dim); stroke-width: 0.4; opacity: 0.25;
+    }
+    #res-ring circle.center-dot {
+      fill: var(--gold); opacity: 0;
+    }
+
+    /* Countdown / timeout indicator */
+    #countdown-wrap {
+      position: fixed; bottom: 48px; left: 0; right: 0;
+      z-index: 16; display: flex; flex-direction: column;
+      align-items: center; gap: 10px; opacity: 0;
+    }
+    #countdown-bar-track {
+      width: min(320px, 55vw); height: 1px;
+      background: var(--gold-ghost); position: relative;
+    }
+    #countdown-bar-fill {
+      position: absolute; left:0; top:0; height:100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+      transform-origin: right;
+    }
+    #countdown-bar-fill::after {
+      content:''; position:absolute; right:-1px; top:-3px;
+      width:2px; height:7px; background:#fff8d0;
+      box-shadow: 0 0 8px 2px rgba(201,168,76,0.8);
+    }
+    #countdown-label {
+      font-size: 7.5px; letter-spacing: 5px; color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+
+    /* ── Bottom status log ── */
+    #status-log {
+      position: fixed; bottom: 96px; left: 0; right: 0;
+      z-index: 16; display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+    }
+    .slog-line {
+      font-size: 7.5px; letter-spacing: 4px;
+      color: var(--mid); text-transform: uppercase;
+      opacity: 0; transition: none;
+    }
+    .slog-line.active { color: rgba(201,168,76,0.55); }
+    .slog-line.done   { color: rgba(201,168,76,0.2); text-decoration: line-through; text-decoration-color: var(--gold-dim); }
+
+    /* ── Final incoming flash ── */
+    #incoming-flash {
+      position: fixed; inset: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; opacity: 0;
+      background: rgba(8,7,6,0.0);
+    }
+    #incoming-text {
+      font-size: 9px; letter-spacing: 10px;
+      color: var(--gold); text-transform: uppercase;
+      opacity: 0;
+    }
+
+    /* ── Fade cover ── */
+    #fade-cover {
+      position: fixed; inset: 0; z-index: 99;
+      background: var(--bg); opacity: 0; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <div class="grain"></div>
+  <div id="static-overlay"></div>
+
+  <div class="fc fc-tl"></div>
+  <div class="fc fc-tr"></div>
+  <div class="fc fc-bl"></div>
+  <div class="fc fc-br"></div>
+  <div class="h-rule" id="rule-top"></div>
+  <div class="h-rule" id="rule-bottom"></div>
+
+  <!-- Transmission header -->
+  <div id="tx-header">
+    <div class="tx-left">
+      <span class="tx-field">TURN &nbsp;&nbsp;<span class="val" id="hd-turn">01/20</span></span>
+      <span class="tx-field">ACT &nbsp;&nbsp;&nbsp;<span class="val" id="hd-act">01</span></span>
+    </div>
+    <div id="tx-center">
+      <div id="tx-dot"></div>
+      <span id="tx-status-label">TRANSMITTING</span>
+    </div>
+    <div class="tx-right">
+      <span class="tx-field">CHANNEL &nbsp;<span class="val" id="hd-ch">SAH-7</span></span>
+      <span class="tx-field">PRIORITY &nbsp;<span class="val urgent" id="hd-pri">HIGH</span></span>
+    </div>
+  </div>
+
+  <!-- Action strip -->
+  <div id="action-strip">
+    <div class="as-pill">TYPE &nbsp;<span class="pill-val" id="as-type">SECURITY PATROL</span></div>
+    <div class="as-divider"></div>
+    <div class="as-pill">ZONE &nbsp;<span class="pill-val" id="as-zone">MOPTI CORRIDOR</span></div>
+    <div class="as-divider"></div>
+    <div class="as-pill">ASSETS &nbsp;<span class="pill-val" id="as-assets">200 PERSONNEL</span></div>
+  </div>
+
+  <!-- Resolution ring (SVG) -->
+  <div id="res-ring-wrap">
+    <svg id="res-ring" viewBox="0 0 100 100">
+      <!-- Outer track -->
+      <circle class="track" cx="50" cy="50" r="46"/>
+      <!-- Second track -->
+      <circle class="track" cx="50" cy="50" r="38" opacity="0.2"/>
+      <!-- Crosshairs -->
+      <line class="cross" x1="50" y1="4" x2="50" y2="16"/>
+      <line class="cross" x1="50" y1="84" x2="50" y2="96"/>
+      <line class="cross" x1="4"  y1="50" x2="16" y2="50"/>
+      <line class="cross" x1="84" y1="50" x2="96" y2="50"/>
+      <!-- Sweeping arcs -->
+      <circle class="sweep2" id="sweep2" cx="50" cy="50" r="46"/>
+      <circle class="sweep"  id="sweep"  cx="50" cy="50" r="46"/>
+      <!-- Center dot -->
+      <circle class="center-dot" id="center-dot" cx="50" cy="50" r="1.2"/>
+    </svg>
+  </div>
+
+  <!-- Center block -->
+  <div id="center-block">
+    <canvas id="wave-canvas"></canvas>
+    <div id="dispatch-label">ORDER DISPATCHED</div>
+    <div id="action-name">SECURITY PATROL</div>
+    <div id="action-zone">MOPTI CORRIDOR &nbsp;&mdash;&nbsp; MALI</div>
+    <div id="consequence-block">
+      <div class="cfrag" id="cf0">Insurgent cells are adapting.</div>
+      <div class="cfrag" id="cf1">Civilian exposure has increased.</div>
+      <div class="cfrag" id="cf2">Your window is closing.</div>
+    </div>
+  </div>
+
+  <!-- Status log -->
+  <div id="status-log">
+    <div class="slog-line" id="sl0">Order encoded &mdash; secure channel</div>
+    <div class="slog-line" id="sl1">Field units engaged</div>
+    <div class="slog-line" id="sl2">Awaiting ground confirmation</div>
+    <div class="slog-line" id="sl3">Processing tactical outcomes</div>
+    <div class="slog-line" id="sl4">Resolution incoming</div>
+  </div>
+
+  <!-- Countdown bar -->
+  <div id="countdown-wrap">
+    <div id="countdown-bar-track">
+      <div id="countdown-bar-fill"></div>
+    </div>
+    <div id="countdown-label" id="countdown-label">AWAITING FIELD RESPONSE</div>
+  </div>
+
+  <!-- Incoming flash -->
+  <div id="incoming-flash">
+    <div id="incoming-text">RESPONSE RECEIVED</div>
+  </div>
+
+  <div id="fade-cover"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIGURATION — override before mounting
+//  window.actionContext = {
+//    action:   'Security Patrol',
+//    zone:     'Mopti Corridor',
+//    country:  'Mali',
+//    assets:   '200 Personnel',
+//    type:     'SECURITY PATROL',
+//    turn:     '01/20',
+//    act:      '01',
+//    duration: 6200   // total ms before resolve fires
+//  }
+// ═══════════════════════════════════════════════════════
+const CTX = Object.assign({
+  action:   'Security Patrol',
+  zone:     'Mopti Corridor',
+  country:  'Mali',
+  assets:   '200 Personnel',
+  type:     'SECURITY PATROL',
+  turn:     '01/20',
+  act:      '01',
+  channel:  'SAH-7',
+  priority: 'HIGH',
+  duration: 6800
+}, window.actionContext || {});
+
+// Inject context into DOM
+document.getElementById('hd-turn').textContent    = CTX.turn;
+document.getElementById('hd-act').textContent     = CTX.act;
+document.getElementById('hd-ch').textContent      = CTX.channel;
+document.getElementById('hd-pri').textContent     = CTX.priority;
+document.getElementById('as-type').textContent    = CTX.type;
+document.getElementById('as-zone').textContent    = CTX.zone.toUpperCase();
+document.getElementById('as-assets').textContent  = CTX.assets.toUpperCase();
+document.getElementById('action-name').textContent = CTX.action.toUpperCase();
+document.getElementById('action-zone').textContent = CTX.zone.toUpperCase() + ' \u2014 ' + CTX.country.toUpperCase();
+
+
+// ═══════════════════════════════════════════════════════
+//  THREE.JS — Particle field (converging + chaos)
+// ═══════════════════════════════════════════════════════
+const W = window.innerWidth, H = window.innerHeight;
+const bgCanvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x080706, 1);
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 80);
+camera.position.set(0, 0, 7);
+
+// Particle cloud — starts scattered, converges toward origin
+const PC = 1800;
+const pPos  = new Float32Array(PC * 3);
+const pVel  = new Float32Array(PC * 3);
+const pOrig = new Float32Array(PC * 3); // home positions (scattered)
+
+for (let i = 0; i < PC; i++) {
+  const angle  = Math.random() * Math.PI * 2;
+  const radius = 2.5 + Math.random() * 6;
+  const ox = Math.cos(angle) * radius;
+  const oy = Math.sin(angle) * radius;
+  const oz = (Math.random() - 0.5) * 4;
+  pOrig[i*3]   = ox; pOrig[i*3+1] = oy; pOrig[i*3+2] = oz;
+  pPos[i*3]    = ox; pPos[i*3+1]  = oy; pPos[i*3+2]  = oz;
+  pVel[i*3]    = (Math.random()-0.5)*0.01;
+  pVel[i*3+1]  = (Math.random()-0.5)*0.01;
+  pVel[i*3+2]  = (Math.random()-0.5)*0.005;
+}
+
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ size: 0.025, color: 0xc9a84c, transparent: true, opacity: 0, sizeAttenuation: true });
+const pCloud = new THREE.Points(pGeo, pMat);
+scene.add(pCloud);
+
+// State: 0=idle, 1=converge, 2=explode-out
+const pState = { mode: 0, convergeFactor: 0 };
+
+// Radial grid (dim)
+const gridMat = new THREE.LineBasicMaterial({ color: 0x3d2e10, transparent: true, opacity: 0 });
+const gridGroup = new THREE.Group();
+const RINGS = 4, SPOKES = 12;
+for (let r = 1; r <= RINGS; r++) {
+  const pts = [];
+  const rad = r * 1.4;
+  for (let s = 0; s <= 64; s++) {
+    const a = (s / 64) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a)*rad, Math.sin(a)*rad, 0));
+  }
+  gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat.clone()));
+}
+for (let s = 0; s < SPOKES; s++) {
+  const a = (s / SPOKES) * Math.PI * 2;
+  const pts = [
+    new THREE.Vector3(0,0,0),
+    new THREE.Vector3(Math.cos(a)*RINGS*1.4, Math.sin(a)*RINGS*1.4, 0)
+  ];
+  gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat.clone()));
+}
+scene.add(gridGroup);
+
+// Center pulse ring (shrinks inward as resolution approaches)
+const pulseRingMat = new THREE.LineBasicMaterial({ color: 0xc9a84c, transparent: true, opacity: 0 });
+const pulseRingPts = [];
+for (let s = 0; s <= 80; s++) {
+  const a = (s/80) * Math.PI*2;
+  pulseRingPts.push(new THREE.Vector3(Math.cos(a), Math.sin(a), 0));
+}
+const pulseRing = new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints(pulseRingPts),
+  pulseRingMat
+);
+scene.add(pulseRing);
+
+let clk = 0;
+let pulseScale = 3.5;
+let pulseTarget = 0.0;
+
+(function loop() {
+  requestAnimationFrame(loop);
+  clk += 0.016;
+
+  // Particle convergence
+  const cf = pState.convergeFactor;
+  for (let i = 0; i < PC; i++) {
+    if (pState.mode === 1) {
+      // Pull toward origin
+      pPos[i*3]   += (-pPos[i*3]   * 0.028 + pVel[i*3])   * cf;
+      pPos[i*3+1] += (-pPos[i*3+1] * 0.028 + pVel[i*3+1]) * cf;
+      pPos[i*3+2] += (-pPos[i*3+2] * 0.022 + pVel[i*3+2]) * cf;
+    } else if (pState.mode === 2) {
+      // Explode outward
+      pVel[i*3]   += (pOrig[i*3]   * 0.004);
+      pVel[i*3+1] += (pOrig[i*3+1] * 0.004);
+      pPos[i*3]   += pVel[i*3];
+      pPos[i*3+1] += pVel[i*3+1];
+    } else {
+      // idle drift
+      pPos[i*3]   += pVel[i*3];
+      pPos[i*3+1] += pVel[i*3+1];
+      pPos[i*3+2] += pVel[i*3+2];
+    }
+  }
+  pGeo.attributes.position.needsUpdate = true;
+
+  // Pulse ring
+  pulseScale += (pulseTarget - pulseScale) * 0.018;
+  pulseRing.scale.setScalar(Math.max(0.01, pulseScale));
+  pulseRing.rotation.z = clk * 0.15;
+
+  // Camera slow crawl
+  camera.position.x = Math.sin(clk * 0.08) * 0.15;
+  camera.position.y = Math.cos(clk * 0.07) * 0.10;
+
+  renderer.render(scene, camera);
+})();
+
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  2D WAVEFORM (signal oscilloscope on <canvas>)
+// ═══════════════════════════════════════════════════════
+const waveEl  = document.getElementById('wave-canvas');
+const wCtx    = waveEl.getContext('2d');
+const WW      = waveEl.offsetWidth  * (devicePixelRatio || 1);
+const WH      = waveEl.offsetHeight * (devicePixelRatio || 1);
+waveEl.width  = WW;
+waveEl.height = WH;
+
+const waveState = {
+  chaos: 1.0,     // 1 = max chaos, 0 = flat resolved
+  amplitude: 0.0, // 0 → 1 over first second
+  speed: 1.0
+};
+
+function drawWave() {
+  wCtx.clearRect(0, 0, WW, WH);
+  const cx = WW / 2, cy = WH / 2;
+  const amp = (WH * 0.34) * waveState.amplitude;
+  const chaos = waveState.chaos;
+  const t = performance.now() / 1000;
+
+  // Main signal line
+  wCtx.beginPath();
+  wCtx.strokeStyle = `rgba(201,168,76,${0.55 + waveState.amplitude * 0.35})`;
+  wCtx.lineWidth = 1.2 * (WW / 600);
+  for (let x = 0; x <= WW; x += 1.5) {
+    const nx = x / WW;
+    const y = cy
+      + Math.sin(nx * Math.PI * 4  + t * 3.2 * waveState.speed) * amp * 0.5
+      + Math.sin(nx * Math.PI * 9  + t * 5.1 * waveState.speed) * amp * 0.3 * chaos
+      + Math.sin(nx * Math.PI * 16 + t * 2.7 * waveState.speed) * amp * 0.2 * chaos
+      + (Math.random() - 0.5) * amp * 0.25 * chaos;
+    x === 0 ? wCtx.moveTo(x, y) : wCtx.lineTo(x, y);
+  }
+  wCtx.stroke();
+
+  // Ghost trace (softer, offset)
+  wCtx.beginPath();
+  wCtx.strokeStyle = `rgba(201,168,76,${0.12 * waveState.amplitude})`;
+  wCtx.lineWidth = 0.8 * (WW / 600);
+  for (let x = 0; x <= WW; x += 2) {
+    const nx = x / WW;
+    const y = cy + 12
+      + Math.sin(nx * Math.PI * 4 + t * 3.2 * waveState.speed - 0.3) * amp * 0.45
+      + Math.sin(nx * Math.PI * 9 + t * 5.1 * waveState.speed - 0.5) * amp * 0.25 * chaos;
+    x === 0 ? wCtx.moveTo(x, y) : wCtx.lineTo(x, y);
+  }
+  wCtx.stroke();
+
+  // Center baseline
+  wCtx.beginPath();
+  wCtx.strokeStyle = `rgba(201,168,76,0.08)`;
+  wCtx.lineWidth = 0.6;
+  wCtx.moveTo(0, cy); wCtx.lineTo(WW, cy);
+  wCtx.stroke();
+
+  requestAnimationFrame(drawWave);
+}
+drawWave();
+
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+function staticFlash(intensity) {
+  gsap.to('#static-overlay', { opacity: intensity, duration: 0.05 });
+  gsap.to('#static-overlay', { opacity: 0, duration: intensity > 0.15 ? 0.2 : 0.12, delay: 0.05 });
+}
+
+function setLogState(idx, state) {
+  // state: 'active' | 'done'
+  const el = document.getElementById('sl' + idx);
+  if (!el) return;
+  el.classList.remove('active','done');
+  el.classList.add(state);
+}
+
+// Animate SVG sweep arc
+function animateSweep(id, circumference, duration, delay) {
+  const el = document.getElementById(id);
+  el.style.opacity = '1';
+  let start = null;
+  setTimeout(() => {
+    (function frame(ts) {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const ease = p < 0.5 ? 2*p*p : -1+(4-2*p)*p; // ease in-out quad
+      el.style.strokeDasharray = `${ease * circumference} ${circumference}`;
+      if (p < 1) requestAnimationFrame(frame);
+    })(performance.now());
+  }, delay);
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  MASTER SEQUENCE
+// ═══════════════════════════════════════════════════════
+async function run() {
+  const TOTAL = CTX.duration;
+
+  // ── Phase 0: Frame in (0 → 0.6s) ──
+  gsap.to('.fc', { opacity: 1, duration: 0.3, stagger: 0.1 });
+  gsap.to(['#rule-top','#rule-bottom'], { opacity: 1, duration: 0.6, delay: 0.2 });
+
+  // ── Phase 1: Header + particles appear (0.4 → 1.2s) ──
+  await wait(420);
+  gsap.to('#tx-header', { opacity: 1, duration: 0.5, ease: 'power2.out' });
+  gsap.to(pMat, { opacity: 0.22, duration: 1.2, ease: 'power1.in' });
+
+  // Radial grid fades in very dim
+  gridGroup.children.forEach((l, i) => {
+    gsap.to(l.material, { opacity: 0.06, duration: 0.8, delay: i * 0.02 });
+  });
+
+  // ── Phase 2: Action strip + waveform (1.0 → 2.0s) ──
+  await wait(600);
+  gsap.to('#action-strip', { opacity: 1, duration: 0.5, ease: 'power2.out' });
+  staticFlash(0.14);
+
+  await wait(500);
+  gsap.to('#wave-canvas', { opacity: 1, duration: 0.6 });
+  gsap.to(waveState, { amplitude: 1, duration: 0.9, ease: 'power2.out' });
+
+  // ── Phase 3: Action name + zone (1.8 → 2.5s) ──
+  await wait(700);
+  gsap.to('#dispatch-label', { opacity: 1, duration: 0.4 });
+  await wait(260);
+  gsap.to('#action-name', { opacity: 1, duration: 0.7, ease: 'power3.out' });
+  await wait(420);
+  gsap.to('#action-zone', { opacity: 1, duration: 0.5 });
+
+  // ── Phase 4: Resolution ring starts + particles converge (2.4 → TOTAL-2s) ──
+  await wait(550);
+
+  // Ring appears and begins sweep
+  gsap.to('#res-ring', { opacity: 1, duration: 0.5 });
+  gsap.to('#center-dot', { opacity: 0.5, duration: 0.4, delay: 0.2, attr: { opacity: 0.5 } });
+  animateSweep('sweep2', 289, TOTAL * 0.72, 0);  // outer wide arc
+  animateSweep('sweep',  289, TOTAL * 0.68, 300); // inner crisp arc
+
+  // Pulse ring begins collapsing toward center
+  gsap.to(pulseRingMat, { opacity: 0.3, duration: 0.8 });
+  gsap.to(pulseState, {}, 0); // placeholder
+
+  // Shrink pulse ring toward center over the wait duration
+  const pulseTimeline = gsap.timeline();
+  pulseTimeline.to(waveState, { speed: 1.4, duration: TOTAL * 0.5 / 1000 });
+
+  // Slow collapse
+  const collapseStart = performance.now();
+  const collapseDur = TOTAL - 2800;
+  function collapsePulse() {
+    const p = Math.min((performance.now() - collapseStart) / collapseDur, 1);
+    pulseScale = 3.5 * (1 - p * 0.88);
+    if (p < 1) requestAnimationFrame(collapsePulse);
+  }
+  collapsePulse();
+
+  // Particles start converging
+  await wait(400);
+  pState.mode = 1;
+  gsap.to(pState, { convergeFactor: 1.0, duration: (TOTAL - 2800) / 1000, ease: 'power1.in' });
+  gsap.to(pMat, { opacity: 0.40, duration: (TOTAL - 2800) / 1000, ease: 'power1.in' });
+
+  // ── Phase 5: Status log stepwise (2.5 → TOTAL-2s) ──
+  await wait(300);
+  const logInterval = (TOTAL - 4500) / 5;
+  const logLines = ['sl0','sl1','sl2','sl3','sl4'];
+
+  for (let i = 0; i < logLines.length; i++) {
+    await wait(i === 0 ? 0 : logInterval);
+    // Mark previous done
+    if (i > 0) setLogState(i - 1, 'done');
+    const el = document.getElementById(logLines[i]);
+    el.style.opacity = '0';
+    el.classList.add('active');
+    gsap.to(el, { opacity: 1, duration: 0.35 });
+  }
+
+  // ── Phase 6: Consequence fragments (dread building) ──
+  const fragStart = TOTAL * 0.38;
+  setTimeout(() => {
+    gsap.to('#cf0', { color: 'rgba(232,220,200,0.35)', duration: 1.0, ease: 'power1.out' });
+  }, fragStart);
+  setTimeout(() => {
+    gsap.to('#cf1', { color: 'rgba(232,220,200,0.28)', duration: 1.0, ease: 'power1.out' });
+  }, fragStart + 900);
+  setTimeout(() => {
+    gsap.to('#cf2', { color: 'rgba(201,168,76,0.40)', duration: 1.0, ease: 'power1.out' });
+  }, fragStart + 1900);
+
+  // ── Phase 7: Countdown bar (countdown to resolution) ──
+  await wait(TOTAL * 0.28 - 2500);
+  gsap.to('#countdown-wrap', { opacity: 1, duration: 0.5 });
+  gsap.to('#countdown-bar-fill', {
+    scaleX: 0, duration: (TOTAL * 0.72 - 600) / 1000,
+    ease: 'linear', transformOrigin: 'right'
+  });
+
+  // ── Phase 8: Waveform chaos builds then snaps (TOTAL - 1.8s) ──
+  await wait(TOTAL - 2600);
+
+  // Last log line done
+  setLogState(4, 'done');
+
+  // Chaos ramps up sharply (signal being overwhelmed)
+  gsap.to(waveState, { chaos: 2.2, speed: 3.5, duration: 0.7, ease: 'power2.in' });
+  staticFlash(0.22);
+
+  // Tx status changes
+  document.getElementById('tx-status-label').textContent = 'RECEIVING';
+  gsap.to('#tx-dot', { boxShadow: '0 0 14px 5px rgba(201,168,76,0.9)', duration: 0.4 });
+
+  await wait(700);
+
+  // ── Phase 9: SNAP — signal locks (TOTAL - 0.9s) ──
+  // Waveform flattens (resolves)
+  gsap.to(waveState, { chaos: 0.05, amplitude: 0.18, speed: 0.3, duration: 0.55, ease: 'power3.out' });
+
+  // Ring snap — brief bright flash on the ring
+  gsap.to('#sweep', { attr: { stroke: '#fff8d0' }, duration: 0.08 });
+  gsap.to('#sweep', { attr: { stroke: '#c9a84c' }, duration: 0.4, delay: 0.08 });
+  gsap.to('#center-dot', { attr: { r: 3.5, opacity: 1 }, duration: 0.1, ease: 'power3.out' });
+  gsap.to('#center-dot', { attr: { r: 1.2, opacity: 0.8 }, duration: 0.45, delay: 0.1 });
+
+  // Particles explode outward
+  pState.mode = 2;
+  pVel.fill(0);
+  gsap.to(pMat, { opacity: 0.12, duration: 0.8 });
+
+  // Static flash — resolution
+  staticFlash(0.28);
+  await wait(80);
+  staticFlash(0.15);
+
+  // "RESPONSE RECEIVED" briefly
+  gsap.to('#incoming-flash', { opacity: 1, duration: 0.05 });
+  gsap.to('#incoming-text', { opacity: 1, duration: 0.12 });
+  await wait(620);
+  gsap.to('#incoming-text', { opacity: 0, duration: 0.3 });
+  gsap.to('#incoming-flash', { opacity: 0, duration: 0.3 });
+
+  // ── Phase 10: Blackout ──
+  await wait(220);
+  gsap.to('#fade-cover', { opacity: 1, duration: 0.65, ease: 'power2.in' });
+  await wait(700);
+
+  document.dispatchEvent(new CustomEvent('actionResolved', { detail: CTX }));
+}
+
+// Pulse ring needs a dummy ref for gsap target
+const pulseState = { dummy: 0 };
+
+window.addEventListener('load', () => setTimeout(run, 200));
+</script>
+</body>
+</html>

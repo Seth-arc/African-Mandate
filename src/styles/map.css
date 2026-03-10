@@ -50,6 +50,17 @@
   font-family: var(--font-ui);
 }
 
+.leaflet-pane.map-top-labels-pane {
+  z-index: 625;
+  pointer-events: none;
+}
+
+/* Keep territory/city labels legible above tactical fills. */
+.map-top-labels-layer .leaflet-tile {
+  opacity: 0.95;
+  filter: brightness(1.2) contrast(1.2);
+}
+
 /* ═══════════════════════════════════════════════
    FOG OF WAR OVERLAY
    ═══════════════════════════════════════════════ */

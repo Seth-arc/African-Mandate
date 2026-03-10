@@ -598,3 +598,596 @@ pm test -- --run passed (49/49).
   - `npm test -- --run` passed (49/49).
   - Playwright visual check confirms legend header text is now only `SAHEL COMMAND` with hide button.
   - Artifact: `output/web-game/legend-no-turn-check/legend-header.png`.
+- New request: clicking `Play` sometimes stalls on landing overlay text `Loading opening scene...`.
+- Root cause in `index.html`: `beginArenaEntry()` awaited `introVideo.play()` directly, which can remain pending indefinitely on some environments/devices, leaving loading text visible forever.
+- Fix: added `waitForPlaybackStart(videoEl, timeoutMs=3200)` helper and replaced direct await with bounded startup wait. If playback does not start in time, flow now calls `completeIntro()` and proceeds to game/auth flow instead of hanging.
+- Kept normal path unchanged: when playback starts, existing intro-video transition and auth modal handoff still run.
+- Validation:
+  - Playwright skill-client run (baseline + post-fix) against `http://127.0.0.1:5174` with click on `#enterArenaBtn`.
+  - Captures:
+    - `output/web-game/play-loading-stuck-baseline-long/shot-0..3.png`
+    - `output/web-game/play-loading-fix-verify/shot-0..3.png`
+  - Visual result: flow transitions from intro to Secure Access modal; no persistent loading-text hang observed.
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Added targeted fallback regression test: patched intro video `play()` to never resolve in browser runtime and confirmed timeout path recovers.
+- Script: `.codex-temp/verify-play-timeout-fallback.mjs` (temporary), output screenshot `output/web-game/play-loading-fix-fallback/forced-play-pending.png`.
+- Result JSON: `{ gameActive: true, loadingVisible: false, introOverlayActive: false, authTitle: "Secure Access" }`.
+- New request: align Territory Overview modal footer buttons (`Investigate Zones`, `Close`) to the right like other modals.
+- Root cause: `.territory-overview-actions` in `src/styles/layout.css` had no horizontal justification, so default flex-start left-aligned the buttons.
+- Fix: updated `.territory-overview-actions` to include `justify-content: flex-end;` and `align-items: center;` for parity with other modal action rows.
+- Validation:
+  - Ran web-game Playwright client capture: `output/web-game/territory-footer-align-client-check/shot-0..1.png`.
+  - Ran targeted Playwright UI script to open territory modal and measure footer layout.
+  - Metrics: `justifyContent: "flex-end"`, `leftGap: 600`, `rightGap: 0`; screenshot `output/web-game/territory-footer-align-fix/territory-overview-footer.png` confirms right alignment.
+  - `npm run typecheck` passed.
+- New request: intro video not playing again.
+- Root cause in `index.html`: `beginArenaEntry()` awaited `waitForVideoReady()` before calling `introVideo.play()`, which can break user-gesture autoplay context on some browsers and cause intro playback to fail/skip.
+- Fix:
+  - kept timeout fallback for no-hang behavior,
+  - moved playback start earlier in the sequence by starting `waitForPlaybackStart(introVideo)` before awaiting readiness,
+  - increased playback-start timeout from `3200ms` to `6500ms` for slower starts,
+  - after playback begins, await readiness probe and then mark overlay ready.
+- Validation:
+  - Playwright game-client check: `output/web-game/intro-play-fix-client-check/shot-0.png` shows intro video frame, `shot-1.png` shows secure access handoff.
+  - Diagnostic state script (`.codex-temp/inspect-intro-play.mjs`) reports at 500ms: `paused=false`, `overlayActive=true`, `overlayReady=true`, `gameActive=false` (intro actually playing), then normal auth transition.
+  - `npm run typecheck` passed.
+- New request: mute intro video.
+- Updated `index.html` intro video to be hard-muted:
+  - added `muted` attribute on `<video id="introVideo">`.
+  - set `GLOBAL_MEDIA_VOLUME_SCALE = 0`.
+  - in `warmIntroVideoBuffer()` and intro init/`loadedmetadata` handlers, set `introVideo.muted = true` and keep volume at `0`.
+- Validation:
+  - Playwright game-client run: `output/web-game/intro-mute-verify-client/shot-0.png` (intro still plays visually), `shot-1.png` (normal auth handoff).
+  - Runtime probe result after Play click: `{ found: true, muted: true, defaultMuted: true, volume: 0, paused: false }`.
+- New request: no scrollbar should appear while intro video is playing.
+- Implemented intro playback overflow lock in `index.html`:
+  - added CSS rules `html.intro-playing, body.intro-playing { overflow: hidden; }`.
+  - added `setIntroPlaybackLock(isLocked)` helper to toggle `intro-playing` on both body and html.
+  - set lock on intro start in `beginArenaEntry()` and clear lock in `completeIntro()`.
+- Validation:
+  - Playwright game-client run: `output/web-game/intro-scrollbar-lock-client/shot-0.png` (intro), `shot-1.png` (auth handoff).
+  - Targeted runtime probe during intro reports `bodyOverflow: hidden`, `htmlOverflow: hidden`, `bodyHasIntroPlaying: true`, `htmlHasIntroPlaying: true`.
+  - Artifact: `output/web-game/intro-scrollbar-lock-check/intro-playing.png`.
+  - `npm run typecheck` passed.
+- New request: remove duplicate `Secure Access` heading (remove modal-chrome h2 for entry gate).
+- Updated `src/ui/modals/ModalRoot.tsx` modal-header render guard to exclude blocking entry-gate session modal (`!isBlockingEntryGate`).
+- Result: Secure Access entry card now shows only the in-card heading (`session-auth-kicker`) and `Login / Sign Up`, with no duplicate modal h2.
+- Validation:
+  - Playwright game-client run: `output/web-game/secure-access-heading-client-check/shot-0.png`, `shot-1.png`.
+  - Visual check on `shot-1.png` confirms only one `Secure Access` heading remains.
+  - `npm run typecheck` passed.
+- New request: Mission Brief copy felt busy due bullets plus numbering; remove numbers and keep bullets.
+- Updated `src/ui/modals/ModalRoot.tsx` Mission Brief timelines:
+  - removed rendering of `.mission-brief-timeline-step` in Primary Objectives.
+  - removed rendering of `.mission-brief-timeline-step` in Victory Conditions.
+- Validation:
+  - Playwright game-client run: `output/web-game/mission-brief-numbering-client-check/shot-0.png`, `shot-1.png`.
+  - Focused Mission Brief check: `output/web-game/mission-brief-numbering-check/mission-brief.png`.
+  - Runtime metrics from check: `timelineStepNodeCount: 0` (number chips removed), `timelineTitleCount: 8`.
+  - `npm run typecheck` passed.
+- New request: make Mission Brief copy more spacious and less crowded.
+- Updated Mission Brief layout typography/spacing in `src/styles/layout.css`:
+  - increased header/content/footer paddings,
+  - increased section and timeline gaps,
+  - increased mission-brief body copy size + line-height (`.mission-brief-section .modal-text`),
+  - loosened role text and timeline description line-height,
+  - increased hint panel and stat-card spacing.
+- Validation:
+  - Playwright game-client run: `output/web-game/mission-brief-spacing-client-check/shot-0.png`, `shot-1.png`.
+  - Focused mission brief capture: `output/web-game/mission-brief-spacing-check/mission-brief.png`.
+  - Runtime style metrics confirm expanded spacing (e.g., `contentGap: 17.6px`, `modalTextLineHeight: 22.272px`, `timelineGap: 15.2px`).
+  - `npm run typecheck` passed.
+- New request: Mission Brief must not be open when user enters the game.
+- Updated entry-flow timer in `src/app/App.tsx`:
+  - after `onboarding_loading`, no longer auto-opens `mission_brief`.
+  - timer now closes `onboarding_loading` (if still active) and marks onboarding seen in localStorage.
+  - keeps secure-access and loading stages intact while ensuring game enters with no mission brief modal open.
+- Validation:
+  - Playwright game-client run: `output/web-game/entry-no-mission-brief-client-check/shot-0.png`, `shot-1.png`.
+  - Focused flow check (`Play -> Continue as Guest -> wait`) screenshot: `output/web-game/entry-no-mission-brief-check/after-guest-entry.png`.
+  - Runtime check result: `{ missionBriefTitle: false, missionBriefModal: false, loadingModal: false, anyBackdrop: false, bodyGameActive: true }`.
+  - `npm run typecheck` passed.
+- New request: replace Mission Brief Situation Overview copy and add closable Player Bio envelope in Player Role section.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - replaced Situation Overview with requested two-paragraph Sahel crisis/AU envoy copy.
+  - added `bioEnvelopeOpen` state and closable `Player Bio Envelope` in Player Role.
+  - envelope panel now shows `Envoy Background` and `Mandate Highlights` lists sourced from existing `ENVOY_BACKGROUND_POINTS` and `ENVOY_MANDATE_POINTS` constants.
+- Updated `src/styles/layout.css` with mission-brief envelope styles:
+  - `.mission-brief-envelope`, `.mission-brief-envelope-toggle`, `.mission-brief-envelope-panel`, `.mission-brief-envelope-title`, `.mission-brief-envelope-list`.
+- Validation:
+  - Playwright game-client run: `output/web-game/mission-brief-envelope-client-check/shot-0.png`, `shot-1.png`.
+  - Focused mission-brief interaction check artifacts:
+    - `output/web-game/mission-brief-envelope-check/brief-envelope-closed.png`
+    - `output/web-game/mission-brief-envelope-check/brief-envelope-open.png`
+    - `output/web-game/mission-brief-envelope-check/brief-envelope-closed-again.png`
+  - Runtime assertions: updated Situation Overview phrases detected; envelope toggles open/close as expected.
+  - `npm run typecheck` passed.
+- New request: replace Mission Brief Player Role summary sentence with updated AU lead negotiator/strategist copy.
+- Updated `ENVOY_ROLE_SUMMARY` in `src/ui/modals/ModalRoot.tsx` to requested text.
+- Validation:
+  - Playwright game-client run: `output/web-game/mission-brief-player-copy-client-check/shot-0.png`, `shot-1.png`.
+  - Focused Mission Brief modal check confirms exact text renders in `.mission-brief-role-text`.
+  - Artifacts: `output/web-game/mission-brief-player-copy-check/mission-brief-role-copy-modal.png`.
+  - `npm run typecheck` passed.
+- New request: give Player Bio copy a more human feel.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - rewrote `ENVOY_BACKGROUND_POINTS` into narrative, human-centered profile bullets.
+  - rewrote `ENVOY_MANDATE_POINTS` into clearer, human-readable leadership/constraint bullets.
+  - retitled envelope sections from `Envoy Background` / `Mandate Highlights` to `Who You Are` / `How You Lead`.
+- Validation:
+  - `npm run typecheck` passed.
+- New request: Review Action modal must include territory detail, not just target zone.
+- Updated `src/ui/modals/ModalRoot.tsx` (`ActionConfigBody`):
+  - derived `resolvedTargetTerritoryKey` from selected review target (`zone_id` -> `zoneState[zone_id].territory_key`, fallback to `territory_key`).
+  - resolved `resolvedTargetTerritoryLabel` via `resolveTerritoryName`.
+  - added a conditional `Territory` row in the review summary when the target is zone-scoped.
+- Validation:
+  - Playwright game-client run: `output/web-game/action-review-territory-client-check/shot-0.png`, `shot-1.png`.
+  - Focused Review Action verification: `output/web-game/action-review-territory-check/review-modal.png`.
+  - Runtime assertion payload: `{ "target": "Mopti", "territory": "Mali", "hasTerritoryRow": true, "territoryIsDetailed": true }`.
+  - `npm run typecheck` passed.
+- New request: map territory and city names are hidden beneath territory layers; improve visibility across layers.
+- Updated map base layering in `src/map/MapView.tsx`:
+  - switched basemap from `dark_all` to `dark_nolabels`.
+  - added `dark_only_labels` TileLayer on a dedicated `topLabelsPane`.
+  - introduced `MapPaneSetup()` to create `topLabelsPane` with `z-index: 625` and `pointer-events: none` so labels render above fills/lines/markers but below tooltips/popups.
+- Updated `src/styles/map.css`:
+  - added `.leaflet-pane.map-top-labels-pane` pane styling.
+  - added `.map-top-labels-layer .leaflet-tile` contrast/brightness tuning for clearer text readability.
+- Validation:
+  - Playwright game-client run: `output/web-game/map-label-layer-client-check/shot-0.png`, `shot-1.png`.
+  - Focused map layering check: `output/web-game/map-label-layer-check/map-view.png`.
+  - Runtime assertion payload: `{ "hasTopLabelsPane": true, "labelsTileCount": 12, "loadedLabelTiles": 12, "labelsPaneZ": 625, "overlayPaneZ": 400, "markerPaneZ": 600, "labelsAboveOverlay": true }`.
+  - `npm run typecheck` passed.
+- New request: identify hover/click SFX and make them cross-platform.
+- Findings before fix:
+  - both map hover and map click were mapped to `playUiSfx('active_button_hover')` in `src/map/MapView.tsx`.
+- Updated `src/map/MapView.tsx`:
+  - `playZoneTerritoryClickSound()` now uses `playUiSfx('active_button_click')`.
+- Reworked `src/utils/uiSfx.ts` for cross-platform reliability:
+  - added explicit `active_button_click` key.
+  - hover source: `active_button_hover.wav`.
+  - click source: `select_click.mp3` with hover WAV fallback.
+  - introduced codec-aware source ordering via `Audio.canPlayType`.
+  - added first-gesture audio unlock listeners (`pointerdown`/`touchstart`/`mousedown`/`keydown`) and `AudioContext` resume path for Safari/mobile autoplay policies.
+  - added Web Audio playback path (decoded buffers) for lower-latency consistent playback.
+  - retained HTMLAudio pooled fallback path for environments where Web Audio decode/play is unavailable.
+  - preserved per-sfx throttle intervals and volume scaling.
+- Validation:
+  - `npm run typecheck` passed.
+  - Playwright game-client run: `output/web-game/ui-sfx-cross-platform-client-check/shot-0.png`, `shot-1.png`.
+  - Focused runtime SFX asset check script: `.codex-temp/verify-ui-sfx-assets.mjs`.
+  - Runtime payload: `{ "dispatched": true, "requestedAudio": ["active_button_hover.wav", "select_click.mp3"], "includesHover": true, "includesClick": true }`.
+  - Visual artifact: `output/web-game/ui-sfx-cross-platform-check/map-hover-click.png`.
+- New request: add a highbrow humorous, cohesively styled "You can't do that here" message for mobile-phone attempts.
+- Updated `index.html` landing flow:
+  - added a dedicated `mobile-gate-overlay` modal (`#mobileGateModal`) with themed copy and CTA.
+  - wired `Play` button gate: `beginArenaEntry()` now checks phone-like devices and opens mobile gate instead of starting intro/game flow.
+  - added phone detection helper (`isPhoneDevice`) using UA + coarse-pointer narrow viewport.
+  - added modal lock unification (`syncLandingModalLock`) so About + Mobile gate share scroll/Lenis locking cleanly.
+  - updated Escape and overlay-click handling to close either modal appropriately.
+  - guarded Supabase auth callback auto-entry so phone users are shown the gate instead of dropping into game flow.
+- Styling:
+  - introduced `mobile-gate-*` styles matching existing dark/gold visual language and typography.
+  - included responsive adjustments for small screens.
+- Validation:
+  - `npm run typecheck` passed.
+  - Focused Playwright mobile emulation (`iPhone 13`) via `.codex-temp/verify-mobile-gate.mjs` returned:
+    `{ "gateActive": true, "gateTitle": "You Can't Do That Here", "gameActive": false, "introActive": false }`.
+  - Visual artifact: `output/web-game/mobile-gate-check/mobile-gate-iphone13.png`.
+- New request: update landing About modal to full-page with low-opacity `/assets/actors/player_about.png` background and use copy from `about_docs/about_copy.md`.
+- Updated `index.html` About modal markup to full-page dialog structure (`about-modal-full`, sectioned content, credits link, disclaimer) using the exact source copy headings/body.
+- Fixed About modal text visibility regression by overriding global landing paragraph animation defaults for `.about-modal-subtitle` and `.about-section-text` (`opacity: 1; transform: none;`).
+- Validation:
+  - `npm run build` passed.
+  - Playwright viewport check confirmed active full-height About modal (`panelHeight: 900px`, `ariaHidden: false`) and readable section text.
+  - Artifacts: `tmp/about-modal-viewport-fixed.png` (final), `tmp/about-modal-viewport.png` (pre-fix visibility check).
+- Follow-up fix: About modal background image visibility was too subtle.
+- Updated `index.html` About modal layering: increased `::before` image opacity to `0.32` with mild contrast/saturation boost; reduced dark mask opacity in `::after` gradient.
+- Validation: Playwright capture confirms visible background image behind About content (`tmp/about-modal-bg-visible.png`).
+- Follow-up request: remove About modal header/section background colors and borders; move copy lower.
+- Updated `index.html`:
+  - `.about-modal-header` now uses transparent background with no border.
+  - `.about-section` now uses transparent background with no border.
+  - `.about-modal-scroll` top padding increased from `4.3rem` to `6.2rem` (mobile `3.6rem` to `5rem`) to move content lower.
+- Validation: Playwright screenshot confirms borderless/flat section styling and lowered copy start (`tmp/about-modal-flat-sections.png`).
+- Follow-up request: remove About modal scrollbar, lighten overlay filter, and move all copy lower.
+- Updated `index.html`:
+  - `.about-modal-full` now hides visible scrollbars cross-browser while preserving scroll (`scrollbar-width: none`, WebKit scrollbar hidden).
+  - lightened About overlay filter (`.about-modal-full::after` linear gradient alpha reduced to `0.62/0.54`, softer radial accents).
+  - adjusted image layer to balanced visibility (`.about-modal-full::before` opacity `0.5`).
+  - moved copy lower by increasing top padding to `clamp(7rem, 14vh, 9.5rem)` (mobile `6.4rem`).
+- Validation: Playwright runtime check confirmed `scrollbarWidth: "none"`, top padding `126px`, and updated filter values; screenshot: `tmp/about-modal-no-scrollbar-lighter-filter.png`.
+- User still saw scrollbar in About modal.
+- Strengthened About scrollbar suppression by targeting `.modal.about-modal-full` + WebKit pseudo scrollbar selector.
+- Updated modal lock logic (`syncLandingModalLock`) to set `document.documentElement.style.overflow = 'hidden'` alongside body while About/mobile gate is open; clear html overflow on unlock.
+- Validation: Playwright runtime check now reports `htmlOverflow: hidden`, `bodyOverflow: hidden`, `modalScrollbarWidth: none`, and no viewport gutter mismatch (`1440/1440`). Screenshot: `tmp/about-modal-scrollbar-hidden-verify.png`.
+- New request: link landing scroll movement to sections so motion feels smooth but structured.
+- Reworked camera rig in `index.html` to a section-linked timeline:
+  - introduced `sections = gsap.utils.toArray('.section')` and computed `sectionSnapStep`.
+  - added `buildSectionLinkedCameraRig(...)` helper that sets one camera pose per section.
+  - enabled ScrollTrigger snapping to section boundaries (`snapTo: sectionSnapStep`) with short eased snap duration.
+  - kept smooth interpolation via scrub (`1.85` desktop, `2.0` mobile).
+- Validation:
+  - `npm run build` passed.
+  - Playwright section pass (5 sections) captured camera transforms per section showing structured progression.
+  - Artifacts: `tmp/landing-section-linked-1.png` ... `tmp/landing-section-linked-5.png`.
+- User requested rollback of section-linked/snap camera update in `index.html` (called clumsy).
+- Reverted landing camera rig to prior timeline-based desktop/mobile motion (removed section-snap helper and snap behavior).
+- Restored previous `sections` binding for text animation (`document.querySelectorAll('.section')`).
+- Validation: `npm run build` passed.
+- New request: make landing image zoom out more.
+- Updated camera reveal pullback in `index.html`:
+  - desktop late transition scale `1.34 -> 1.22` and final reveal scale `1.0 -> 0.9`.
+  - mobile late transition scale `1.38 -> 1.26` and final reveal scale `1.0 -> 0.92`.
+- Validation: Playwright capture at landing end state shows wider reveal composition (`tmp/landing-zoomed-out-more.png`).
+- New request: create a similarly styled page-loading animation (using `hero.png`) for login/sign-up/guest entry.
+- Updated `OnboardingLoadingBody` in `src/ui/modals/ModalRoot.tsx` to a cinematic full-page loading structure with updated copy/checklist.
+- Reworked loading modal presentation in `src/styles/layout.css`:
+  - `modal-content-loading` now renders full viewport (no card chrome).
+  - `onboarding-loading-shell` now uses animated `url('/img/hero.png')` background with layered cinematic overlays.
+  - added framed loading content panel, refined typography, progress bar, checklist bullets, and animated status dots.
+  - added `@keyframes onboarding-hero-drift` plus responsive tuning under `@media (max-width: 640px)`.
+- Updated `src/app/App.tsx` entry-flow logic so `onboarding_loading` shows for every confirmed entry path (sign-up/login/guest), not only first-time/guest conditions.
+- Validation:
+  - `npm run build` passed.
+  - Playwright flow check (`Play -> Continue as Guest`) confirmed loading modal appears with hero background from `/img/hero.png` and cinematic overlay.
+  - Artifact: `tmp/entry-hero-loading-guest.png`.
+  - Runtime metrics confirm `bgImage: url("http://127.0.0.1:4173/img/hero.png")`, full-height shell, and overlay gradient active.
+- Follow-up polish: fixed checklist marker encoding artifact in loading CSS by using ASCII marker `*`.
+- Re-validated hero loading screen capture after cleanup: `tmp/entry-hero-loading-guest-final.png`.
+- Request refinement: remove `hero.png` from loading visuals but keep cinematic suspense style.
+- Updated `OnboardingLoadingBody` copy to a pre-reveal tone (`Command Interface Coming Online`, suspense checklist, stand-by phase line).
+- Reworked loading scene styling in `src/styles/layout.css`:
+  - removed image background from `.onboarding-loading-shell::before`.
+  - replaced with animated layered gradients + line texture (`onboarding-atmosphere`) and scanline/vignette sweep (`onboarding-scan`).
+  - kept gold-accented command card treatment and progress indicators.
+  - added animated suspense phase text (`.onboarding-loading-phase`, `onboarding-phase-pulse`) and mobile typography tuning.
+- Validation:
+  - `npm run build` passed.
+  - Playwright flow check confirms no hero URL in loader background (`hasHeroUrl: false`) and active suspense animations.
+  - Artifact: `tmp/entry-loading-suspense-no-hero-bg.png`.
+- New request: implement LMS-style onboarding architecture with context-driven state and route progression.
+- Added router-driven tour context in `src/tour/TourContext.tsx`:
+  - `TourProvider` with decoupled state/actions (`start`, `next`, `skip`).
+  - strict step config array of `{ path, title, body }` for `/`, `/learners`, `/placements`, `/reporting`.
+  - `next()` mutates both step state and browser route via `useNavigate`.
+- Added accessible full-screen onboarding overlay in `src/ui/onboarding/DemoTour.tsx`:
+  - `role="dialog"`, `aria-labelledby`, `aria-describedby`, backdrop with `aria-hidden`.
+  - Esc key listener for skip/close.
+  - dynamic CTA (`Next`/`Finish`) based on last-step index.
+- Integrated routing/provider stack in `src/main.tsx`:
+  - wrapped app with `BrowserRouter` and `TourProvider`.
+- Integrated overlay + trigger points:
+  - `src/app/App.tsx` now renders `DemoTourOverlay` globally.
+  - `src/ui/layout/GameLayout.tsx` adds `Onboarding` header button and wires menu `Tutorial` action to `startTour()`.
+- Added tour UI styles in `src/styles/layout.css` (overlay layout, dialog, actions, responsive rules).
+- Added native DOM fallback wizard mockup in `mockup-signup.html` with `#fellow-modal` visibility managed via `classList.add/remove('open')` and Escape close handling.
+- Validation:
+  - Installed dependency: `react-router-dom`.
+  - `npm run build` passed.
+  - Playwright flow check (`/?code=1` shortcut): tour opens, advances from `/` to `/learners`, and closes on Escape.
+  - Artifacts: `tmp/tour-step-1.png`, `tmp/tour-step-2.png`, `tmp/tour-step-1-body-visible.png`.
+- User reported tour not visible after entering as guest.
+- Added guest auto-launch for onboarding tour in `src/app/App.tsx`:
+  - imported `useTour` and read `start` + `isOpen`.
+  - added `autoTourTriggeredRef` guard.
+  - reset guard when entry flow starts.
+  - new effect: when `entry_gate_active && entry_gate_confirmed && auth_mode === 'guest' && modal === 'none'`, launch tour once (`startTour(0)`).
+- Validation:
+  - `npm run build` passed.
+  - Playwright guest path check confirms auto-opened tour after loading (`title: LMS Pathways Tour`, `isOpen: true`, `authBadge: Guest mode`).
+  - Artifact: `tmp/guest-auto-tour-visible.png`.
+- User feedback: tour was not customized to African Mandate gameplay interface.
+- Reworked tour model in `src/tour/TourContext.tsx`:
+  - replaced LMS steps with 6 African Mandate-specific steps (Mission Command Deck, Sahel Theater Map, Intel & Actor Feed, Action Cycle Control, Campaign Vital Signs, Decision Surface).
+  - each step now includes `focusSelector` + `focusLabel` mapped to real gameplay UI targets.
+  - updated path progression to gameplay-themed query routes (`/?tour=...`) and route comparison now includes pathname+search.
+- Updated `src/ui/onboarding/DemoTour.tsx`:
+  - added dynamic focus-box computation via selector + viewport rect tracking (resize/scroll aware).
+  - overlay now renders a moving highlight frame over the targeted gameplay panel.
+  - route line now presents focus label + pathway path.
+- Updated `src/styles/layout.css`:
+  - added `.demo-tour-focus` visual treatment and z-index layering for backdrop/focus/dialog.
+  - responsive focus styling retained at mobile breakpoint.
+  - fixed tour body text visibility lock (`opacity: 1; transform: none`).
+- Guest auto-tour race fix in `src/app/App.tsx`:
+  - blocked auto-launch while onboarding loading timer is active and while entry flow is pending.
+  - prevents loading modal and tour overlap.
+- Validation:
+  - `npm run build` passed.
+  - Playwright checks confirm:
+    - guest entry opens African Mandate tour automatically,
+    - loading modal is closed before tour appears (`loadingOpen: false`),
+    - tour shows customized title `Mission Command Deck` and focused header highlight.
+  - Artifacts: `tmp/african-tour-step-1.png`, `tmp/african-tour-step-2.png`, `tmp/african-tour-step-3.png`, `tmp/african-tour-no-loading-overlap.png`.
+- User feedback: tour still felt non-customized for African Mandate gameplay interface.
+- Updated src/tour/TourContext.tsx tour copy/order to a gameplay-native sequence (Command Rail -> Campaign Vital Signs -> Sahel Theater Map -> Intel and Actor Feed -> Decision Surface -> Action Cycle Control) with tightened African Mandate wording.
+- Updated src/ui/onboarding/DemoTour.tsx branding and metadata line: replaced LMS pathways with African Mandate Orientation and removed raw router path from UI in favor of gameplay-focused Interface focus text.
+- Validation: 
+pm run build passed.
+- New request: improve styling and quality of the onboarding tour overlay.
+- Updated src/tour/TourContext.tsx: added prev() callback to tour context so users can move backward between onboarding steps.
+- Updated src/ui/onboarding/DemoTour.tsx:
+  - added progress rail and step-dot indicators,
+  - added Back button (disabled at first step),
+  - split action groups (Back | Skip/Next) for clearer hierarchy,
+  - added keyboard hint (Press Esc to close onboarding).
+- Updated src/styles/layout.css tour visuals:
+  - richer backdrop treatment and improved spotlight/focus ring with subtle pulse,
+  - elevated dialog surface styling with top accent line,
+  - refined typography/spacing for readability,
+  - stronger button states including disabled behavior,
+  - responsive mobile adjustments for new action layout/hint.
+- Validation:
+  - 
+pm run build passed.
+  - 
+pm run typecheck passed.
+  - Playwright web-game client screenshot artifacts: output/web-game/tour-style-quality-check-guest/shot-0.png.
+  - Focused browser verification script (.codex-temp/verify-tour-polish.mjs) confirmed navigation behavior: progressedToSecond: true, ackRestoredFirst: true with artifacts in output/web-game/tour-style-quality-check-manual/.
+- Follow-up note: tour validation result JSON shows { progressedToSecond: true, backRestoredFirst: true } in output/web-game/tour-style-quality-check-manual/result.json.
+- Tour focus blur fix: focused element is no longer blurred.
+- Updated src/ui/onboarding/DemoTour.tsx to render segmented backdrop fragments around the focus box (top/left/right/bottom) instead of a single full-screen blur layer when focus exists.
+- Updated src/styles/layout.css:
+  - .demo-tour-backdrop no longer applies backdrop blur globally.
+  - added .demo-tour-backdrop-fragment with blur so only non-focused regions are blurred/dimmed.
+- Validation: 
+pm run typecheck passed; 
+pm run build passed.
+- New request: update first tour slide to be a video.
+- Updated src/tour/TourContext.tsx with optional tour media fields (ideoSrc, ideoPoster, ideoCaption) and wired step 1 (Command Rail) to /assets/vid/African_Mandate_opening_scene.mp4.
+- Updated src/ui/onboarding/DemoTour.tsx to render an inline <video> block (autoplay + muted + loop + playsInline) only when the current step has ideoSrc.
+- Updated src/styles/layout.css with tour media styles (.demo-tour-media-wrap, .demo-tour-media, .demo-tour-media-caption) and responsive sizing.
+- Validation:
+  - 
+pm run typecheck passed.
+  - 
+pm run build passed.
+  - Browser verification artifacts: output/web-game/tour-first-slide-video-check/step-1-video.png, step-2-no-video.png, esult.json showing step1.hasVideo: true, step2.hasVideo: false.
+- Tour adjustment: moved onboarding video into its own dedicated first slide (Opening Brief) instead of embedding it inside Command Rail.
+- Updated src/tour/TourContext.tsx: inserted /?tour=opening-brief step with video, removed video fields from the Command Rail step.
+- Validation: 
+pm run typecheck passed; 
+pm run build passed.
+- New request: make tour styling match other interface modals and ensure Inter font usage.
+- Updated src/styles/layout.css tour styles to modal-parity tokens:
+  - dialog now uses ar(--bg-card), ar(--border), 8px radius, and ar(--shadow-lg).
+  - backdrop normalized to modal-style gba(0,0,0,0.7).
+  - button styling aligned to existing modal button system (g-card, subtle border, same sizing/weight/hover behavior).
+  - media container/caption aligned to panel + subtle borders.
+  - removed custom pulse/glow treatment on focus frame and reduced decorative gradient accents.
+- Explicit Inter enforcement added for tour root/title/buttons/body/meta labels (ont-family: var(--font-sans)).
+- Validation:
+  - 
+pm run build passed.
+  - Browser parity check artifact: output/web-game/tour-modal-parity-check/tour-modal-parity.png.
+  - Computed-style verification (output/web-game/tour-modal-parity-check/result.json) confirms modal-like surface and font family (Inter, sans-serif).
+- Tour layout adjustment per request:
+  - moved .demo-tour-route directly below .demo-tour-title in src/ui/onboarding/DemoTour.tsx.
+  - removed .demo-tour-kicker block from tour markup.
+  - removed .demo-tour-media-caption render from tour video figure.
+- CSS cleanup in src/styles/layout.css:
+  - removed .demo-tour-kicker and .demo-tour-media-caption styles.
+  - adjusted .demo-tour-route styling for title-adjacent placement (no top divider).
+  - removed mobile override for .demo-tour-media-caption.
+- Validation: 
+pm run typecheck passed; 
+pm run build passed.
+- Tour body readability fix: removed narrow text column behavior in src/styles/layout.css.
+- Updated .demo-tour-dialog-wrap width from min(760px, 92vw) to min(920px, 94vw).
+- Updated .demo-tour-body to max-width: none, width: 100%, white-space: normal, and 	ext-wrap: pretty for natural sentence flow.
+- Validation: 
+pm run build passed.
+- New request: after the video slide, the tour modal should move around with the focused interface region.
+- Updated src/ui/onboarding/DemoTour.tsx:
+  - added floating-dialog positioning state/ref (loatingPosition, dialogWrapRef) and shouldFloatDialog gate (step > 0 && focusBox).
+  - implemented placement algorithm (prefer below focus; fallback above; then right/left side; final clamped fallback) so the modal follows the highlighted surface.
+  - switched focus tracking effect to useLayoutEffect, reset stale focus on step change, and added periodic sync while open to keep focus/dialog aligned with live layout changes.
+  - dialog wrapper now uses is-floating class with inline top/left coordinates after the video slide.
+- Updated src/styles/layout.css:
+  - .demo-tour-dialog-wrap widened to min(920px, 94vw) for centered video step.
+  - added transition on top/left for smoother moves.
+  - added .demo-tour-dialog-wrap.is-floating (position: fixed, min(620px, calc(100vw - 2rem))) and mobile override width.
+- Validation:
+  - 
+pm run typecheck passed.
+  - 
+pm run build passed.
+  - browser verification artifacts: output/web-game/tour-follow-focus-check/step0-video.png, step1-command.png, step2-metrics.png.
+  - output/web-game/tour-follow-focus-check/result.json confirms movedAfterVideo: true and movedWithNextFocus: true.
+- Tour cleanup: removed duplicate progress tracker by deleting demo-tour-progress from src/ui/onboarding/DemoTour.tsx.
+- Removed unused progressPercent variable in DemoTour.tsx.
+- Removed .demo-tour-progress and .demo-tour-progress-fill styles from src/styles/layout.css.
+- Validation: 
+pm run typecheck passed; 
+pm run build passed.
+- New request: replace tour opening video slide with AU Commissioner avatar + audio message panel (MP3 to be provided later).
+- Updated src/tour/TourContext.tsx:
+  - replaced video fields with vatarSrc, vatarAlt, udioSrc, udioLabel, udioPendingText.
+  - opening slide now points to /assets/actors/AU Commissioner.png and shows audio placeholder text until MP3 path is added.
+- Updated src/ui/onboarding/DemoTour.tsx:
+  - replaced video rendering with avatar image block.
+  - added audio briefing panel rendering: <audio controls> when udioSrc exists, otherwise pending-message fallback.
+- Updated src/styles/layout.css:
+  - replaced .demo-tour-media with .demo-tour-avatar styling.
+  - added audio panel styles (.demo-tour-audio-wrap, .demo-tour-audio-label, .demo-tour-audio-player, .demo-tour-audio-pending) and mobile adjustments.
+  - avatar fit tuned to portrait-safe framing (object-fit: contain).
+- Validation:
+  - 
+pm run typecheck passed.
+  - 
+pm run build passed.
+  - Browser artifact: output/web-game/tour-commissioner-slide-check/commissioner-slide.png.
+  - Runtime check (output/web-game/tour-commissioner-slide-check/result.json): hasAvatar: true, hasAudioPlayer: false, pending-text present.
+- New request: commissioner onboarding slide should show circular avatar + side-by-side audio panel with waveform and use uploaded MP3.
+- Updated src/tour/TourContext.tsx opening step to set `audioSrc` to `/assets/audio/messages/AU%20Commissioner_envoy_welcome.mp3`.
+- Updated src/ui/onboarding/DemoTour.tsx:
+  - added circular-portrait + audio briefing row layout,
+  - added waveform bar renderer,
+  - wired waveform animation state to `<audio>` play/pause/end events,
+  - reset audio/wave state on tour step changes.
+- Updated src/styles/layout.css:
+  - added `.demo-tour-briefing-row`, `.demo-tour-avatar-frame`, and circular avatar styling,
+  - added `.demo-tour-waveform` animated bars and keyframes,
+  - adjusted responsive rules so avatar/audio stack cleanly on small screens.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright verification script: `.codex-temp/verify-tour-commissioner-wave.mjs`.
+  - Result: `output/web-game/tour-commissioner-wave-check/result.json` (`wavePlaying: true` after playback start).
+  - Screenshot reviewed: `output/web-game/tour-commissioner-wave-check/commissioner-wave.png`.
+- New request: style commissioner slide audio player to match modal and remove download affordances.
+- Updated src/ui/onboarding/DemoTour.tsx:
+  - replaced native `<audio controls>` UI with custom in-modal controls (Play/Pause, seek timeline, Mute/Unmute, elapsed/total time).
+  - kept hidden native `<audio>` element as playback engine only (`className="demo-tour-audio-native"`).
+  - added `controlsList="nodownload noplaybackrate"` and disabled audio context menu.
+  - wired state sync for playback, duration, timeline seek, mute state, and reset on step/modal changes.
+- Updated src/styles/layout.css:
+  - added modal-parity control styling (`.demo-tour-audio-controls`, `.demo-tour-audio-control-btn`, `.demo-tour-audio-timeline`, `.demo-tour-audio-seek`, `.demo-tour-audio-time`).
+  - hid native audio element visually (`.demo-tour-audio-native { display: none; }`).
+  - added mobile responsive layout for custom controls.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Skill web-game client invocation failed in this environment due missing `playwright` package resolution from skill script path.
+  - Local Playwright verification script `.codex-temp/verify-tour-audio-custom-controls.mjs` passed.
+  - Result: `output/web-game/tour-audio-custom-controls-check/result.json` confirms `hasNativeControlsAttribute: false`, `controlsList: "nodownload noplaybackrate"`, `nativeDisplay: "none"`, `downloadLinksInAudioWrap: 0`.
+  - Screenshot reviewed: `output/web-game/tour-audio-custom-controls-check/tour-audio-custom-controls.png`.
+- Minor UI request: set `.demo-tour-audio-wrap` to full opacity.
+- Updated `src/styles/layout.css` `.demo-tour-audio-wrap` with `opacity: 1`.
+- Validation: `npm run typecheck` passed.
+- Tour copy tweak: removed "Interface focus:" prefix from slide route line in `src/ui/onboarding/DemoTour.tsx`; now shows only the focus label text.
+- Validation: `npm run typecheck` passed.
+- Tour waveform layout tweak: `.demo-tour-waveform span` now uses `flex: 1 1 0` with `min-width: 2px` so bars expand across the full waveform width.
+- Validation: `npm run typecheck` passed.
+- Waveform correction: replaced wider bars approach with higher bar density.
+- Updated `src/ui/onboarding/DemoTour.tsx` to render 52 bars (`WAVEFORM_BARS`).
+- Updated `src/styles/layout.css` so bars remain narrow (`width: 2px`) and span full row via `justify-content: space-between`.
+- Validation: `npm run typecheck` passed.
+- Copy update: changed onboarding audio label from "Secure voice message to the Special Envoy" to "Encrypted voice message to the Special Envoy" in `src/tour/TourContext.tsx`.
+- Validation: `npm run typecheck` passed.
+- New request: replace post-login/loading modal page with the same pre-interface opening video treatment.
+- Updated `OnboardingLoadingBody` in `src/ui/modals/ModalRoot.tsx`:
+  - inserted full-screen video element using `/assets/vid/African_Mandate_opening_scene.mp4` (`autoPlay`, `muted`, `loop`, `playsInline`, `preload="auto"`).
+  - replaced suspense checklist copy block with compact loading panel over the video.
+- Updated onboarding loading styles in `src/styles/layout.css`:
+  - converted `.onboarding-loading-shell` to a video-backed full-screen loader with cinematic overlays.
+  - added `.onboarding-loading-video` and keyframe drift animation.
+  - tuned loading panel typography/progress bar for post-login reveal state.
+  - updated responsive loader sizing/padding for mobile.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright verification script `.codex-temp/verify-post-login-loading-video.mjs` confirmed loader video playback:
+    - `videoFound: true`, `videoPaused: false`, `videoMuted: true`, `videoLoop: true`, `videoCurrentTime: 0.79`.
+  - Artifacts:
+    - `output/web-game/post-login-loading-video-check/post-login-loading-video.png`
+    - `output/web-game/post-login-loading-video-check/result.json`
+- Follow-up fix: post-login loading video source was incorrect.
+- Updated `src/ui/modals/ModalRoot.tsx` onboarding loader video src to `/assets/vid/pre-interface%20loading_video.mp4` (file exists at `public/assets/vid/pre-interface loading_video.mp4`).
+- Validation: `npm run typecheck` passed.
+- UI tweak: made the tour audio slider WebKit track invisible by adding `.demo-tour-audio-seek::-webkit-slider-runnable-track` with transparent/no-border/no-shadow and zero height.
+- Validation: `npm run typecheck` passed.
+- Follow-up UI tweak: hid the tour audio slider thumb (the visible "ball") on WebKit and Firefox.
+- Updated `.demo-tour-audio-seek` with `appearance: none` and transparent thumb rules (`::-webkit-slider-thumb`, `::-moz-range-thumb`).
+- Validation: `npm run typecheck` passed.
+- Audio control UI update (tour commissioner slide):
+  - Removed mute control from custom audio controls in `src/ui/onboarding/DemoTour.tsx`.
+  - Removed mute-state logic and mute toggle handler.
+  - Time readout now renders as a single bracketed string: `[played/full]`.
+- Styling update in `src/styles/layout.css`:
+  - audio controls now use a 2-column layout (Play button + timeline), including mobile.
+  - time readout style adjusted for single-string display.
+- Validation: `npm run typecheck` passed.
+- Loader fix (requested): pre-interface loading video now plays in full and text overlay removed.
+- Updated `src/app/App.tsx`:
+  - removed fixed 2900ms onboarding loading timeout.
+  - loading modal now stays open until explicitly closed by loader component.
+- Updated `src/ui/modals/ModalRoot.tsx` `OnboardingLoadingBody`:
+  - removed loading overlay text panel markup.
+  - kept only full-screen video element.
+  - removed `loop` and added `onEnded={closeModal}` so modal closes after full playback.
+  - added `onError={closeModal}` fallback.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright verification (`.codex-temp/verify-preinterface-full-video.mjs`) confirms:
+    - `contentOverlayFound: false`
+    - `titleOverlayFoundInLoading: false`
+    - video duration `10.04s`, `videoLoop: false`, and loader closes only after playback (`waitMs: 11290`, `loadingStillVisible: false`).
+  - Artifacts:
+    - `output/web-game/post-login-preinterface-full-video-check/loading-video-during-playback.png`
+    - `output/web-game/post-login-preinterface-full-video-check/result.json`
+- Transition polish request: make interface + tour entrance after pre-interface loading video smoother/elegant.
+- Updated `src/ui/modals/ModalRoot.tsx` (`OnboardingLoadingBody`):
+  - added staged exit transition with `isExiting` state and 420ms delayed close after video end/error.
+  - loader now applies `onEnded`/`onError` -> `beginRevealExit` rather than immediate close.
+- Updated `src/styles/layout.css`:
+  - added loading-shell exit animations (`.onboarding-loading-shell.is-exiting`) with fade/scale/blur and video darken/zoom easing.
+  - added smooth entrance animations for tour overlay/backdrop/dialog (`demo-tour-overlay-in`, `demo-tour-backdrop-in`, `demo-tour-dialog-in`).
+- Updated `src/app/App.tsx`:
+  - added delayed guest auto-tour launch (~380ms) after loader closes, with timer cleanup and guard reset on new entry flow.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright timing check (`.codex-temp/verify-smooth-loader-tour.mjs`) confirms staged handoff:
+    - loader exit lead: `445.9ms`
+    - tour appears `427.7ms` after loader removal.
+  - Artifact: `output/web-game/post-loading-smooth-transition-check/result.json` and `.../tour-after-loader.png`.
+- Further smoothness pass ("must not feel yanked"):
+  - Added a post-loader interface reveal veil in `src/app/App.tsx` + `src/styles/layout.css`.
+  - Veil animates black/blur -> clear over ~760ms after loading video closes.
+  - Tour auto-launch is now gated until reveal settles and delayed to 760ms (from 380ms).
+  - Added timer cleanup/reset paths to avoid stale delayed launches.
+- Tour entrance easing was softened in `src/styles/layout.css`:
+  - overlay/backdrop fade increased to 0.52s,
+  - dialog ease increased to 0.62s with gentler initial translate/scale.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright timing check (`.codex-temp/verify-transition-elegance-v2.mjs`) shows staged handoff:
+    - loader exit lead `444.4ms`
+    - reveal veil duration `774.7ms`
+    - tour appears `789ms` after loader removal.
+  - Artifact: `output/web-game/post-loading-elegance-v2-check/result.json`.
+- New request: start game theme on Play click and fade it out smoothly when `pre-interface loading_video.mp4` ends.
+- Updated `index.html`:
+  - Added theme audio controller for `/assets/audio/music/Briefing%20Room%20Runway.mp3`.
+  - Starts playback in `beginArenaEntry()` immediately after Play click passes mobile gate checks.
+  - Added smooth fade-out function (requestAnimationFrame, cubic easing) and event listener for `african-mandate:theme-fade-out`.
+  - Exposed `window.__africanMandateThemeAudio` for runtime observability/debug.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - On pre-interface loading video exit, dispatches `african-mandate:theme-fade-out` with fade duration payload (`1800ms`) before modal closes.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright verification (`.codex-temp/verify-theme-music-fade.mjs`) confirmed:
+    - after Play click: theme exists, `paused: false`, `currentTime > 0`, correct src.
+    - during loading video: theme still playing.
+    - after loading video end + fade window: theme `paused: true` and reset.
+  - Artifacts: `output/web-game/theme-music-fade-check/result.json`, `.../post-fade-state.png`.
+- Requested refinement: smooth/elegant transition from login/sign-up modal into pre-interface loading video.
+- Updated `src/app/App.tsx` entry-flow handoff:
+  - replaced two-step `session_manager -> none -> onboarding_loading` with direct modal switch when `entry_gate_confirmed` while `session_manager` is open.
+  - kept fallback path for `modal === none` if needed.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - detect `loadingEnteringFromEntryGate` when loading opens from `session_manager` and add transition class hooks on backdrop/content.
+- Updated `src/styles/layout.css`:
+  - added `loading-entry-from-gate` animations (`loading-backdrop-in`, `loading-surface-in`).
+  - added onboarding loading entry animations (`onboarding-loading-shell-in`, `onboarding-loading-video-in`) for softer reveal.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+  - Playwright transition check (`.codex-temp/verify-auth-to-loading-smooth.mjs`) confirms no modal gap and active animations:
+    - `sessionToLoadingGapMs: 0`
+    - `loadingShellAnimationName: onboarding-loading-shell-in`
+    - `backdropAnimationName: loading-backdrop-in`
+    - `contentAnimationName: loading-surface-in`
+  - Artifacts:
+    - `output/web-game/auth-to-loading-smooth-check/result.json`
+    - `output/web-game/auth-to-loading-smooth-check/auth-to-loading-transition.png`
+- Landing heading clipping fix: adjusted `.mask-line` in `index.html` with descender-safe spacing (`padding-bottom: 0.1em; margin-bottom: -0.1em;`) so letters like 'g' are not clipped in lines like "Collateral Geography".
+- Browser verification (`.codex-temp/verify-collateral-geography-fix.mjs`) confirms visible bottom room (`bottomPaddingRoom: 5.78`).
+- Artifacts: `output/web-game/landing-collateral-geography-fix-check/result.json`, `.../collateral-geography-fix.png`.

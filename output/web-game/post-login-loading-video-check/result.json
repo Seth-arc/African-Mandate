@@ -1,0 +1,14 @@
+{
+  "url": "http://127.0.0.1:5174",
+  "metrics": {
+    "shellFound": true,
+    "videoFound": true,
+    "videoCurrentTime": 0.79,
+    "videoPaused": false,
+    "videoMuted": true,
+    "videoLoop": true,
+    "videoReadyState": 4,
+    "titleText": "Loading opening scene..."
+  },
+  "consoleErrors": []
+}

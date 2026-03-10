@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ErrorBoundary } from './ErrorBoundary'
 import { GameLayout } from '../ui/layout/GameLayout'
+import { DemoTourOverlay } from '../ui/onboarding/DemoTour'
+import { useTour } from '../tour/TourContext'
 import { useSessionStore } from '../state/sessionStore'
 import { useUiStore } from '../state/uiStore'
-
-const ONBOARDING_SEEN_KEY = 'african_mandate.onboarding_seen.v1'
 
 type AppReadyWindow = Window & { __africanMandateAppReady?: boolean }
 
@@ -15,11 +15,15 @@ function App(): ReactNode {
   const entryGateActive = useSessionStore((s) => s.entry_gate_active)
   const entryGateConfirmed = useSessionStore((s) => s.entry_gate_confirmed)
   const authMode = useSessionStore((s) => s.auth_mode)
+  const { start: startTour, isOpen: isTourOpen } = useTour()
   const openModal = useUiStore((s) => s.openModal)
-  const closeModal = useUiStore((s) => s.closeModal)
   const modal = useUiStore((s) => s.modal)
   const [entryFlowPending, setEntryFlowPending] = useState(false)
-  const onboardingTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const [interfaceRevealActive, setInterfaceRevealActive] = useState(false)
+  const autoTourTriggeredRef = useRef(false)
+  const autoTourTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const interfaceRevealTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const previousModalRef = useRef(modal)
 
   useEffect(() => {
     void initialize()
@@ -36,6 +40,16 @@ function App(): ReactNode {
     window.dispatchEvent(new Event('african-mandate:app-ready'))
 
     const handleStartFlow = (): void => {
+      if (autoTourTimerRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(autoTourTimerRef.current)
+        autoTourTimerRef.current = null
+      }
+      if (interfaceRevealTimerRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(interfaceRevealTimerRef.current)
+        interfaceRevealTimerRef.current = null
+      }
+      setInterfaceRevealActive(false)
+      autoTourTriggeredRef.current = false
       beginEntryGate()
       openModal('session_manager')
       setEntryFlowPending(true)
@@ -57,43 +71,98 @@ function App(): ReactNode {
     if (!entryFlowPending) return
     if (!entryGateConfirmed) return
     if (modal !== 'session_manager') return
-    closeModal()
-  }, [entryFlowPending, entryGateConfirmed, modal, closeModal])
+
+    setEntryFlowPending(false)
+    openModal('onboarding_loading')
+  }, [entryFlowPending, entryGateConfirmed, modal, openModal])
 
   useEffect(() => {
     if (!entryFlowPending) return
     if (!entryGateConfirmed) return
     if (modal !== 'none') return
 
-    const onboardingSeen =
-      typeof window !== 'undefined' && window.localStorage.getItem(ONBOARDING_SEEN_KEY) === '1'
-    const shouldLaunchOnboarding = authMode === 'guest' || !onboardingSeen
     setEntryFlowPending(false)
-    if (!shouldLaunchOnboarding) return
-
     openModal('onboarding_loading')
-    if (typeof window === 'undefined') return
-    if (onboardingTimerRef.current) {
-      window.clearTimeout(onboardingTimerRef.current)
+  }, [entryFlowPending, entryGateConfirmed, modal, openModal])
+
+  useEffect(() => {
+    const previousModal = previousModalRef.current
+    if (previousModal === 'onboarding_loading' && modal === 'none') {
+      setInterfaceRevealActive(true)
+      if (interfaceRevealTimerRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(interfaceRevealTimerRef.current)
+      }
+      if (typeof window !== 'undefined') {
+        interfaceRevealTimerRef.current = window.setTimeout(() => {
+          setInterfaceRevealActive(false)
+          interfaceRevealTimerRef.current = null
+        }, 760)
+      }
+    } else if (modal !== 'none') {
+      setInterfaceRevealActive(false)
+      if (interfaceRevealTimerRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(interfaceRevealTimerRef.current)
+        interfaceRevealTimerRef.current = null
+      }
     }
-    onboardingTimerRef.current = window.setTimeout(() => {
-      openModal('mission_brief')
-      window.localStorage.setItem(ONBOARDING_SEEN_KEY, '1')
-      onboardingTimerRef.current = null
-    }, 2900)
-  }, [authMode, entryFlowPending, entryGateConfirmed, modal, openModal])
+    previousModalRef.current = modal
+  }, [modal])
+
+  useEffect(() => {
+    if (!entryGateActive || !entryGateConfirmed) return
+    if (entryFlowPending) return
+    if (authMode !== 'guest') return
+    if (modal !== 'none') return
+    if (interfaceRevealActive) return
+    if (isTourOpen) return
+    if (autoTourTriggeredRef.current) return
+
+    autoTourTriggeredRef.current = true
+    if (typeof window === 'undefined') {
+      startTour(0)
+      return
+    }
+
+    if (autoTourTimerRef.current) {
+      window.clearTimeout(autoTourTimerRef.current)
+    }
+    autoTourTimerRef.current = window.setTimeout(() => {
+      autoTourTimerRef.current = null
+      const sessionState = useSessionStore.getState()
+      const uiState = useUiStore.getState()
+      if (
+        sessionState.entry_gate_active &&
+        sessionState.entry_gate_confirmed &&
+        sessionState.auth_mode === 'guest' &&
+        uiState.modal === 'none'
+      ) {
+        startTour(0)
+        return
+      }
+      autoTourTriggeredRef.current = false
+    }, 760)
+  }, [authMode, entryFlowPending, entryGateActive, entryGateConfirmed, interfaceRevealActive, isTourOpen, modal, startTour])
 
   useEffect(() => {
     return () => {
-      if (onboardingTimerRef.current && typeof window !== 'undefined') {
-        window.clearTimeout(onboardingTimerRef.current)
+      if (autoTourTimerRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(autoTourTimerRef.current)
+        autoTourTimerRef.current = null
+      }
+      if (interfaceRevealTimerRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(interfaceRevealTimerRef.current)
+        interfaceRevealTimerRef.current = null
       }
     }
   }, [])
 
   return (
     <ErrorBoundary>
-      <GameLayout />
+      <>
+        <GameLayout />
+        <div className={`interface-reveal-veil${interfaceRevealActive ? ' is-active' : ''}`} aria-hidden="true" />
+        <DemoTourOverlay />
+      </>
     </ErrorBoundary>
   )
 }

@@ -1,0 +1,9 @@
+{
+  "step1": {
+    "hasVideo": true,
+    "source": "http://127.0.0.1:4173/assets/vid/African_Mandate_opening_scene.mp4"
+  },
+  "step2": {
+    "hasVideo": false
+  }
+}
