@@ -587,3 +587,14 @@ pm test -- --run passed (49/49).
   - Playwright visual check artifacts:
     - `output/web-game/action-review-style-check/review-modal-full.png`
     - `output/web-game/action-review-style-check/review-card.png`
+- Request: remove Turn indicator from map legend.
+- Updated `src/map/MapView.tsx`:
+  - removed `currentTurn` selector from `MapLegendControls`,
+  - removed header turn badge render (`Turn {currentTurn}`).
+- Updated `src/styles/map.css`:
+  - removed now-unused `.map-legend-turn-badge` styles.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright visual check confirms legend header text is now only `SAHEL COMMAND` with hide button.
+  - Artifact: `output/web-game/legend-no-turn-check/legend-header.png`.
