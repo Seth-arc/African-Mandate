@@ -891,6 +891,7 @@
         const introVideoOverlay = document.getElementById('introVideoOverlay');
         const introVideo = document.getElementById('introVideo');
         const introVideoLoading = document.getElementById('introVideoLoading');
+        const GLOBAL_MEDIA_VOLUME_SCALE = 0.6;
         let introCompleted = false;
         let introTransitionInProgress = false;
         const enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Enter the Arena';
@@ -920,6 +921,7 @@
         function warmIntroVideoBuffer() {
             if (!introVideo) return;
             try {
+                introVideo.volume = GLOBAL_MEDIA_VOLUME_SCALE;
                 introVideo.preload = 'auto';
                 if (introVideo.readyState < 2) {
                     introVideo.load();
@@ -1104,6 +1106,10 @@
             enterArenaBtn.addEventListener('touchstart', warmIntroVideoBuffer, { once: true, passive: true });
         }
         if (introVideo) {
+            introVideo.volume = GLOBAL_MEDIA_VOLUME_SCALE;
+            introVideo.addEventListener('loadedmetadata', () => {
+                introVideo.volume = GLOBAL_MEDIA_VOLUME_SCALE;
+            });
             window.addEventListener('load', warmIntroVideoBuffer, { once: true });
         }
         if (aboutBtn) aboutBtn.addEventListener('click', openModal);

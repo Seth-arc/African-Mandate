@@ -1,0 +1,6 @@
+{
+  "modalClass": "modal-content modal-content-mission-brief mission-brief-visible",
+  "modalOpacity": "1",
+  "modalTransform": "matrix(1, 0, 0, 1, 0, 0)",
+  "backdropBackground": "rgba(0, 0, 0, 0.7) none repeat scroll 0% 0% / auto padding-box border-box"
+}

@@ -16,6 +16,7 @@ import {
   type SessionSummary,
 } from '../services/saveService'
 import type { GameState } from './types'
+import { reconcileTerritoryStateFromZones } from './territoryStateRuntime'
 
 function messageFromError(error: unknown): string {
   if (error instanceof Error) {
@@ -257,7 +258,8 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
       if (state.auth_mode !== 'authenticated' || !state.user_id) {
         throw new Error('Sign in with Google to load sessions.')
       }
-      const nextState = await loadCloudSessionSnapshot(sessionId, state.user_id, baseState)
+      const loadedState = await loadCloudSessionSnapshot(sessionId, state.user_id, baseState)
+      const nextState = reconcileTerritoryStateFromZones(loadedState)
 
       set({ active_session_id: sessionId })
       await get().refreshSessions()

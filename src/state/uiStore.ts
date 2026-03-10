@@ -5,11 +5,15 @@
 
 import { create } from 'zustand'
 import type { ActionLogEntry, Resources } from './types'
+import { playUiSfx } from '../utils/uiSfx'
 
 export type ModalKind =
   | 'none'
   | 'onboarding_loading'
   | 'session_manager'
+  | 'dossier'
+  | 'dossier_article'
+  | 'relationship_matrix'
   | 'action_config'
   | 'territory_overview'
   | 'zone_list'
@@ -22,7 +26,30 @@ export type ModalKind =
   | 'campaign_outcome'
   | 'status_report'
   | 'mission_brief'
+  | 'credits'
   | 'leaderboard'
+
+const REPORT_MODAL_SOUND_KINDS: ReadonlySet<ModalKind> = new Set([
+  'mission_brief',
+  'intel_report',
+  'status_report',
+])
+
+function playModalTransitionSfx(previousModal: ModalKind, nextModal: ModalKind): void {
+  if (previousModal === nextModal) return
+
+  const previousIsReportModal = REPORT_MODAL_SOUND_KINDS.has(previousModal)
+  const nextIsReportModal = REPORT_MODAL_SOUND_KINDS.has(nextModal)
+
+  if (previousIsReportModal && !nextIsReportModal) {
+    playUiSfx('modal_close')
+    return
+  }
+
+  if (nextIsReportModal) {
+    playUiSfx('modal_open')
+  }
+}
 
 export type ActionFlowStep = 'configure' | 'review' | 'outcome'
 export type DialogueFlowStep = 'choices' | 'outcome'
@@ -48,6 +75,8 @@ export interface UiState {
   actionOutcome: ActionLogEntry | null
   /** Selected intel report_key (for intel_report modal). */
   selectedReportKey: string | null
+  /** Selected dossier article id (for dossier article modal). */
+  selectedDossierArticleId: string | null
   /** Selected actor_key (for dialogue modal). */
   selectedActorKey: string | null
   /** Selected dialogue_id (for dialogue modal). */
@@ -78,6 +107,7 @@ const initialState: UiState = {
   actionAllocation: null,
   actionOutcome: null,
   selectedReportKey: null,
+  selectedDossierArticleId: null,
   selectedActorKey: null,
   selectedDialogueId: null,
   dialogueFlowStep: 'choices',
@@ -88,7 +118,7 @@ const initialState: UiState = {
   selectedZoneId: null,
   mapLayers: {
     territories: true,
-    zones: true,
+    zones: false,
     criticalOnly: false,
   },
   mapThreatThreshold: 75,
@@ -104,6 +134,7 @@ interface UiStore extends UiState {
   setActionOutcome: (outcome: ActionLogEntry | null) => void
   resetActionFlow: () => void
   setSelectedReportKey: (key: string | null) => void
+  setSelectedDossierArticle: (id: string | null) => void
   setSelectedActorKey: (key: string | null) => void
   setSelectedDialogueId: (id: string | null) => void
   setDialogueFlowStep: (step: DialogueFlowStep) => void
@@ -123,6 +154,7 @@ export const useUiStore = create<UiStore>((set) => ({
   ...initialState,
   openModal: (kind) =>
     set((s) => {
+      playModalTransitionSfx(s.modal, kind)
       if (kind !== 'action_config') {
         if (kind !== 'dialogue') {
           return { modal: kind }
@@ -142,19 +174,23 @@ export const useUiStore = create<UiStore>((set) => ({
       }
     }),
   closeModal: () =>
-    set({
-      modal: 'none',
-      selectedActionId: null,
-      selectedTarget: null,
-      actionFlowStep: 'configure',
-      actionAllocation: null,
-      actionOutcome: null,
-      selectedReportKey: null,
-      selectedActorKey: null,
-      selectedDialogueId: null,
-      dialogueFlowStep: 'choices',
-      dialogueOutcomeTextKey: null,
-      dialogueChoiceId: null,
+    set((s) => {
+      playModalTransitionSfx(s.modal, 'none')
+      return {
+        modal: 'none',
+        selectedActionId: null,
+        selectedTarget: null,
+        actionFlowStep: 'configure',
+        actionAllocation: null,
+        actionOutcome: null,
+        selectedReportKey: null,
+        selectedDossierArticleId: null,
+        selectedActorKey: null,
+        selectedDialogueId: null,
+        dialogueFlowStep: 'choices',
+        dialogueOutcomeTextKey: null,
+        dialogueChoiceId: null,
+      }
     }),
   setSelectedAction: (actionId, target) =>
     set({
@@ -180,6 +216,7 @@ export const useUiStore = create<UiStore>((set) => ({
       actionOutcome: null,
     }),
   setSelectedReportKey: (key) => set({ selectedReportKey: key }),
+  setSelectedDossierArticle: (id) => set({ selectedDossierArticleId: id }),
   setSelectedActorKey: (key) =>
     set({
       selectedActorKey: key,

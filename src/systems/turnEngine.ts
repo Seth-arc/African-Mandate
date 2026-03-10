@@ -15,6 +15,7 @@ import type {
 } from '../state/types'
 import { GameError } from '../state/types'
 import { resolveRuntimeEvents } from './eventResolver'
+import { reconcileTerritoryStateFromZones } from '../state/territoryStateRuntime'
 
 const METRIC_KEYS = [
   'stability',
@@ -458,6 +459,7 @@ export function advanceTurn(state: GameState): GameState {
       [turn]: { ...eventResolution.state.session.metrics },
     },
   }
+  nextState = reconcileTerritoryStateFromZones(nextState)
 
   if (eventResolution.deadlineFailReason) {
     return {

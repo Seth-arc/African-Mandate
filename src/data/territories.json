@@ -16,7 +16,7 @@
         "insurgency": 65,
         "civilian_support": 35
       },
-      "flag_url": "assets/flags/mali.png",
+      "flag_url": "assets/flags/Flag_of_Mali.svg",
       "capital": "Bamako",
       "region": "sahel_central"
     },
@@ -33,7 +33,7 @@
         "insurgency": 60,
         "civilian_support": 38
       },
-      "flag_url": "assets/flags/burkina_faso.png",
+      "flag_url": "assets/flags/Flag_of_Burkina_Faso.svg",
       "capital": "Ouagadougou",
       "region": "sahel_central"
     },
@@ -50,7 +50,7 @@
         "insurgency": 55,
         "civilian_support": 40
       },
-      "flag_url": "assets/flags/niger.png",
+      "flag_url": "assets/flags/Flag_of_Niger.svg",
       "capital": "Niamey",
       "region": "sahel_east"
     },
@@ -67,7 +67,7 @@
         "insurgency": 50,
         "civilian_support": 42
       },
-      "flag_url": "assets/flags/chad.png",
+      "flag_url": "assets/flags/Flag_of_Chad.svg",
       "capital": "N'Djamena",
       "region": "sahel_east"
     },
@@ -84,7 +84,7 @@
         "insurgency": 35,
         "civilian_support": 50
       },
-      "flag_url": "assets/flags/mauritania.png",
+      "flag_url": "assets/flags/Flag_of_Mauritania.svg",
       "capital": "Nouakchott",
       "region": "sahel_west"
     }

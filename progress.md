@@ -244,3 +244,346 @@ pm test -- --run passed (49/49).
   - Malian refugees
   - Refugee communities
   - Volunteers for Defense of Homeland (VDP)
+- New request: enhance mission brief modal to match `context_files/gameplay-interface-final.html` copy/layout/design.
+- Rebuilt `mission_brief` modal body in `src/ui/modals/ModalRoot.tsx` to parity structure:
+  - custom mission header with subtitle, act badge, envoy avatar/role block, and mission stat row,
+  - sectioned content: Situation Overview, Primary Objectives, Victory Conditions, Strategic Guidance, Strategic Hint,
+  - timeline-style objective and victory blocks with on-track/at-risk status tags,
+  - footer actions: Close Brief, View Status Report, Proceed to Action Planning.
+- Added mission brief content constants in `ModalRoot.tsx` (`MISSION_PRIMARY_OBJECTIVES`, `MISSION_STRATEGIC_GUIDANCE`, `MISSION_STRATEGIC_HINTS`) and dynamic win-condition wiring from existing thresholds/state.
+- Updated modal chrome behavior for mission brief in `ModalRoot.tsx`:
+  - hide generic modal header for `mission_brief`,
+  - dedicated modal sizing class `modal-content-mission-brief` (wider shell, padded internally by mission layout).
+- Added dedicated mission brief styling in `src/styles/layout.css`:
+  - mission shell/header/content/footer layout,
+  - identity card + avatar + stat row,
+  - section framing and timeline visuals,
+  - victory status chips and strategic hint callout,
+  - responsive behavior for <=860px and <=640px.
+- Post-fix: neutralized landing-page global paragraph animation leakage into mission brief copy by forcing mission subtitle/role/note opacity/transform defaults.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright flow validation to mission brief passed; artifacts:
+    - `output/web-game/mission-brief-parity-check/metrics.json`
+    - `output/web-game/mission-brief-parity-check/mission-brief-modal-final.png`
+    - `output/web-game/mission-brief-parity-check/text-opacity-check.json`
+- New request: make mission brief modal reveal more elegant after login/signup/guest access selection.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - added mission-brief reveal state (`missionBriefRevealVisible`) and previous-modal tracking,
+  - detect handoff from `onboarding_loading` to `mission_brief`,
+  - stage mission-brief classes (`mission-brief-prep` -> `mission-brief-visible`) via `requestAnimationFrame`,
+  - keep backdrop black for the first reveal beat when coming from onboarding loading.
+- Updated `src/styles/layout.css`:
+  - added `mission-brief-section-in` keyframes,
+  - added smoother backdrop transition,
+  - added dedicated mission-brief enter styling (`modal-content-mission-brief`, prep/visible states),
+  - added staggered reveal for mission brief header/content/footer blocks.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright flow check artifacts:
+    - `output/web-game/mission-brief-reveal-check/mission-brief-early.png`
+    - `output/web-game/mission-brief-reveal-check/mission-brief-settled.png`
+    - `output/web-game/mission-brief-reveal-check/reveal-state.json`
+- Mission brief footer actions updated per request:
+  - removed `View Status Report` and `Proceed to Action Planning` buttons,
+  - added `Dossier` button positioned to the left of `Close Brief`, wired to `openModal('player_profile')`.
+- Validation: `npm run typecheck` passed.
+- New request: Dossier button in mission brief should open an intelligence-dossier modal with specific article set, and article modals should match `gameplay-interface-final.html` style including images.
+- Updated `src/state/uiStore.ts`:
+  - added modal kinds: `dossier`, `dossier_article`,
+  - added `selectedDossierArticleId` state + `setSelectedDossierArticle` action,
+  - reset/close now clears dossier article selection.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - mission brief `Dossier` button now opens `dossier` modal (instead of player profile),
+  - added deterministic dossier dataset for four required briefs (wagner/ecowas/climate/french) with required headline/subheadline/date/location/source/image/copy,
+  - added `DossierBody` (article list cards using intelligence feed copy),
+  - added `DossierArticleBody` (newspaper-style intel article view with lead image, meta, body sections, sources, close action),
+  - wired modal routing for `dossier` + `dossier_article`,
+  - added modal shell sizing classes and custom-header suppression for dossier modals.
+- Updated `src/styles/layout.css`:
+  - added `modal-content-dossier` and `modal-content-dossier-article` container rules,
+  - added dossier list layout/styles,
+  - added intelligence report modal styling aligned to reference classes (`intel-report-*`, `report-*`) including responsive behavior,
+  - ensured injected report paragraph text is not impacted by landing-page global paragraph animation defaults.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright artifacts:
+    - `output/web-game/dossier-intel-modal-check/dossier-list.png`
+    - `output/web-game/dossier-intel-modal-check/dossier-article-wagner.png`
+    - `output/web-game/dossier-intel-modal-check/metrics.json`
+    - `output/web-game/dossier-intel-modal-check/all-article-image-check.json` (4/4 article images loaded).
+- New request: navbar must only show Mission Brief + Status Report + mode-specific third element:
+  - guest: `Guest mode` status,
+  - authenticated: `Menu` dropdown with items Save Session, Load Session, Settings, Tutorial, Credits, Exit.
+- Updated `src/ui/layout/GameLayout.tsx`:
+  - removed `Sessions` and `Leaderboard` header buttons,
+  - guest view now renders only `Guest mode` status chip,
+  - authenticated view now renders `Menu` dropdown,
+  - added outside-click + Escape close behavior for dropdown,
+  - wired menu actions:
+    - Save Session -> `saveState(state, 'manual', 'manual')` then open session manager,
+    - Load Session -> open session manager,
+    - Settings -> open session manager,
+    - Tutorial -> open mission brief,
+    - Credits -> open credits modal,
+    - Exit -> navigate back to landing (`window.location.pathname`).
+- Updated `src/state/uiStore.ts`:
+  - added `credits` modal kind.
+- Updated `src/ui/modals/ModalRoot.tsx`:
+  - added `credits` modal title and `CreditsBody`,
+  - added `ModalBody` routing for `credits`.
+- Updated `src/styles/layout.css`:
+  - added navbar mode/status + menu dropdown styling (`game-mode-status`, `game-menu*`),
+  - added responsive behavior for dropdown and guest chip at <=860px and <=640px.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright guest-flow check passed and confirms nav contract for guest mode:
+    - `output/web-game/navbar-mode-check/guest-navbar-metrics.json`
+    - `output/web-game/navbar-mode-check/guest-navbar.png`
+- Additional visual verification: captured clear in-game guest navbar screenshot after closing mission brief modal:
+  - `output/web-game/navbar-mode-check/guest-navbar-clear.png`
+  - `output/web-game/navbar-mode-check/guest-navbar-clear-metrics.json`
+- New request: include territory flags in the zone list modal header as well.
+- Updated `src/ui/modals/ModalRoot.tsx` (`ZoneListBody`):
+  - resolved territory flag from `content.territories.territories[].flag_url` with deterministic fallback to `TERRITORY_FLAG_FALLBACK`,
+  - rendered territory flag block in the zone list header (`.zones-modal-flag`) with initials fallback when no image exists.
+- Updated `src/styles/layout.css`:
+  - added zone-list flag/header layout classes (`zones-modal-header--with-flag`, `zones-modal-header-row`, `zones-modal-flag`, `zones-modal-heading`) and responsive sizing.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Fix: zone list modal territory flags were not mapping because territory data referenced non-existent `.png` files under `assets/flags`, while repo contains SVG files (`Flag_of_*.svg`).
+- Updated `src/data/territories.json` flag_url entries to existing SVG assets.
+- Updated `src/ui/modals/ModalRoot.tsx` with shared territory-flag resolver + robust image fallback handler, and applied it to both territory overview + zone list modals.
+- Validation: `npm run typecheck` passed, `npm test -- --run` passed (49/49).
+- Dossier UI refinement: each mission dossier feed card now includes a thumbnail image (reusing the article image asset) in a compact horizontal card layout.
+- Reduced dossier bulk by tightening shell/header sizing, card padding, typography scale, feed spacing, and mobile breakpoints; clamped subheadline/summary lines to keep cards concise.
+- Files updated: `src/ui/modals/ModalRoot.tsx`, `src/styles/layout.css`.
+- Validation: `npm run typecheck` passed, `npm test -- --run` passed (49/49).
+- Added shared UI SFX utility: `src/utils/uiSfx.ts` with deterministic key->asset mapping and guarded playback in browser only.
+  - `active_button_hover` tries `/assets/audio/effects/active_button_hover.mp3` first, then falls back to existing `/assets/audio/effects/active_button_hover.wav`.
+  - Added modal open (`swipe-255512.mp3`) and modal close (`whoosh-07-410877.mp3`) mappings.
+- Wired modal transition SFX in `src/state/uiStore.ts`:
+  - opening `mission_brief`, `intel_report`, `status_report` => swipe sound,
+  - closing those modals (including transition away) => whoosh sound.
+- Replaced map procedural oscillator SFX with file-based `active_button_hover` in `src/map/MapView.tsx`:
+  - hover + click on clickable territory/zone polygons,
+  - hover + click on territory/zone markers,
+  - hover + click on territory/zone popup action buttons,
+  - hover on clickable territory items in legend and click via existing handler.
+- Validation: `npm run typecheck` passed, `npm test -- --run` passed (49/49).
+- Zone type map icon parity patch completed.
+- Updated `ZoneTypeLabelMarkers` in `src/map/MapView.tsx` to render the same inline SVG icon set used by legend/popups (capital/conflict/border/remote/crisis/urban) instead of CSS pseudo-shape placeholders.
+- Added `zoneTypeSvgMarkup` helper in `src/map/MapView.tsx` and injected SVG into Leaflet `L.divIcon` HTML for each zone marker.
+- Updated `src/styles/map.css`:
+  - added `.map-zone-label-icon svg` sizing,
+  - added `.map-zone-label-icon--svg::before { content: none !important; }` so old pseudo icons do not double-render,
+  - added missing `.map-zone-label-icon--urban_center::before` fallback style.
+- Validation: `npm run typecheck` passed, `npm test -- --run` passed (49/49).
+- Follow-up fix for invisible on-map zone-type icons:
+  - moved `ZoneTypeLabelMarkers` icon markers to `markerPane` (above vector layers) instead of `overlayPane`,
+  - increased icon container size to 20x20,
+  - added `.map-zone-type-marker` high-contrast backing circle,
+  - increased zone-type icon opacity and svg size for visibility.
+- Files updated: `src/map/MapView.tsx`, `src/styles/map.css`.
+- Validation: `npm run typecheck` passed, `npm test -- --run` passed (49/49).
+- Updated `ACTOR_PRESENT_AVATAR_MAP` in `src/ui/modals/ModalRoot.tsx` for the 14 previously-null actor names using files found in `public/assets/actors`.
+- Mapped direct matches where available and reused closest available assets for entries with no dedicated file (`Displaced rural communities`, `Refugee communities`, `ISGS`).
+- Validation: `npm run typecheck` passed, `npm test -- --run` passed (49/49).
+- Updated Actor Panel UX to prioritize interactable actors: added default 'Engageable Now' filter, explicit interaction-state chips (Engage now / Dialogue locked / Profile only), lock reasons, and direct 'Open dialogue' CTA for currently available actors. Added matching layout styles for filter controls and interaction states. Validation: npm run typecheck passed.
+- Zone modal actor UX update: profile-only canonical actors (no relationship tracking + no authored dialogue) are now resolved from zone ctors_present via deterministic alias mapping and surfaced as clickable cards inside Zone Detail. Added dedicated 'Profile-Only Stakeholders' section; clicking opens ctor_profile modal. Key actor cards for profile-only entries are also clickable. Added matching CSS for interactive zone actor and profile-only cards. Validation: npm run typecheck passed.
+- Actor panel tightened per UX request: now only shows actors that are currently interactable (active + dialogue available now). Removed canonical/all filter fallback from panel view. Card click and CTA both open dialogue directly. Empty state now instructs user to trigger engagement actions or advance turn.
+- Actor modal content parity update: added explicit actor Description generated from actor metadata and surfaced actor Notes inside both Actor Profile and Dialogue modals. Added 'Default sentiment' row in actor profile and spacing rule for multi-paragraph actor brief text. Validation: npm run typecheck passed.
+- Expanded actor modal data parity per request: surfaced actor_key, portrait_url, relationship tracking mode, and baseline relationship score in Actor Profile and Dialogue modals; added portrait rendering with image fallback initials; retained notes + description in both modal flows. Validation: npm run typecheck passed.
+- Patched stale territory overview pipeline: added econcileTerritoryStateFromZones utility (src/state/territoryStateRuntime.ts) to recompute territory stability/insurgency/status from live zone_state (population-weighted). Wired into action effects (ctionResolver.applyEffects), turn advancement (	urnEngine.advanceTurn), and cloud session load (sessionStore.loadState) so territory Current Situation and status data stay synchronized. Validation: npm run typecheck passed.
+- Reworked Territory Overview 'Current Situation' copy to be visibly data-driven: added status chip + hotspot/incidents/displacement pills and three explicit runtime narrative lines (status snapshot, stability-vs-insurgency pressure delta, and threat-band ops summary). Added corresponding territory status chip styles. Validation: npm run typecheck passed.
+- Restyled Territory Overview Current Situation states to align with modal visual system: replaced inline pills with structured mini-state cards (Status/Hotspot/Incidents/Displacement), unified card borders/background/radius/typography with territory stats/sections, and kept status color accents only on the Status state card. Added mobile single-column behavior for the state grid. Validation: npm run typecheck passed.
+- Styled action-config meta section for modal parity: converted .action-config-meta from loose chip row into a bordered panel block with modal-consistent background/radius/padding and responsive grid layout; updated .action-config-meta .action-config-chip to card-style chips (full-width, neutral text, bg-card) to match surrounding modal UI. Validation: 
+pm run typecheck passed.
+- Post-style validation run: 
+pm test -- --run passed (9 files, 49 tests).
+- Removed map legend sections per UX request: deleted Territories, Active Incidents, and Selection from MapLegendControls in src/map/MapView.tsx. Pruned dependent legend-only code (territory quick-list handling, incident feed derivation, selection display/actions) and removed unused local icon/sparkline helpers. Cleaned unused legend CSS blocks in src/styles/map.css for those removed sections. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Font consistency patch for game interface: updated map typographic token --font-mono to Inter stack in src/styles/map.css so legend/stat/threshold/readout elements no longer render in a separate monospace family. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Fixed remaining non-Inter headings in game UI caused by landing-page global h2 leakage: added heading-family guard for .game-shell and .modal-content (h1..h4) in src/styles/layout.css, and explicit Inter family for key title classes (.sidebar-panel-title, .mission-brief-title, .mission-brief-section-title, .campaign-presentation-title). Also set modal chrome heading (Status report / generic modal header) to ontFamily: var(--font-sans) in src/ui/modals/ModalRoot.tsx. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Updated territory polygon visual differentiation in map: added deterministic TERRITORY_BASE_COLORS (one distinct base color per territory) and 	erritoryBaseColor() helper in src/map/MapView.tsx. Territory fills now use territory-specific colors for easier scan; status remains encoded via border color (STATUS_COLORS), dash pattern, and hatch overlays for high/critical. Slightly increased base fill opacities for readability. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Map polish: removed visible grey borders from neighbouring-country context layer by disabling neighbour path stroke (stroke: false, transparent color, zero weight) and slightly softening neighbour fill opacity in src/map/MapView.tsx NEIGHBOUR_STYLE. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Startup map-layer default adjusted per UX request: src/state/uiStore.ts initial mapLayers now starts as { territories: true, zones: false, criticalOnly: false } so only territories are visible when interface loads. Updated unit expectation in 	ests/unit/uiStore.test.ts to reflect new default and validate enabling zones from that state. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- Added Mission Brief -> Relationship Matrix flow for tracked actors. New ModalKind elationship_matrix in src/state/uiStore.ts; wired modal title/routing in src/ui/modals/ModalRoot.tsx. Mission brief footer now includes Relationship Matrix button. Implemented RelationshipMatrixBody using runtime state.actor_sentiments joined with ctors.json metadata (name/title/faction/baseline/current/delta/dialogue_state), with profile drill-down (openModal('actor_profile')). Added dedicated matrix UI styles and responsive behavior in src/styles/layout.css plus wider modal sizing class modal-content-relationship-matrix. Validation: 
+pm run typecheck passed; 
+pm test -- --run passed (49/49).
+- New request: add actor location indicators in the Relationship Matrix modal.
+- Implemented deterministic actor-location mapping in `src/ui/modals/ModalRoot.tsx`:
+  - added `RELATIONSHIP_ACTOR_TERRITORY_MAP` for tracked territory actors (Mali/Burkina Faso/Niger mappings),
+  - added `resolveRelationshipLocation(...)` and `RelationshipLocationBadge` to render flags for territory actors,
+  - regional/institutional actors now use their logo (from `portrait_url`) as requested,
+  - added a new `Location` column in the matrix table.
+- Updated relationship matrix styling in `src/styles/layout.css` for compact location badges and labels (flag/logo rendering parity with modal theme).
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Relationship matrix consistency update:
+  - `Dialogue State` now derives from game logic at render-time using `isActorActive(...)`, `getActorDialogueAvailability(...)`, and current sentiment completion state, instead of reading stale `actor_sentiments.dialogue_state` directly.
+  - Added `resolveDialogueStateLabel(...)` in `src/ui/modals/ModalRoot.tsx` for live labels: `Completed`, `Available now`, `Available turns: ...`, `Locked (activation)`, etc.
+- Removed Relationship Matrix `Profile` button column to free horizontal space and prevent actor names from being obscured.
+- Adjusted matrix actor-name/title CSS to wrap instead of ellipsis truncation so full names remain visible.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Relationship Matrix modal update per UX request:
+  - Removed the `Dialogue State` column entirely from the matrix table.
+  - Regional/institutional location label now uses deterministic scope labels `Regional` or `Continental` (no `Regional / Institutional`).
+  - Regional/institutional actors continue to render logo badges (not map/flag badges).
+  - Added `RELATIONSHIP_INSTITUTION_SCOPE_MAP` mapping for explicit institutional scope labels.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Updated regional institution logo data sources in `src/data/actors.json`:
+  - `regional_ecowas.portrait_url` -> `assets/logos/ECOWAS.png`
+  - `regional_aes.portrait_url` -> `assets/logos/Alliance_of_Sahel_States_Logo.png`
+- Verified both files exist under `public/assets/logos` and `npm run typecheck` passes.
+- Patched `src/data/actors.json` with strong portrait matches from `public/assets/actors`:
+  - junta_burkina_traore -> `assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png`
+  - junta_mali -> `assets/actors/Col. Assimi Goita.png`
+  - junta_niger -> `assets/actors/Gen. Abdou Karim Niger Transitional Council.png`
+  - civil_society_konate -> `assets/actors/Amina Ouedraogo Burkina Civil Society Network.png`
+  - external_wagner -> `assets/actors/Wagner Group.png`
+  - au_intelligence_directorate -> `assets/actors/AU Commissioner.png`
+  - community_dogon -> `assets/actors/Dogon Self-Defense.png`
+  - community_fulani -> `assets/actors/Fulani Community.png`
+- Added ASCII alias asset to avoid Unicode filename mismatch in tooling:
+  - `public/assets/actors/Col. Assimi Goita.png` (copied from existing `Col. Assimi Goïta.png`).
+- Validation:
+  - all 8 updated paths exist.
+  - `npm run typecheck` passed.
+- Reworked dossier modal styling for tighter parity with the rest of the UI (reduced oversized spacing/sizing and normalized surfaces).
+- Updated modal sizing in `ModalRoot.tsx`:
+  - dossier and dossier_article now use `min(920px, 94vw)` and `maxHeight: 90vh`.
+  - removed dossier_article transparent/no-border inline overrides so it renders as a normal in-system modal surface.
+- Updated `src/styles/layout.css` dossier/intel report styles:
+  - compacted header/content/footer paddings, typography scales, card radii, and grid gaps.
+  - reduced feed thumbnail and article hero image heights.
+  - aligned backgrounds/borders/shadows to existing modal panel tokens (`--bg-card`, `--bg-panel`, `--border-subtle`, `--shadow-lg`).
+  - tightened meta/footer/button styles to remove bulky spacing.
+- Updated responsive overrides at <=860px so they do not reintroduce large dossier/intel spacing.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- UI request: removed navbar `game-act-turn` block and surfaced that context in sidebar `turn-progress-now`.
+- `GameLayout` updates:
+  - removed Act/actions block from header left cluster.
+  - removed now-unused `getActFromTurn`, `act`, `slots`, and `config` usage.
+- `TurnProgressPanel` updates:
+  - now computes act from `getActFromTurn(session.turn)` and displays `Act`, `Turn`, and `actions left` inside `turn-progress-now`.
+- `layout.css` updates:
+  - removed obsolete `.game-act-turn`/`.game-act-label`/`.game-act-number`/`.game-actions-remaining` styles.
+  - tightened `.game-header-left` spacing after navbar block removal.
+  - updated `.turn-progress-now` to 3-column grid for Act/Turn/Actions with responsive single-column behavior on small screens.
+  - removed obsolete responsive `game-act-turn` overrides.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Audio attenuation update: reduced all current game sounds by 40% (to 60% of prior levels).
+- `src/utils/uiSfx.ts`:
+  - added `UI_SFX_GLOBAL_VOLUME_SCALE = 0.6`.
+  - playback volume now uses `UI_SFX_VOLUMES[key] * UI_SFX_GLOBAL_VOLUME_SCALE` (clamped 0..1), affecting hover/click and modal open/close SFX.
+- `index.html`:
+  - added `GLOBAL_MEDIA_VOLUME_SCALE = 0.6` for intro video audio.
+  - sets `introVideo.volume` on init, in warm buffer path, and on `loadedmetadata` to keep opening-scene audio at the reduced level.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Reworked Turn Progression sidebar panel styling to better match project UI patterns.
+- `TurnProgressPanel.tsx` updates:
+  - replaced plain `turn-progress-now` text spans with compact stat tiles (Act / Turn / Actions).
+  - replaced inline empty-state style with class-based `turn-progress-empty` block.
+  - restructured latest-action and latest-resolution lines into key/value rows and stacked fields for long values.
+- `layout.css` updates for turn panel:
+  - redesigned `turn-progress-now` as a stat-tile grid (`turn-progress-now-item`, label/value classes).
+  - added panel-consistent empty-state card (`turn-progress-empty`).
+  - converted `turn-progress-block` sections into bordered card blocks (instead of top-divider-only).
+  - added key/value typography classes and refined list styling with subtle bullets.
+  - kept responsive behavior and adjusted small-screen text alignment to left.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Navbar logo now links to landing page (`/`).
+- Updated `GameLayout` logo wrapper from static div to anchor with `aria-label="Return to landing page"`.
+- Added `.game-logo-link` styles in `layout.css` for consistent hover/focus behavior with existing navbar UI.
+- Validation: `npm run typecheck` passed.
+- Request: include territory flags in Action modal territory selection.
+- Implemented custom territory selector in `ActionConfigBody` so options can include flag images (native `<select>` cannot render images).
+- Added deterministic flag resolution per territory using existing `resolveTerritoryFlagPaths(...)` and fallback handling via `handleFlagImageError`.
+- Added territory flag badge renderer and wired selected + option rendering in the action modal territory control.
+- Added cohesive action-modal styles for the custom selector (`.action-config-territory-*`) in `src/styles/layout.css`.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright UI check confirmed visible flags in selected territory and menu options.
+  - Artifact: `output/web-game/territory-flag-action-modal-verify/shot-0.png`.
+- Request: style `.game-scenario-panel` for consistency/readability with rest of game UI.
+- Updated scenario panel styling in `src/styles/layout.css`:
+  - panel now uses compact structured spacing and card-like content blocks,
+  - title now uses the same uppercase tactical header language (gold + tracking),
+  - description now uses bordered card treatment for readability,
+  - KPI chips converted to uniform grid cards,
+  - scenario action buttons aligned to shared UI button weight/spacing,
+  - mobile layout now uses 2-column KPI/action grid and full-width buttons.
+- Validation:
+  - `npm run typecheck` passed.
+  - Playwright visual check passed with artifacts:
+    - `output/web-game/scenario-panel-style-check/shot-0.png`
+    - `output/web-game/scenario-panel-style-check/panel-0.png`
+- Request: allow map legend to be minimizable.
+- Implemented map-legend minimize/expand in `src/map/MapView.tsx`:
+  - added local `legendCollapsed` state in `MapLegendControls`,
+  - added header button (`Hide`/`Show`) with `aria-expanded` and labels,
+  - wrapped legend body + shortcuts in collapsible `.map-legend-content`,
+  - added `M` keyboard shortcut to toggle legend visibility,
+  - updated shortcut hint to include `M Legend`.
+- Added matching styles in `src/styles/map.css`:
+  - `.map-legend-collapse-btn` control style and focus state,
+  - `.map-legend-content` + `.is-collapsed` transition/pointer behavior.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright visual verification captures:
+    - `output/web-game/legend-minimize-check/legend-expanded.png`
+    - `output/web-game/legend-minimize-check/legend-collapsed.png`
+    - `output/web-game/legend-minimize-check/legend-restored.png`
+- Request: remove `action-config-summary` from Take Action flow because it duplicates review.
+- Removed duplicated summary block from `ActionConfigBody` configure step in `src/ui/modals/ModalRoot.tsx`.
+- Removed unused `.action-config-summary*` CSS selectors from `src/styles/layout.css`.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+- Request: style `action-config-review` for consistency and readability.
+- Updated `src/styles/layout.css` review styles:
+  - `action-config-review` now matches panel-card treatment (`bg-card`, subtle shadow, tighter spacing),
+  - each `action-config-review-row` is now a bordered card row with clear label/value hierarchy,
+  - labels (`span`) switched to uppercase tactical micro-label style for readability,
+  - values (`strong`) emphasized and right-aligned on desktop,
+  - review action buttons aligned right for cleaner modal rhythm.
+- Mobile refinement:
+  - `action-config-review-row` now collapses to one column and left-aligned values under `@media (max-width: 640px)`.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` passed (49/49).
+  - Playwright visual check artifacts:
+    - `output/web-game/action-review-style-check/review-modal-full.png`
+    - `output/web-game/action-review-style-check/review-card.png`

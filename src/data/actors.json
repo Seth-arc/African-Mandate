@@ -65,7 +65,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": 52,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/traore_portrait.png",
+      "portrait_url": "assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png",
       "notes": "Negotiable junta leader. Sovereignty-focused."
     },
     {
@@ -78,7 +78,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": 48,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/junta_mali_portrait.png",
+      "portrait_url": "assets/actors/Col. Assimi Goita.png",
       "notes": "Mali transitional government representative."
     },
     {
@@ -91,7 +91,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": 45,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/junta_niger_portrait.png",
+      "portrait_url": "assets/actors/Gen. Abdou Karim Niger Transitional Council.png",
       "notes": "Niger transitional government representative."
     },
     {
@@ -104,7 +104,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": 50,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/ecowas_logo.png",
+      "portrait_url": "assets/logos/ECOWAS.png",
       "notes": "Regional bloc. Action-driven relationship."
     },
     {
@@ -117,7 +117,7 @@
       "default_sentiment": "cautious",
       "default_relationship_score": 45,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/aes_logo.png",
+      "portrait_url": "assets/logos/Alliance_of_Sahel_States_Logo.png",
       "notes": "Alliance of Sahel States. Alternative coalition path."
     },
     {
@@ -130,7 +130,7 @@
       "default_sentiment": "hopeful",
       "default_relationship_score": 68,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/konate_portrait.png",
+      "portrait_url": "assets/actors/Amina Ouedraogo Burkina Civil Society Network.png",
       "notes": "Civil society coalition leader. Unlocks community mediation."
     },
     {
@@ -170,7 +170,7 @@
       "default_sentiment": "hostile",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/wagner_logo.png",
+      "portrait_url": "assets/actors/Wagner Group.png",
       "notes": "Consequence mechanic. Not negotiable."
     },
     {
@@ -196,7 +196,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/intel_directorate_seal.png",
+      "portrait_url": "assets/actors/AU Commissioner.png",
       "notes": "Intel report generation. Internal institution."
     },
     {
@@ -222,7 +222,7 @@
       "default_sentiment": "cautious",
       "default_relationship_score": 45,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/community_dogon.png",
+      "portrait_url": "assets/actors/Dogon Self-Defense.png",
       "notes": "Dogon community. Tribalism event actor."
     },
     {
@@ -235,8 +235,9 @@
       "default_sentiment": "cautious",
       "default_relationship_score": 42,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/community_fulani.png",
+      "portrait_url": "assets/actors/Fulani Community.png",
       "notes": "Fulani community. Tribalism event actor."
     }
   ]
 }
+

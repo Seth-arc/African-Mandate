@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { MapContainer, TileLayer, useMap, CircleMarker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet'
 import type { Feature, FeatureCollection } from 'geojson'
@@ -7,6 +7,7 @@ import '../styles/map.css'
 import { useGameStore } from '../state/gameStore'
 import { useUiStore } from '../state/uiStore'
 import { resolveTerritoryName, resolveZoneName, threatLevelToStatus } from '../state/selectors'
+import { playUiSfx } from '../utils/uiSfx'
 import type {
   StrategicValue,
   TerritoryKey,
@@ -35,6 +36,15 @@ const STATUS_COLORS: Record<TerritoryStatus, string> = {
   moderate: '#d4af37',
   high: '#e8a523',
   critical: '#a83232',
+}
+
+/* Territory base palette (distinct per country for faster visual scan) */
+const TERRITORY_BASE_COLORS: Record<TerritoryKey, string> = {
+  mali: '#4d7fa8',
+  burkina_faso: '#8a6f3a',
+  niger: '#3f8f7a',
+  chad: '#85506a',
+  mauritania: '#6a6696',
 }
 
 const ISO_TO_TERRITORY_KEY: Record<string, string> = {
@@ -144,10 +154,11 @@ const STRATEGIC_WEIGHT: Record<StrategicValue, StrategicWeight> = {
 /* ── Neighbour styling ── */
 
 const NEIGHBOUR_STYLE: L.PathOptions = {
-  color: '#3a3a4a',
-  weight: 0.8,
+  stroke: false,
+  color: 'transparent',
+  weight: 0,
   fillColor: '#1a1a24',
-  fillOpacity: 0.35,
+  fillOpacity: 0.28,
   interactive: false,
 }
 
@@ -198,69 +209,12 @@ function MapInstanceCapture(): null {
    SOUND EFFECTS (Tactical Audio Cues)
    ═══════════════════════════════════════════════ */
 
-const AudioCtxRef = { ctx: null as AudioContext | null }
-
-function getAudioCtx(): AudioContext {
-  if (!AudioCtxRef.ctx) {
-    AudioCtxRef.ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-  }
-  return AudioCtxRef.ctx
+function playZoneTerritoryHoverSound(): void {
+  playUiSfx('active_button_hover')
 }
 
-function playSelectSound(): void {
-  try {
-    const ctx = getAudioCtx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.setValueAtTime(1200, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.06)
-    gain.gain.setValueAtTime(0.08, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.1)
-  } catch {
-    /* audio not available */
-  }
-}
-
-function playCriticalHoverSound(): void {
-  try {
-    const ctx = getAudioCtx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(440, ctx.currentTime)
-    osc.frequency.setValueAtTime(520, ctx.currentTime + 0.05)
-    gain.gain.setValueAtTime(0.04, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.15)
-  } catch {
-    /* audio not available */
-  }
-}
-
-function playZoneHoverSound(): void {
-  try {
-    const ctx = getAudioCtx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.type = 'triangle'
-    osc.frequency.setValueAtTime(800, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.08)
-    gain.gain.setValueAtTime(0.03, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.12)
-  } catch {
-    /* audio not available */
-  }
+function playZoneTerritoryClickSound(): void {
+  playUiSfx('active_button_hover')
 }
 
 /* ═══════════════════════════════════════════════
@@ -326,6 +280,13 @@ function territoryFromState(
   if (!territoryState || !territoryKey) return undefined
   if (!Object.prototype.hasOwnProperty.call(territoryState, territoryKey)) return undefined
   return territoryState[territoryKey as TerritoryKey]
+}
+
+function territoryBaseColor(territoryKey: string | null, status: TerritoryStatus): string {
+  if (territoryKey && Object.prototype.hasOwnProperty.call(TERRITORY_BASE_COLORS, territoryKey)) {
+    return TERRITORY_BASE_COLORS[territoryKey as TerritoryKey]
+  }
+  return STATUS_COLORS[status]
 }
 
 function resolveTerritoryFlagUrls(
@@ -482,26 +443,6 @@ function ChevronIcon({ collapsed }: { collapsed: boolean }): ReactNode {
   )
 }
 
-function ShieldIcon(): ReactNode {
-  return (
-    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 1L2 4v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V4L8 1z" />
-    </svg>
-  )
-}
-
-function CrosshairIcon(): ReactNode {
-  return (
-    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="8" cy="8" r="5" />
-      <line x1="8" y1="1" x2="8" y2="4" />
-      <line x1="8" y1="12" x2="8" y2="15" />
-      <line x1="1" y1="8" x2="4" y2="8" />
-      <line x1="12" y1="8" x2="15" y2="8" />
-    </svg>
-  )
-}
-
 /* ── Zone type icons for legend and markers ── */
 
 function CapitalIcon(): ReactNode {
@@ -581,33 +522,23 @@ function zoneTypeIcon(zoneType: ZoneType): ReactNode {
   }
 }
 
-/* ═══════════════════════════════════════════════
-   SPARKLINE (tiny inline SVG)
-   ═══════════════════════════════════════════════ */
-
-function Sparkline({ values, color }: { values: number[]; color: string }): ReactNode {
-  if (values.length < 2) return null
-
-  const width = 40
-  const height = 14
-  const padding = 1
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
-
-  const points = values
-    .map((v, i) => {
-      const x = padding + (i / (values.length - 1)) * (width - padding * 2)
-      const y = height - padding - ((v - min) / range) * (height - padding * 2)
-      return `${x},${y}`
-    })
-    .join(' ')
-
-  return (
-    <svg className="map-legend-sparkline" viewBox={`0 0 ${width} ${height}`}>
-      <polyline className="map-legend-sparkline-line" points={points} stroke={color} />
-    </svg>
-  )
+function zoneTypeSvgMarkup(zoneType: ZoneType): string {
+  switch (zoneType) {
+    case 'capital':
+      return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="10" height="9" rx="1"></rect><polyline points="3,6 8,2 13,6"></polyline><line x1="8" y1="9" x2="8" y2="12"></line></svg>'
+    case 'conflict_hotspot':
+      return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="4" x2="8" y2="9"></line><circle cx="8" cy="11.5" r="0.5" fill="currentColor"></circle></svg>'
+    case 'border_region':
+      return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="1" x2="8" y2="15" stroke-dasharray="2 2"></line><polyline points="4,5 8,3 12,5"></polyline><polyline points="4,11 8,13 12,11"></polyline></svg>'
+    case 'remote_contested':
+      return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" stroke-dasharray="3 2"></circle><line x1="5" y1="5" x2="11" y2="11"></line><line x1="11" y1="5" x2="5" y2="11"></line></svg>'
+    case 'humanitarian_crisis':
+      return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1L1 14h14L8 1z"></path><line x1="8" y1="6" x2="8" y2="10"></line><circle cx="8" cy="12" r="0.5" fill="currentColor"></circle></svg>'
+    case 'urban_center':
+      return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14.5V2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v12.5"></path><line x1="5" y1="4" x2="7" y2="4"></line><line x1="9" y1="4" x2="11" y2="4"></line><line x1="5" y1="7" x2="7" y2="7"></line><line x1="9" y1="7" x2="11" y2="7"></line><line x1="5" y1="10" x2="7" y2="10"></line><line x1="9" y1="10" x2="11" y2="10"></line><path d="M1 14.5h14"></path></svg>'
+    default:
+      return ''
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -766,21 +697,22 @@ function SahelGeoJSONLayer(): null {
             const territoryKey = feature ? territoryKeyFromFeature(feature) : null
             const territory = territoryFromState(territoryState, territoryKey)
             const status: TerritoryStatus = territory?.status ?? 'moderate'
+            const baseColor = territoryBaseColor(territoryKey, status)
             const isSelected = territoryKey !== null && territoryKey === selectedTerritoryKey
             const isCritical = status === 'critical' || status === 'high'
             const fillOpacityByStatus: Record<TerritoryStatus, number> = {
-              low: 0.18,
-              moderate: 0.24,
-              high: 0.30,
-              critical: 0.36,
+              low: 0.24,
+              moderate: 0.28,
+              high: 0.31,
+              critical: 0.34,
             }
 
             return {
-              color: STATUS_COLORS[status],
+              color: isSelected ? '#d4af37' : STATUS_COLORS[status],
               weight: isSelected ? 3.4 : 2.2,
-              fillColor: STATUS_COLORS[status],
+              fillColor: baseColor,
               fillOpacity: isSelected
-                ? Math.min(fillOpacityByStatus[status] + 0.16, 0.55)
+                ? Math.min(fillOpacityByStatus[status] + 0.14, 0.55)
                 : fillOpacityByStatus[status],
               dashArray: status === 'critical' ? '6 3' : status === 'high' ? '4 3' : undefined,
               className: `map-territory-status map-territory-status--${status}${isCritical ? ' map-hatch-overlay' : ''}`,
@@ -824,11 +756,11 @@ function SahelGeoJSONLayer(): null {
             )
 
             layerNode.on('mouseover', () => {
-              if (status === 'critical') playCriticalHoverSound()
+              playZoneTerritoryHoverSound()
             })
 
             layerNode.on('click', () => {
-              playSelectSound()
+              playZoneTerritoryClickSound()
               setSelectedTerritory(territoryKey)
               setSelectedZone(null)
               openModal('territory_overview')
@@ -1017,13 +949,11 @@ function ZoneGeoJSONLayer(): null {
             )
 
             layerNode.on('mouseover', () => {
-              const status = threatLevelToStatus(threatLevel)
-              if (status === 'critical') playCriticalHoverSound()
-              else playZoneHoverSound()
+              playZoneTerritoryHoverSound()
             })
 
             layerNode.on('click', () => {
-              playSelectSound()
+              playZoneTerritoryClickSound()
               setSelectedTerritory(territoryKey)
               setSelectedZone(zoneId)
               openModal('zone_detail')
@@ -1096,7 +1026,15 @@ function TerritoryPopupContent({
           Zones: <span className="map-popup-meta-count">{zoneCount}</span>
         </span>
       </div>
-      <button type="button" className="map-popup-btn" onClick={onOpen}>
+      <button
+        type="button"
+        className="map-popup-btn"
+        onMouseEnter={playZoneTerritoryHoverSound}
+        onClick={() => {
+          playZoneTerritoryClickSound()
+          onOpen()
+        }}
+      >
         Open Territory Overview
       </button>
     </div>
@@ -1140,13 +1078,13 @@ function TerritoryMarkers(): ReactNode {
             }}
             eventHandlers={{
               click: () => {
-                playSelectSound()
+                playZoneTerritoryClickSound()
                 setSelectedTerritory(territoryKey)
                 setSelectedZone(null)
                 openModal('territory_overview')
               },
               mouseover: () => {
-                if (territory.status === 'critical') playCriticalHoverSound()
+                playZoneTerritoryHoverSound()
               },
             }}
           >
@@ -1263,7 +1201,15 @@ function ZonePopupContent({
           </div>
         </div>
       )}
-      <button type="button" className="map-popup-btn" onClick={onOpen}>
+      <button
+        type="button"
+        className="map-popup-btn"
+        onMouseEnter={playZoneTerritoryHoverSound}
+        onClick={() => {
+          playZoneTerritoryClickSound()
+          onOpen()
+        }}
+      >
         Open Zone Detail
       </button>
     </div>
@@ -1318,13 +1264,13 @@ function ZoneMarkers(): ReactNode {
             }}
             eventHandlers={{
               click: () => {
-                playSelectSound()
+                playZoneTerritoryClickSound()
                 setSelectedTerritory(zone.territory_key)
                 setSelectedZone(zoneId)
                 openModal('zone_detail')
               },
               mouseover: () => {
-                if (status === 'critical') playCriticalHoverSound()
+                playZoneTerritoryHoverSound()
               },
             }}
           >
@@ -1386,18 +1332,21 @@ function ZoneTypeLabelMarkers(): null {
 
       if (mapLayers.criticalOnly && threatLevel < threatThreshold) return
 
-      const iconClass = `map-zone-label-icon map-zone-label-icon--${zoneType}`
+      const iconSvg = zoneTypeSvgMarkup(zoneType)
+      if (!iconSvg) return
+
+      const iconClass = `map-zone-label-icon map-zone-label-icon--svg map-zone-label-icon--${zoneType}`
       const icon = L.divIcon({
-        className: '',
-        html: `<div class="${iconClass}" style="color:${typeConfig.color}"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
+        className: 'map-zone-type-marker',
+        html: `<div class="${iconClass}" style="color:${typeConfig.color}">${iconSvg}</div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
       })
 
       const marker = L.marker([coords.lat, coords.lon], {
         icon,
         interactive: false,
-        pane: 'overlayPane',
+        pane: 'markerPane',
       })
       marker.addTo(map)
       markersRef.current.push(marker)
@@ -1749,17 +1698,12 @@ function MapLegendControls(): ReactNode {
   const mapLayers = useUiStore((s) => s.mapLayers)
   const setMapLayer = useUiStore((s) => s.setMapLayer)
   const clearMapSelection = useUiStore((s) => s.clearMapSelection)
-  const selectedTerritoryKey = useUiStore((s) => s.selectedTerritoryKey)
-  const selectedZoneId = useUiStore((s) => s.selectedZoneId)
-  const setSelectedTerritory = useUiStore((s) => s.setSelectedTerritory)
-  const setSelectedZone = useUiStore((s) => s.setSelectedZone)
   const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
   const setMapThreatThreshold = useUiStore((s) => s.setMapThreatThreshold)
-  const openModal = useUiStore((s) => s.openModal)
   const content = useGameStore((s) => s.state.content)
   const territoryState = useGameStore((s) => s.state.territory_state)
   const zoneState = useGameStore((s) => s.state.zone_state)
-  const currentTurn = useGameStore((s) => s.state.session.turn)
+  const [legendCollapsed, setLegendCollapsed] = useState(false)
 
   /* ── Computed aggregates ── */
   const stats = useMemo(() => {
@@ -1790,50 +1734,6 @@ function MapLegendControls(): ReactNode {
     return counts
   }, [content])
 
-  /* ── Incident feed (most recent 5) ── */
-  const incidentFeed = useMemo(() => {
-    if (!zoneState) return []
-    const items: { zoneId: string; zoneName: string; threatLevel: number; isCritical: boolean }[] = []
-    Object.entries(zoneState).forEach(([zoneId, zone]) => {
-      if (zone.incidents && zone.incidents.length > 0) {
-        items.push({
-          zoneId,
-          zoneName: resolveZoneName(content, zoneId),
-          threatLevel: zone.threat_level,
-          isCritical: zone.threat_level >= 75,
-        })
-      }
-    })
-    return items.sort((a, b) => b.threatLevel - a.threatLevel).slice(0, 5)
-  }, [zoneState, content])
-
-  /* ── Territory list with synthetic sparkline data ── */
-  const territoryList = useMemo(() => {
-    if (!territoryState) return []
-    return Object.entries(territoryState).map(([key, t]) => {
-      /* Generate synthetic sparkline from stability ± random jitter */
-      const base = t.stability ?? 50
-      const sparkValues = Array.from({ length: 6 }, (_, i) =>
-        Math.max(0, Math.min(100, base + (Math.sin(i * 1.2 + base * 0.1) * 12) + (i - 3) * 2))
-      )
-      return { key, territory: t, sparkValues }
-    })
-  }, [territoryState])
-
-  /* ── Pan to territory on quick-list click ── */
-  const handleTerritoryClick = useCallback(
-    (territoryKey: string, coords: { lat: number; lon: number }) => {
-      playSelectSound()
-      setSelectedTerritory(territoryKey)
-      setSelectedZone(null)
-
-      if (SharedMapRef.current) {
-        SharedMapRef.current.flyTo([coords.lat, coords.lon], 7, { duration: 0.8 })
-      }
-    },
-    [setSelectedTerritory, setSelectedZone]
-  )
-
   /* ── Keyboard shortcuts ── */
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
@@ -1845,6 +1745,9 @@ function MapLegendControls(): ReactNode {
           break
         case 'z':
           setMapLayer('zones', !mapLayers.zones)
+          break
+        case 'm':
+          setLegendCollapsed((current) => !current)
           break
         case 'escape':
           clearMapSelection()
@@ -1860,235 +1763,149 @@ function MapLegendControls(): ReactNode {
     return () => window.removeEventListener('keydown', handler)
   }, [mapLayers, setMapLayer, clearMapSelection])
 
-  /* ── Selection display name ── */
-  const selectionName = selectedZoneId
-    ? resolveZoneName(content, selectedZoneId)
-    : selectedTerritoryKey
-      ? resolveTerritoryName(content, selectedTerritoryKey)
-      : null
-
-  const hasSelection = selectedTerritoryKey !== null || selectedZoneId !== null
-
   return (
-    <div className="map-legend-panel">
+    <div className={`map-legend-panel${legendCollapsed ? ' is-minimized' : ''}`}>
       {/* ── Header Bar ── */}
       <div className="map-legend-header">
         <RadarIcon />
         <span className="map-legend-title">Sahel Command</span>
-        <span className="map-legend-turn-badge">Turn {currentTurn}</span>
+        <button
+          type="button"
+          className="map-legend-collapse-btn"
+          aria-expanded={!legendCollapsed}
+          aria-label={legendCollapsed ? 'Expand map legend' : 'Minimize map legend'}
+          onClick={() => setLegendCollapsed((current) => !current)}
+        >
+          {legendCollapsed ? 'Show' : 'Hide'}
+        </button>
       </div>
 
-      <div className="map-legend-body">
-        {/* ═══ INTEL SUMMARY (Live Stat Counters) ═══ */}
-        <LegendSection title="Intel Summary" defaultOpen={false}>
-          <div className="map-legend-stat-grid">
-            <div className="map-legend-stat-card">
-              <span className="map-legend-stat-number">{stats.totalTerritories}</span>
-              <span className="map-legend-stat-desc">Territories</span>
-            </div>
-            <div className="map-legend-stat-card">
-              <span className="map-legend-stat-number">{stats.totalZones}</span>
-              <span className="map-legend-stat-desc">Zones</span>
-            </div>
-            <div className={`map-legend-stat-card${stats.criticalZones > 0 ? ' is-alert' : ''}`}>
-              <span className={`map-legend-stat-number${stats.criticalZones > 0 ? ' is-critical' : ''}`}>
-                {stats.criticalZones}
-              </span>
-              <span className="map-legend-stat-desc">Critical</span>
-            </div>
-            <div className={`map-legend-stat-card${stats.totalIncidents > 0 ? ' is-alert' : ''}`}>
-              <span className={`map-legend-stat-number${stats.totalIncidents > 0 ? ' is-critical' : ''}`}>
-                {stats.totalIncidents}
-              </span>
-              <span className="map-legend-stat-desc">Incidents</span>
-            </div>
-            <div className="map-legend-stat-card full-width">
-              <span className="map-legend-stat-desc">Displaced</span>
-              <span className="map-legend-stat-number">{stats.totalDisplaced.toLocaleString()}</span>
-            </div>
-          </div>
-        </LegendSection>
-
-        {/* ═══ LAYERS & FILTERS ═══ */}
-        <LegendSection title="Layers" defaultOpen={false}>
-          <label className="map-legend-toggle">
-            <input
-              type="checkbox"
-              checked={mapLayers.territories}
-              onChange={(event) => setMapLayer('territories', event.target.checked)}
-            />
-            <span>Territories</span>
-          </label>
-          <label className="map-legend-toggle">
-            <input
-              type="checkbox"
-              checked={mapLayers.zones}
-              onChange={(event) => setMapLayer('zones', event.target.checked)}
-            />
-            <span>Zones</span>
-          </label>
-          <label className="map-legend-toggle">
-            <input
-              type="checkbox"
-              checked={mapLayers.criticalOnly}
-              onChange={(event) => setMapLayer('criticalOnly', event.target.checked)}
-              disabled={!mapLayers.zones}
-            />
-            <span>Critical only</span>
-          </label>
-
-          {/* Threat-Level Slider */}
-          {mapLayers.zones && mapLayers.criticalOnly && (
-            <div className="map-legend-slider-row">
-              <div className="map-legend-slider-header">
-                <span className="map-legend-slider-label">Threat Threshold</span>
-                <span className="map-legend-slider-value">{threatThreshold}</span>
+      <div className={`map-legend-content${legendCollapsed ? ' is-collapsed' : ''}`}>
+        <div className="map-legend-body">
+          {/* ═══ INTEL SUMMARY (Live Stat Counters) ═══ */}
+          <LegendSection title="Intel Summary" defaultOpen={false}>
+            <div className="map-legend-stat-grid">
+              <div className="map-legend-stat-card">
+                <span className="map-legend-stat-number">{stats.totalTerritories}</span>
+                <span className="map-legend-stat-desc">Territories</span>
               </div>
+              <div className="map-legend-stat-card">
+                <span className="map-legend-stat-number">{stats.totalZones}</span>
+                <span className="map-legend-stat-desc">Zones</span>
+              </div>
+              <div className={`map-legend-stat-card${stats.criticalZones > 0 ? ' is-alert' : ''}`}>
+                <span className={`map-legend-stat-number${stats.criticalZones > 0 ? ' is-critical' : ''}`}>
+                  {stats.criticalZones}
+                </span>
+                <span className="map-legend-stat-desc">Critical</span>
+              </div>
+              <div className={`map-legend-stat-card${stats.totalIncidents > 0 ? ' is-alert' : ''}`}>
+                <span className={`map-legend-stat-number${stats.totalIncidents > 0 ? ' is-critical' : ''}`}>
+                  {stats.totalIncidents}
+                </span>
+                <span className="map-legend-stat-desc">Incidents</span>
+              </div>
+              <div className="map-legend-stat-card full-width">
+                <span className="map-legend-stat-desc">Displaced</span>
+                <span className="map-legend-stat-number">{stats.totalDisplaced.toLocaleString()}</span>
+              </div>
+            </div>
+          </LegendSection>
+
+          {/* ═══ LAYERS & FILTERS ═══ */}
+          <LegendSection title="Layers" defaultOpen={false}>
+            <label className="map-legend-toggle">
               <input
-                type="range"
-                className="map-legend-slider-input"
-                min={0}
-                max={100}
-                value={threatThreshold}
-                onChange={(e) => {
-                  const val = Number(e.target.value)
-                  setMapThreatThreshold(val)
-                }}
+                type="checkbox"
+                checked={mapLayers.territories}
+                onChange={(event) => setMapLayer('territories', event.target.checked)}
               />
-            </div>
-          )}
-        </LegendSection>
+              <span>Territories</span>
+            </label>
+            <label className="map-legend-toggle">
+              <input
+                type="checkbox"
+                checked={mapLayers.zones}
+                onChange={(event) => setMapLayer('zones', event.target.checked)}
+              />
+              <span>Zones</span>
+            </label>
+            <label className="map-legend-toggle">
+              <input
+                type="checkbox"
+                checked={mapLayers.criticalOnly}
+                onChange={(event) => setMapLayer('criticalOnly', event.target.checked)}
+                disabled={!mapLayers.zones}
+              />
+              <span>Critical only</span>
+            </label>
 
-        {/* ═══ STATUS KEY (with counts) ═══ */}
-        <LegendSection title="Status Key" defaultOpen={false}>
-          {(['low', 'moderate', 'high', 'critical'] as TerritoryStatus[]).map((status) => (
-            <div className="map-legend-status-row" key={status}>
-              <div className="map-legend-status-dot" data-status={status} />
-              <span className="map-legend-status-label">{status}</span>
-              <span className="map-legend-status-count">{stats.statusCounts[status]}</span>
-            </div>
-          ))}
-        </LegendSection>
-
-        {/* ═══ ZONE TYPE KEY (new section) ═══ */}
-        <LegendSection title="Zone Types" defaultOpen={false}>
-          {(Object.entries(ZONE_TYPE_CONFIG) as [ZoneType, ZoneTypeConfig][]).map(([zoneType, config]) => (
-            <div className="map-legend-zonetype-row" key={zoneType}>
-              <div className="map-legend-zonetype-icon" style={{ color: config.color }}>
-                {zoneTypeIcon(zoneType)}
-              </div>
-              <span className="map-legend-zonetype-label">{config.label}</span>
-              <span className="map-legend-zonetype-count">{zoneTypeCounts[zoneType] ?? 0}</span>
-            </div>
-          ))}
-        </LegendSection>
-
-        {/* ═══ TERRITORY QUICK-LIST (with sparklines) ═══ */}
-        <LegendSection title="Territories" defaultOpen={false}>
-          <div className="map-legend-territory-list">
-            {territoryList.map(({ key, territory, sparkValues }) => (
-              <div
-                key={key}
-                className={`map-legend-territory-item${selectedTerritoryKey === key ? ' is-selected' : ''}`}
-                onClick={() => handleTerritoryClick(key, territory.coords)}
-              >
-                <div
-                  className="map-legend-territory-dot"
-                  style={{ background: STATUS_COLORS[territory.status] }}
+            {/* Threat-Level Slider */}
+            {mapLayers.zones && mapLayers.criticalOnly && (
+              <div className="map-legend-slider-row">
+                <div className="map-legend-slider-header">
+                  <span className="map-legend-slider-label">Threat Threshold</span>
+                  <span className="map-legend-slider-value">{threatThreshold}</span>
+                </div>
+                <input
+                  type="range"
+                  className="map-legend-slider-input"
+                  min={0}
+                  max={100}
+                  value={threatThreshold}
+                  onChange={(e) => {
+                    const val = Number(e.target.value)
+                    setMapThreatThreshold(val)
+                  }}
                 />
-                <span className="map-legend-territory-name">{territory.name}</span>
-                <Sparkline values={sparkValues} color={STATUS_COLORS[territory.status]} />
-                <span className="map-legend-territory-stability">{territory.stability}</span>
+              </div>
+            )}
+          </LegendSection>
+
+          {/* ═══ STATUS KEY (with counts) ═══ */}
+          <LegendSection title="Status Key" defaultOpen={false}>
+            {(['low', 'moderate', 'high', 'critical'] as TerritoryStatus[]).map((status) => (
+              <div className="map-legend-status-row" key={status}>
+                <div className="map-legend-status-dot" data-status={status} />
+                <span className="map-legend-status-label">{status}</span>
+                <span className="map-legend-status-count">{stats.statusCounts[status]}</span>
               </div>
             ))}
-          </div>
-        </LegendSection>
+          </LegendSection>
 
-        {/* ═══ INCIDENT FEED ═══ */}
-        <LegendSection title="Active Incidents" defaultOpen={false}>
-          <div className="map-legend-feed">
-            {incidentFeed.length === 0 ? (
-              <div className="map-legend-feed-empty">No active incidents</div>
-            ) : (
-              incidentFeed.map((item, idx) => (
-                <div
-                  key={`${item.zoneId}-${idx}`}
-                  className="map-legend-feed-item"
-                  style={{ animationDelay: `${idx * 0.08}s` }}
-                >
-                  <div className={`map-legend-feed-icon${item.isCritical ? '' : ' is-warning'}`} />
-                  <div className="map-legend-feed-body">
-                    <div className="map-legend-feed-zone">{item.zoneName}</div>
-                    <div className="map-legend-feed-meta">Threat: {item.threatLevel}</div>
-                  </div>
+          {/* ═══ ZONE TYPE KEY (new section) ═══ */}
+          <LegendSection title="Zone Types" defaultOpen={false}>
+            {(Object.entries(ZONE_TYPE_CONFIG) as [ZoneType, ZoneTypeConfig][]).map(([zoneType, config]) => (
+              <div className="map-legend-zonetype-row" key={zoneType}>
+                <div className="map-legend-zonetype-icon" style={{ color: config.color }}>
+                  {zoneTypeIcon(zoneType)}
                 </div>
-              ))
-            )}
-          </div>
-        </LegendSection>
-
-        {/* ═══ SELECTION & CONTEXTUAL ACTIONS ═══ */}
-        <LegendSection title="Selection" defaultOpen={false}>
-          <div className="map-selection-summary">
-            <div className="map-selection-label">Active Target</div>
-            <div className={`map-selection-value${selectionName ? '' : ' is-none'}`}>
-              {selectionName ?? 'None'}
-            </div>
-          </div>
-
-          {hasSelection && (
-            <>
-              <div className="map-legend-actions">
-                <button
-                  type="button"
-                  className="map-legend-action-btn"
-                  onClick={() => {
-                    openModal(selectedZoneId ? 'zone_detail' : 'territory_overview')
-                  }}
-                >
-                  <CrosshairIcon />
-                  Intel
-                </button>
-                <button
-                  type="button"
-                  className="map-legend-action-btn"
-                  onClick={() => {
-                    openModal('action_config')
-                  }}
-                >
-                  <ShieldIcon />
-                  Deploy
-                </button>
+                <span className="map-legend-zonetype-label">{config.label}</span>
+                <span className="map-legend-zonetype-count">{zoneTypeCounts[zoneType] ?? 0}</span>
               </div>
-              <button
-                type="button"
-                className="map-clear-selection-btn"
-                onClick={clearMapSelection}
-              >
-                Clear selection
-              </button>
-            </>
-          )}
-        </LegendSection>
-      </div>
+            ))}
+          </LegendSection>
 
-      {/* ═══ KEYBOARD SHORTCUTS ═══ */}
-      <div className="map-legend-shortcuts">
-        <div className="map-legend-shortcut">
-          <span className="map-legend-shortcut-key">L</span>
-          <span className="map-legend-shortcut-desc">Layers</span>
         </div>
-        <div className="map-legend-shortcut">
-          <span className="map-legend-shortcut-key">Z</span>
-          <span className="map-legend-shortcut-desc">Zones</span>
-        </div>
-        <div className="map-legend-shortcut">
-          <span className="map-legend-shortcut-key">C</span>
-          <span className="map-legend-shortcut-desc">Critical</span>
-        </div>
-        <div className="map-legend-shortcut">
-          <span className="map-legend-shortcut-key">Esc</span>
-          <span className="map-legend-shortcut-desc">Deselect</span>
+
+        {/* ═══ KEYBOARD SHORTCUTS ═══ */}
+        <div className="map-legend-shortcuts">
+          <div className="map-legend-shortcut">
+            <span className="map-legend-shortcut-key">L</span>
+            <span className="map-legend-shortcut-desc">Layers</span>
+          </div>
+          <div className="map-legend-shortcut">
+            <span className="map-legend-shortcut-key">Z</span>
+            <span className="map-legend-shortcut-desc">Zones</span>
+          </div>
+          <div className="map-legend-shortcut">
+            <span className="map-legend-shortcut-key">C</span>
+            <span className="map-legend-shortcut-desc">Critical</span>
+          </div>
+          <div className="map-legend-shortcut">
+            <span className="map-legend-shortcut-key">M</span>
+            <span className="map-legend-shortcut-desc">Legend</span>
+          </div>
         </div>
       </div>
     </div>

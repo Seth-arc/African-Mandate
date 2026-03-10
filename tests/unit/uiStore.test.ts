@@ -28,11 +28,11 @@ describe('uiStore map and modal state', () => {
   it('maintains map layer visibility toggles for territory, zones, and critical filtering', () => {
     const initialLayers = useUiStore.getState().mapLayers
     expect(initialLayers.territories).toBe(true)
-    expect(initialLayers.zones).toBe(true)
+    expect(initialLayers.zones).toBe(false)
     expect(initialLayers.criticalOnly).toBe(false)
 
-    useUiStore.getState().setMapLayer('zones', false)
-    expect(useUiStore.getState().mapLayers.zones).toBe(false)
+    useUiStore.getState().setMapLayer('zones', true)
+    expect(useUiStore.getState().mapLayers.zones).toBe(true)
 
     useUiStore.getState().toggleMapLayer('criticalOnly')
     expect(useUiStore.getState().mapLayers.criticalOnly).toBe(true)

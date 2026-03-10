@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore, type ModalKind } from '../../state/uiStore'
 import { useSessionStore } from '../../state/sessionStore'
@@ -20,6 +20,7 @@ import type {
   ZoneType,
 } from '../../state/types'
 import {
+  relationshipLabelFromScore,
   resolveActionDescription,
   resolveActionName,
   resolveActorData,
@@ -62,6 +63,9 @@ const MODAL_STYLE = {
 function modalTitle(modal: ModalKind): string {
   if (modal === 'onboarding_loading') return 'Initializing'
   if (modal === 'session_manager') return 'Sessions'
+  if (modal === 'dossier') return 'Dossier'
+  if (modal === 'dossier_article') return 'Dossier article'
+  if (modal === 'relationship_matrix') return 'Relationship matrix'
   if (modal === 'action_config') return 'Take Action'
   if (modal === 'territory_overview') return 'Territory overview'
   if (modal === 'zone_list') return 'Zone list'
@@ -74,6 +78,7 @@ function modalTitle(modal: ModalKind): string {
   if (modal === 'campaign_outcome') return 'Campaign outcome'
   if (modal === 'status_report') return 'Status report'
   if (modal === 'mission_brief') return 'Mission brief'
+  if (modal === 'credits') return 'Credits'
   if (modal === 'leaderboard') return 'Leaderboard'
   return 'Modal'
 }
@@ -107,6 +112,54 @@ const TERRITORY_FLAG_FALLBACK: Record<TerritoryKey, string> = {
   mauritania: '/assets/flags/Flag_of_Mauritania.svg',
 }
 
+const RELATIONSHIP_ACTOR_TERRITORY_MAP: Partial<Record<string, TerritoryKey>> = {
+  junta_burkina_traore: 'burkina_faso',
+  junta_mali: 'mali',
+  junta_niger: 'niger',
+  civil_society_konate: 'burkina_faso',
+  community_dogon: 'mali',
+  community_fulani: 'mali',
+  insurgent_splinter: 'mali',
+}
+
+const RELATIONSHIP_INSTITUTION_SCOPE_MAP: Partial<Record<string, 'Regional' | 'Continental'>> = {
+  regional_ecowas: 'Regional',
+  regional_aes: 'Regional',
+  external_donors: 'Continental',
+}
+
+function normalizeAssetSrc(path: string | null | undefined): string | null {
+  if (!path) return null
+  if (/^(?:https?:)?\/\//i.test(path) || path.startsWith('data:')) return path
+  return path.startsWith('/') ? path : `/${path}`
+}
+
+function resolveTerritoryFlagPaths(
+  territoryKey: string,
+  territoryFlagUrl: string | null | undefined
+): { primarySrc: string | null; fallbackSrc: string | null } {
+  const fallbackFromMap = Object.prototype.hasOwnProperty.call(TERRITORY_FLAG_FALLBACK, territoryKey)
+    ? TERRITORY_FLAG_FALLBACK[territoryKey as TerritoryKey]
+    : null
+  const primaryFromData = normalizeAssetSrc(territoryFlagUrl)
+  const fallbackSrc = normalizeAssetSrc(fallbackFromMap)
+  return {
+    primarySrc: primaryFromData ?? fallbackSrc,
+    fallbackSrc,
+  }
+}
+
+function handleFlagImageError(event: SyntheticEvent<HTMLImageElement>): void {
+  const image = event.currentTarget
+  const fallbackSrc = image.dataset.fallbackSrc ?? ''
+  const currentSrc = image.getAttribute('src') ?? ''
+  if (!fallbackSrc || currentSrc === fallbackSrc) {
+    image.style.display = 'none'
+    return
+  }
+  image.setAttribute('src', fallbackSrc)
+}
+
 type ZoneImageAsset = {
   src: string
   dedicated: boolean
@@ -133,36 +186,36 @@ const ZONE_IMAGE_ASSETS: Record<string, ZoneImageAsset> = {
 
 /* Deterministic actor_present -> avatar mapping for zone key-actor cards. */
 const ACTOR_PRESENT_AVATAR_MAP: Record<string, string | null> = {
-  'Boko Haram remnants': null,
-  'Border communities': null,
+  'Boko Haram remnants': '/assets/actors/Boko Haram Remnants.png',
+  'Border communities': '/assets/actors/Border Communities.png',
   'Burkina Faso security forces': '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
   'Chad military forces': '/assets/actors/Amb. Halima Djerma Chad Transitional Government.png',
   'Civil society coalitions': '/assets/actors/Amina Ouedraogo Burkina Civil Society Network.png',
-  'Displaced civilians in northern camps': null,
-  'Displaced fishing communities': null,
-  'Displaced rural communities': null,
-  'Dogon self-defense militias': null,
+  'Displaced civilians in northern camps': '/assets/actors/Northern Camp Civilians.png',
+  'Displaced fishing communities': '/assets/actors/Displaced Fishing Communities.png',
+  'Displaced rural communities': '/assets/actors/Border Communities.png',
+  'Dogon self-defense militias': '/assets/actors/Dogon Self-Defense.png',
   'ECOWAS envoys': '/assets/actors/ECOWAS Commission.png',
   'ECOWAS leadership': '/assets/actors/ECOWAS Commission.png',
-  'Fulani Community': null,
-  'Fulani community leaders': null,
+  'Fulani Community': '/assets/actors/Fulani Community.png',
+  'Fulani community leaders': '/assets/actors/Fulani Leaders.png',
   "General Ibrahim Traore's government": '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
-  'ISGS': null,
-  'ISGS elements': null,
+  'ISGS': '/assets/actors/ISGS Elements.png',
+  'ISGS elements': '/assets/actors/ISGS Elements.png',
   'JNIM': '/assets/actors/JNIM.png',
-  'Kanuri community militias': null,
+  'Kanuri community militias': '/assets/actors/Kanuri Militias.png',
   'Mali Transitional Government': '/assets/actors/Col. Assimi Go%C3%AFta.png',
   'Malian government forces': '/assets/actors/Col. Assimi Go%C3%AFta.png',
-  'Malian refugees': null,
+  'Malian refugees': '/assets/actors/Malian Refugees.png',
   'Mauritania Security Directorate': '/assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
   'Mauritanian security services': '/assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
   'National security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
   'Niger security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
   'Niger Transitional Government': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
-  'Refugee communities': null,
+  'Refugee communities': '/assets/actors/Malian Refugees.png',
   'Regional intelligence partners': '/assets/actors/AU Commissioner.png',
   'Regional peacekeeping partners': '/assets/actors/AU Commissioner.png',
-  'Volunteers for Defense of Homeland (VDP)': null,
+  'Volunteers for Defense of Homeland (VDP)': '/assets/actors/VDP (Burkina Faso).png',
   'Wagner Group': '/assets/actors/Wagner Group.png',
 }
 
@@ -223,6 +276,25 @@ function normalizeTextLookup(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
+const ZONE_ACTOR_ALIAS_RULES: ReadonlyArray<{ pattern: RegExp; actorKey: string }> = [
+  { pattern: /\bmali transitional government\b|\bmalian government forces\b/, actorKey: 'junta_mali' },
+  {
+    pattern: /\bniger transitional government\b|\bniger security forces\b|\bnational security forces\b/,
+    actorKey: 'junta_niger',
+  },
+  {
+    pattern: /\btraor\b|\bburkina faso security forces\b|\bvdp\b|\bvolunteers for defense of homeland\b/,
+    actorKey: 'junta_burkina_traore',
+  },
+  { pattern: /\becowas\b/, actorKey: 'regional_ecowas' },
+  { pattern: /\bcivil society\b/, actorKey: 'civil_society_konate' },
+  { pattern: /\bdogon\b/, actorKey: 'community_dogon' },
+  { pattern: /\bfulani\b/, actorKey: 'community_fulani' },
+  { pattern: /\bwagner\b/, actorKey: 'external_wagner' },
+  { pattern: /\bjnim\b|\bisgs\b|\bboko\b|\binsurgent\b/, actorKey: 'insurgent_networks' },
+  { pattern: /\bregional intelligence partners\b|\bmauritania security\b/, actorKey: 'au_intelligence_directorate' },
+]
+
 function findActorByDisplayName(
   actors: ActorData[],
   content: LoadedContent,
@@ -234,6 +306,20 @@ function findActorByDisplayName(
     const resolved = normalizeTextLookup(resolveActorName(content, actor.actor_key))
     return resolved === normalizedName || resolved.includes(normalizedName) || normalizedName.includes(resolved)
   })
+}
+
+function resolveCanonicalActorForZoneName(
+  actors: ActorData[],
+  content: LoadedContent,
+  actorName: string
+): ActorData | undefined {
+  const directMatch = findActorByDisplayName(actors, content, actorName)
+  if (directMatch) return directMatch
+  const normalizedName = normalizeTextLookup(actorName)
+  if (!normalizedName) return undefined
+  const alias = ZONE_ACTOR_ALIAS_RULES.find((rule) => rule.pattern.test(normalizedName))
+  if (!alias) return undefined
+  return actors.find((actor) => actor.actor_key === alias.actorKey)
 }
 
 function formatCoordinate(value: number, positiveLabel: string, negativeLabel: string): string {
@@ -263,6 +349,156 @@ function inferActorRole(content: LoadedContent, actorData: ActorData | undefined
   if (/jnim|isgs|insurgent|boko/i.test(actorName)) return 'Armed non-state actor'
   if (/community|civil|leader|society/i.test(actorName)) return 'Community stakeholder'
   return 'Local stakeholder'
+}
+
+function describeActorProfile(actor: ActorData): string {
+  const typeLabel = formatTokenLabel(actor.type)
+  const factionLabel = formatTokenLabel(actor.faction)
+  const profileLabel = formatTokenLabel(actor.profile)
+  const relationshipMode = actor.relationship_tracked
+    ? 'Relationship effects are tracked in campaign state.'
+    : 'Relationship effects are informational only for this actor.'
+  return `${typeLabel} actor aligned with ${factionLabel}. Profile: ${profileLabel}. ${relationshipMode}`
+}
+
+function actorInitials(name: string): string {
+  const tokens = name
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 0)
+  if (tokens.length === 0) return '?'
+  if (tokens.length === 1) return tokens[0]!.slice(0, 2).toUpperCase()
+  return `${tokens[0]!.charAt(0)}${tokens[tokens.length - 1]!.charAt(0)}`.toUpperCase()
+}
+
+type RelationshipLocation = {
+  kind: 'flag' | 'logo' | 'fallback'
+  label: string
+  src: string | null
+  fallbackSrc: string | null
+}
+
+function relationshipLocationCode(label: string): string {
+  const tokens = label
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 0)
+  if (tokens.length === 0) return '??'
+  if (tokens.length === 1) return tokens[0]!.slice(0, 2).toUpperCase()
+  return `${tokens[0]!.charAt(0)}${tokens[1]!.charAt(0)}`.toUpperCase()
+}
+
+function resolveRelationshipLocation(content: LoadedContent, actor: ActorData): RelationshipLocation {
+  const isRegionalOrInstitutional = actor.type === 'institutional' || actor.actor_key.startsWith('regional_')
+  const logoSrc = normalizeAssetSrc(actor.portrait_url)
+
+  if (isRegionalOrInstitutional) {
+    const scope = RELATIONSHIP_INSTITUTION_SCOPE_MAP[actor.actor_key] ??
+      (actor.actor_key.startsWith('regional_') ? 'Regional' : 'Continental')
+    return {
+      kind: 'logo',
+      label: scope,
+      src: logoSrc,
+      fallbackSrc: null,
+    }
+  }
+
+  const territoryKey = RELATIONSHIP_ACTOR_TERRITORY_MAP[actor.actor_key]
+  if (territoryKey) {
+    const territory = content.territories.territories.find((item) => item.territory_key === territoryKey)
+    const territoryLabel = resolveTerritoryName(content, territoryKey)
+    const { primarySrc, fallbackSrc } = resolveTerritoryFlagPaths(territoryKey, territory?.flag_url)
+    return {
+      kind: 'flag',
+      label: territoryLabel,
+      src: primarySrc,
+      fallbackSrc,
+    }
+  }
+
+  return {
+    kind: logoSrc ? 'logo' : 'fallback',
+    label: 'Transnational',
+    src: logoSrc,
+    fallbackSrc: null,
+  }
+}
+
+function RelationshipLocationBadge({ location }: { location: RelationshipLocation }): ReactNode {
+  const [imageFailed, setImageFailed] = useState(false)
+
+  useEffect(() => {
+    setImageFailed(false)
+  }, [location.src, location.fallbackSrc, location.label, location.kind])
+
+  const showImage = Boolean(location.src) && !imageFailed
+
+  return (
+    <div className="relationship-matrix-location">
+      <span className={`relationship-matrix-location-badge ${location.kind}${showImage ? ' has-image' : ''}`}>
+        {showImage && location.src ? (
+          <img
+            src={location.src}
+            alt={`${location.label} ${location.kind === 'flag' ? 'flag' : 'logo'}`}
+            loading="lazy"
+            onError={(event) => {
+              const image = event.currentTarget
+              const fallbackSrc = location.fallbackSrc ?? ''
+              const currentSrc = image.getAttribute('src') ?? ''
+              if (fallbackSrc && currentSrc !== fallbackSrc) {
+                image.setAttribute('src', fallbackSrc)
+                return
+              }
+              setImageFailed(true)
+            }}
+          />
+        ) : (
+          <span className="relationship-matrix-location-code">{relationshipLocationCode(location.label)}</span>
+        )}
+      </span>
+      <span className="relationship-matrix-location-label">{location.label}</span>
+    </div>
+  )
+}
+
+function formatBaselineRelationship(score: number | null): string {
+  if (score === null) return 'N/A'
+  return `${relationshipLabelFromScore(score)} (${score})`
+}
+
+function relationshipToneClass(
+  label: ActorSentiment['relationship_label']
+): 'positive' | 'negative' | 'neutral' {
+  if (label === 'allied' || label === 'cooperative') return 'positive'
+  if (label === 'hostile' || label === 'adversarial') return 'negative'
+  return 'neutral'
+}
+
+function ActorPortrait({ actor, name }: { actor: ActorData; name: string }): ReactNode {
+  const portraitSrc = normalizeAssetSrc(actor.portrait_url)
+  const [imageFailed, setImageFailed] = useState(false)
+
+  useEffect(() => {
+    setImageFailed(false)
+  }, [actor.actor_key, portraitSrc])
+
+  const showImage = Boolean(portraitSrc) && !imageFailed
+
+  return (
+    <div className={`actor-profile-portrait${showImage ? ' has-image' : ''}`} aria-hidden={showImage ? 'false' : 'true'}>
+      {showImage && portraitSrc ? (
+        <img
+          className="actor-profile-portrait-image"
+          src={portraitSrc}
+          alt={`${name} portrait`}
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span className="actor-profile-portrait-fallback">{actorInitials(name)}</span>
+      )}
+    </div>
+  )
 }
 
 function zoneSituationReport(
@@ -397,32 +633,31 @@ function TerritoryOverviewBody(): ReactNode {
   const topZone = zones[0]
   const topZoneName = topZone ? resolveZoneName(content, topZone.zone_id) : null
   const topThreatLabel = topZone?.threats[0] ?? null
+  const stabilityDelta = territory.stability - territory.insurgency
+  const statusLabel = territory.status.toUpperCase()
+  const topHotspotSummary = topZone && topZoneName
+    ? `${topZoneName} (${topZone.threat_level}/100${topThreatLabel ? `, ${topThreatLabel}` : ''})`
+    : 'No hotspot identified from current telemetry.'
+  const displacementSummary = totalDisplaced > 0
+    ? `${totalDisplaced.toLocaleString()} displaced civilians`
+    : 'No displacement currently logged'
+  const incidentSummary = totalIncidents > 0
+    ? `${totalIncidents} active incident${totalIncidents === 1 ? '' : 's'}`
+    : 'No active incident logs'
+  const currentSituationLead = `${territory.name} is now in ${statusLabel} status with stability ${territory.stability}/100 and insurgency ${territory.insurgency}/100.`
+  const currentSituationFollowup = stabilityDelta >= 0
+    ? `Stability holds a ${Math.abs(stabilityDelta)}-point edge over insurgency pressure, but zone volatility remains active.`
+    : `Insurgency pressure exceeds stability by ${Math.abs(stabilityDelta)} points, requiring coordinated containment and recovery.`
+  const currentSituationOps = criticalZoneCount > 0
+    ? `${criticalZoneCount} zone${criticalZoneCount === 1 ? '' : 's'} are in critical threat, with ${highZoneCount} additional high-threat zone${highZoneCount === 1 ? '' : 's'}.`
+    : highZoneCount > 0
+      ? `No critical zones are flagged, but ${highZoneCount} high-threat zone${highZoneCount === 1 ? '' : 's'} remain under sustained pressure.`
+      : 'No critical or high-threat zones are currently flagged.'
 
-  const flagFromContent = territoryContent?.flag_url
-    ? territoryContent.flag_url.startsWith('/')
-      ? territoryContent.flag_url
-      : `/${territoryContent.flag_url}`
-    : null
-  const fallbackFlag = TERRITORY_FLAG_FALLBACK[territory.territory_key]
-  const flagSrc = flagFromContent ?? fallbackFlag
-
-  const situationParts: string[] = [
-    `${territory.name} is currently assessed as ${territory.status.toUpperCase()}, with stability at ${territory.stability}/100 and insurgency at ${territory.insurgency}/100.`,
-  ]
-  if (criticalZoneCount > 0) {
-    situationParts.push(`${criticalZoneCount} zone${criticalZoneCount === 1 ? '' : 's'} are at CRITICAL threat.`)
-  } else {
-    situationParts.push('No zones are currently flagged at CRITICAL threat.')
-  }
-  if (highZoneCount > 0) {
-    situationParts.push(`${highZoneCount} additional zone${highZoneCount === 1 ? '' : 's'} remain in HIGH threat status.`)
-  }
-  if (topZone && topZoneName) {
-    situationParts.push(`Highest pressure remains in ${topZoneName} (${topZone.threat_level}/100 threat).`)
-  }
-  if (totalDisplaced > 0) {
-    situationParts.push(`${totalDisplaced.toLocaleString()} people are displaced across reported zones.`)
-  }
+  const { primarySrc: flagSrc, fallbackSrc: fallbackFlag } = resolveTerritoryFlagPaths(
+    territory.territory_key,
+    territoryContent?.flag_url
+  )
 
   const keyChallenges = [
     {
@@ -457,13 +692,8 @@ function TerritoryOverviewBody(): ReactNode {
             <img
               src={flagSrc}
               alt={`${territory.name} flag`}
-              onError={(event) => {
-                if (event.currentTarget.src.endsWith(fallbackFlag)) {
-                  event.currentTarget.style.display = 'none'
-                  return
-                }
-                event.currentTarget.src = fallbackFlag
-              }}
+              data-fallback-src={fallbackFlag ?? ''}
+              onError={handleFlagImageError}
             />
           ) : (
             <span>{territory.name.slice(0, 2).toUpperCase()}</span>
@@ -496,7 +726,27 @@ function TerritoryOverviewBody(): ReactNode {
 
       <div className="territory-overview-section">
         <h4 className="territory-overview-section-title">Current Situation</h4>
-        <p className="territory-overview-section-text">{situationParts.join(' ')}</p>
+        <div className="territory-situation-meta">
+          <div className={`territory-situation-state territory-situation-state--status territory-status-${territory.status}`}>
+            <span className="territory-situation-label">Status</span>
+            <span className="territory-situation-value">{statusLabel}</span>
+          </div>
+          <div className="territory-situation-state">
+            <span className="territory-situation-label">Hotspot</span>
+            <span className="territory-situation-value">{topHotspotSummary}</span>
+          </div>
+          <div className="territory-situation-state">
+            <span className="territory-situation-label">Incidents</span>
+            <span className="territory-situation-value">{incidentSummary}</span>
+          </div>
+          <div className="territory-situation-state">
+            <span className="territory-situation-label">Displacement</span>
+            <span className="territory-situation-value">{displacementSummary}</span>
+          </div>
+        </div>
+        <p className="territory-overview-section-text">{currentSituationLead}</p>
+        <p className="territory-overview-section-text">{currentSituationFollowup}</p>
+        <p className="territory-overview-section-text">{currentSituationOps}</p>
       </div>
 
       <div className="territory-overview-section">
@@ -543,6 +793,13 @@ function ZoneListBody(): ReactNode {
   }
 
   const territoryName = resolveTerritoryName(content, effectiveTerritoryKey)
+  const territoryContent = content.territories.territories.find(
+    (item) => item.territory_key === effectiveTerritoryKey
+  )
+  const { primarySrc: flagSrc, fallbackSrc: fallbackFlag } = resolveTerritoryFlagPaths(
+    effectiveTerritoryKey,
+    territoryContent?.flag_url
+  )
   const zoneDataById = new Map(content.zones.zones.map((zone) => [zone.zone_id, zone]))
   const zones = Object.values(zoneState)
     .filter((zone) => zone.territory_key === effectiveTerritoryKey)
@@ -557,9 +814,26 @@ function ZoneListBody(): ReactNode {
       <button type="button" className="zone-modal-close" onClick={closeModal} aria-label="Close zone list">
         x
       </button>
-      <div className="zones-modal-header">
-        <h3 className="zones-modal-title">{territoryName} - Zones of Interest</h3>
-        <div className="zones-modal-subtitle">Strategic Analysis by Region</div>
+      <div className="zones-modal-header zones-modal-header--with-flag">
+        <div className="zones-modal-header-row">
+          <div className="zones-modal-flag">
+            {flagSrc ? (
+              <img
+                src={flagSrc}
+                alt={`${territoryName} flag`}
+                loading="lazy"
+                data-fallback-src={fallbackFlag ?? ''}
+                onError={handleFlagImageError}
+              />
+            ) : (
+              <span>{territoryName.slice(0, 2).toUpperCase()}</span>
+            )}
+          </div>
+          <div className="zones-modal-heading">
+            <h3 className="zones-modal-title">{territoryName} - Zones of Interest</h3>
+            <div className="zones-modal-subtitle">Strategic Analysis by Region</div>
+          </div>
+        </div>
       </div>
 
       <div className="zones-grid">
@@ -636,6 +910,7 @@ function ZoneDetailBody(): ReactNode {
   const zoneState = useGameStore((s) => s.state.zone_state)
   const actorSentiments = useGameStore((s) => s.state.actor_sentiments) as Record<string, ActorSentiment> | undefined
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
+  const setSelectedActorKey = useUiStore((s) => s.setSelectedActorKey)
   const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
 
@@ -660,22 +935,50 @@ function ZoneDetailBody(): ReactNode {
   const threatBand = zoneThreatBand(zone.threat_level)
   const threatClass = threatBand === 'low' || threatBand === 'moderate' ? 'stable' : threatBand
   const actorEntries = content.actors.actors
+  const dialogueActorKeySet = new Set(content.dialogues.dialogues.map((dialogue) => dialogue.actor_key))
   const keyActorLookup = new Set(zone.actors_present.map((name) => normalizeTextLookup(name)))
+  const isProfileOnlyActor = (actor: ActorData): boolean =>
+    !actor.relationship_tracked && !dialogueActorKeySet.has(actor.actor_key)
+  const openActorProfileFromZone = (actorKey: string): void => {
+    setSelectedActorKey(actorKey)
+    openModal('actor_profile')
+  }
 
   const keyActors = zone.actors_present.map((actorName) => {
-    const actorData = findActorByDisplayName(actorEntries, content, actorName)
+    const actorData = resolveCanonicalActorForZoneName(actorEntries, content, actorName)
     const relationshipScore = actorData ? actorSentiments?.[actorData.actor_key] : undefined
+    const profileOnly = actorData ? isProfileOnlyActor(actorData) : false
     return {
       name: actorName,
       avatarSrc: keyActorAvatarForName(actorName),
+      actorKey: actorData?.actor_key ?? null,
+      profileOnly,
       role: inferActorRole(content, actorData, actorName),
-      presence: relationshipScore
-        ? `Relationship ${relationshipScore.relationship_score}/100`
-        : zone.threat_level >= 75
-          ? 'High operational influence'
-          : 'Active stakeholder',
+      presence: profileOnly
+        ? 'Profile briefing available'
+        : relationshipScore
+          ? `Relationship ${relationshipScore.relationship_score}/100`
+          : zone.threat_level >= 75
+            ? 'High operational influence'
+            : 'Active stakeholder',
     }
   })
+  const keyActorKeyLookup = new Set(
+    keyActors
+      .map((actor) => actor.actorKey)
+      .filter((actorKey): actorKey is string => actorKey !== null)
+  )
+  const profileOnlyActors = Array.from(
+    keyActors.reduce<Map<string, { actorKey: string; name: string; role: string }>>((acc, actor) => {
+      if (!actor.profileOnly || !actor.actorKey || acc.has(actor.actorKey)) return acc
+      acc.set(actor.actorKey, {
+        actorKey: actor.actorKey,
+        name: resolveActorName(content, actor.actorKey),
+        role: resolveActorTitle(content, actor.actorKey),
+      })
+      return acc
+    }, new Map()).values()
+  )
 
   const supportActors = actorEntries
     .filter((actor) => actor.profile !== 'au_internal')
@@ -684,6 +987,8 @@ function ZoneDetailBody(): ReactNode {
       const sentiment = actorSentiments?.[actor.actor_key]
       const impact = sentiment
         ? `Relationship: ${sentiment.relationship_label}`
+        : isProfileOnlyActor(actor)
+          ? 'Profile-only stakeholder'
         : actor.relationship_tracked
           ? 'Relationship tracked'
           : 'Context actor'
@@ -695,6 +1000,7 @@ function ZoneDetailBody(): ReactNode {
       }
     })
     .filter((entry) => !keyActorLookup.has(normalizeTextLookup(entry.name)))
+    .filter((entry) => !keyActorKeyLookup.has(entry.actor.actor_key))
     .sort((a, b) => Number(b.actor.relationship_tracked) - Number(a.actor.relationship_tracked))
     .slice(0, 4)
 
@@ -774,26 +1080,75 @@ function ZoneDetailBody(): ReactNode {
           <div className="zone-actors-empty">No key actors listed.</div>
         ) : (
           <div className="zone-actors-list">
-            {keyActors.map((actor) => (
-              <div className="zone-actor-item" key={actor.name}>
-                <div className={`zone-actor-avatar${actor.avatarSrc ? ' has-image' : ''}`}>
-                  {actor.avatarSrc ? (
-                    <img
-                      className="zone-actor-avatar-image"
-                      src={actor.avatarSrc}
-                      alt={`${actor.name} avatar`}
-                      loading="lazy"
-                    />
-                  ) : (
-                    actor.name.slice(0, 1).toUpperCase()
-                  )}
-                </div>
-                <div className="zone-actor-info">
-                  <div className="zone-actor-name">{actor.name}</div>
-                  <div className="zone-actor-role">{actor.role}</div>
-                  <div className="zone-actor-presence">{actor.presence}</div>
-                </div>
-              </div>
+            {keyActors.map((actor) => {
+              const interactive = actor.profileOnly && actor.actorKey !== null
+              const baseClassName = `zone-actor-item${interactive ? ' zone-actor-item--interactive' : ''}`
+
+              const actorBody = (
+                <>
+                  <div className={`zone-actor-avatar${actor.avatarSrc ? ' has-image' : ''}`}>
+                    {actor.avatarSrc ? (
+                      <img
+                        className="zone-actor-avatar-image"
+                        src={actor.avatarSrc}
+                        alt={`${actor.name} avatar`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      actor.name.slice(0, 1).toUpperCase()
+                    )}
+                  </div>
+                  <div className="zone-actor-info">
+                    <div className="zone-actor-name">{actor.name}</div>
+                    <div className="zone-actor-role">{actor.role}</div>
+                    <div className="zone-actor-presence">{actor.presence}</div>
+                  </div>
+                </>
+              )
+
+              if (!interactive || !actor.actorKey) {
+                return (
+                  <div className={baseClassName} key={actor.name}>
+                    {actorBody}
+                  </div>
+                )
+              }
+              const actorKey = actor.actorKey
+
+              return (
+                <button
+                  type="button"
+                  className={baseClassName}
+                  key={actor.name}
+                  onClick={() => openActorProfileFromZone(actorKey)}
+                  aria-label={`Open ${actor.name} profile`}
+                >
+                  {actorBody}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="modal-section">
+        <h3 className="modal-section-title">Profile-Only Stakeholders</h3>
+        {profileOnlyActors.length === 0 ? (
+          <div className="zone-support-empty">No profile-only stakeholders mapped for this zone.</div>
+        ) : (
+          <div className="zone-profile-actors-list">
+            {profileOnlyActors.map((actor) => (
+              <button
+                type="button"
+                className="zone-profile-actor-item"
+                key={actor.actorKey}
+                onClick={() => openActorProfileFromZone(actor.actorKey)}
+                aria-label={`Open ${actor.name} profile`}
+              >
+                <div className="zone-profile-actor-name">{actor.name}</div>
+                <div className="zone-profile-actor-role">{actor.role}</div>
+                <div className="zone-profile-actor-cta">Open profile briefing</div>
+              </button>
             ))}
           </div>
         )}
@@ -908,6 +1263,242 @@ const ENVOY_MANDATE_POINTS = [
   'Operates under strict resource and time constraints set by mission configuration',
   'Mission outcome is judged by threshold metrics and fail conditions in campaign rules',
 ]
+
+type MissionBriefTimelineItem = {
+  step: string
+  title: string
+  description: string
+}
+
+type MissionBriefGuidanceItem = {
+  title: string
+  description: string
+}
+
+const MISSION_PRIMARY_OBJECTIVES: MissionBriefTimelineItem[] = [
+  {
+    step: '01',
+    title: 'Stabilize Critical Zones',
+    description:
+      'Reduce insurgency levels in high-threat zones across Mali, Burkina Faso, and Niger. Prevent collapse of urban centers under siege and protect civilians from escalating violence.',
+  },
+  {
+    step: '02',
+    title: 'Build Regional Cooperation',
+    description:
+      'Strengthen coordination between ECOWAS, national governments, and local actors. Navigate political tensions created by military juntas while sustaining pressure for credible transitions.',
+  },
+  {
+    step: '03',
+    title: 'Counter External Interference',
+    description:
+      'Address external actors that undermine African-led security frameworks. Offer credible, sovereignty-respecting alternatives that advance long-term regional stability.',
+  },
+  {
+    step: '04',
+    title: 'Protect Civilian Populations',
+    description:
+      'Ensure humanitarian access, prevent mass atrocity risk, and address root conflict drivers including governance failures, climate shocks, and economic marginalization.',
+  },
+]
+
+const MISSION_STRATEGIC_GUIDANCE: MissionBriefGuidanceItem[] = [
+  {
+    title: 'Balance Multiple Priorities',
+    description:
+      'You cannot solve every crisis simultaneously. Focus limited actions on interventions that produce cross-territory spillover gains.',
+  },
+  {
+    title: 'Engage Key Actors',
+    description:
+      'Success depends on negotiating with military leadership, community coalitions, regional bodies, and local authorities. Actor intent and leverage shift quickly.',
+  },
+  {
+    title: 'Monitor Intelligence',
+    description:
+      'Use the intelligence feed and territory reports continuously. The strongest interventions are timed to emerging windows, not static assumptions.',
+  },
+  {
+    title: 'Manage Resources',
+    description:
+      'Budget, political capital, personnel, and time are finite. Planned capacity building and diplomacy usually outperform repeated reactive deployments.',
+  },
+]
+
+const MISSION_STRATEGIC_HINTS: MissionBriefGuidanceItem[] = [
+  {
+    title: 'Start with Intelligence Gathering',
+    description:
+      'Before major actions, investigate pressure zones to understand local dynamics. Opening moves should prioritize areas where early stabilization can cascade across neighboring zones.',
+  },
+  {
+    title: 'Build Relationships Early',
+    description:
+      'Establish channels with national transition authorities, ECOWAS envoys, and community representatives in Act 1. Early trust reduces friction once escalation begins.',
+  },
+]
+
+type DossierArticleId = 'wagner' | 'ecowas' | 'climate' | 'french'
+
+type DossierArticle = {
+  id: DossierArticleId
+  masthead: string
+  headline: string
+  subheadline: string
+  date: string
+  location: string
+  source: string
+  urgencyBadge: string | null
+  image: string
+  imageCaption: string
+  feedTime: string
+  feedSummary: string
+  contentHtml: string
+  sources: string
+}
+
+const DOSSIER_ARTICLES: DossierArticle[] = [
+  {
+    id: 'wagner',
+    masthead: 'Sahel Intelligence Brief',
+    headline: 'Wagner Group Contractors Spotted in Northern Burkina Faso',
+    subheadline:
+      'Russian military presence expanding across Sahel as juntas seek alternatives to Western security partnerships',
+    date: 'Mar 8, 2026',
+    location: 'Northern Burkina Faso',
+    source: 'AU Field Intelligence',
+    urgencyBadge: 'URGENT',
+    image: '/img/Wagner Group contractors have been observed operating in multiple Sahel nations since 2021.png',
+    imageCaption: 'Wagner Group contractors have been observed operating in multiple Sahel nations since 2021',
+    feedTime: '3 hours ago',
+    feedSummary:
+      'Wagner Group contractors spotted in northern Burkina Faso. Potential Russian influence expansion detected.',
+    contentHtml: `
+      <p class="report-paragraph">Wagner Group private military contractors have been identified operating in northern Burkina Faso near Ouahigouya. Multiple sources estimate 200-300 Russian contractors now active in support roles.</p>
+      <p class="report-paragraph">Intelligence indicates tactical advising, training, and potential operational support to junta-aligned units. The pattern mirrors expansion previously seen in Mali.</p>
+      <h3 class="report-section-title">Strategic Implications</h3>
+      <p class="report-paragraph">This signals a major shift in regional security architecture as junta governments seek alternatives to Western military partnerships.</p>
+      <div class="report-pullquote">"Wagner expansion risks replacing one dependency with another while reducing transparency and accountability."</div>
+      <div class="report-infobox">
+        <div class="report-infobox-title">Recommended Focus</div>
+        <ul class="report-list">
+          <li>Coordinate AU and ECOWAS diplomatic messaging</li>
+          <li>Track contractor movements and rights-abuse indicators</li>
+          <li>Expand African-led alternatives for partner security support</li>
+          <li>Prioritize border intelligence sharing across affected corridors</li>
+        </ul>
+      </div>
+    `,
+    sources:
+      'AU Regional Bureau for the Sahel, ECOWAS Security Network, National Intelligence Services, Open Source Intelligence',
+  },
+  {
+    id: 'ecowas',
+    masthead: 'Sahel Intelligence Brief',
+    headline: 'ECOWAS Summit Postponed Indefinitely',
+    subheadline:
+      'Regional bloc struggles with internal divisions as junta-led states form alternative coalition',
+    date: 'Mar 8, 2026',
+    location: 'Abuja, Nigeria',
+    source: 'ECOWAS Communications',
+    urgencyBadge: null,
+    image: '/img/ECOWAS headquarters in Abuja.png',
+    imageCaption: 'ECOWAS headquarters in Abuja faces escalating pressure on regional cohesion',
+    feedTime: '8 hours ago',
+    feedSummary:
+      'ECOWAS summit delayed. Regional coordination efforts facing diplomatic resistance from junta-led states.',
+    contentHtml: `
+      <p class="report-paragraph">ECOWAS postponed its emergency Sahel summit as member-state positions diverged on sanctions, engagement, and transitional roadmaps with military-led governments.</p>
+      <p class="report-paragraph">Mali, Burkina Faso, and Niger continue advancing a parallel security alignment, increasing pressure on ECOWAS institutional authority.</p>
+      <h3 class="report-section-title">Diplomatic Outlook</h3>
+      <p class="report-paragraph">Regional fragmentation raises coordination risk across stabilization, border control, and humanitarian corridors unless mediation channels are restored quickly.</p>
+      <div class="report-infobox">
+        <div class="report-infobox-title">Immediate Priorities</div>
+        <ul class="report-list">
+          <li>Convene AU-ECOWAS bridge consultations with phased benchmarks</li>
+          <li>Protect technical security coordination from political deadlock</li>
+          <li>Define incentive pathways tied to constitutional transition milestones</li>
+          <li>Maintain active channels with both ECOWAS and junta coalitions</li>
+        </ul>
+      </div>
+    `,
+    sources: 'ECOWAS Communications Desk, AU Peace and Security Council, Regional Diplomatic Channels',
+  },
+  {
+    id: 'climate',
+    masthead: 'Sahel Intelligence Brief',
+    headline: 'Sahel Climate Crisis Accelerating Food Insecurity',
+    subheadline:
+      '40% drop in agricultural yields threatens to displace millions, creating new security threats',
+    date: 'Mar 8, 2026',
+    location: 'Sahel Region-Wide',
+    source: 'AU Climate Observatory',
+    urgencyBadge: null,
+    image: '/img/Drought conditions across the Sahel.png',
+    imageCaption: 'Drought pressure across the Sahel has reached critical multi-year levels',
+    feedTime: '12 hours ago',
+    feedSummary:
+      'Climate report indicates 40% drop in agricultural yields. Food insecurity rising across the Sahel.',
+    contentHtml: `
+      <p class="report-paragraph">New assessments show a 40% regional drop in yields versus recent baseline periods, increasing displacement pressure and local resource conflict risks.</p>
+      <p class="report-paragraph">Food insecurity now compounds existing insurgency dynamics by raising recruitment vulnerability, migration stress, and governance burden in frontline territories.</p>
+      <h3 class="report-section-title">Climate-Security Feedback Loop</h3>
+      <p class="report-paragraph">Climate stress and insecurity reinforce each other: conflict blocks planting seasons, disrupted migration routes accelerate land degradation, and state response capacity is diverted to crisis containment.</p>
+      <div class="report-pullquote">"In the Sahel, climate policy and security policy are now operationally inseparable."</div>
+      <div class="report-infobox">
+        <div class="report-infobox-title">Integrated Response Priorities</div>
+        <ul class="report-list">
+          <li>Scale resilient agriculture support where access is viable</li>
+          <li>Protect humanitarian corridors with local early warning links</li>
+          <li>Embed climate adaptation metrics in stabilization planning</li>
+          <li>Expand youth livelihoods tied to restoration and resilience sectors</li>
+        </ul>
+      </div>
+    `,
+    sources:
+      'AU Climate Observatory, National Meteorological Services, FAO and WFP Field Assessments, Regional Agriculture Dashboards',
+  },
+  {
+    id: 'french',
+    masthead: 'Sahel Intelligence Brief',
+    headline: 'France Announces Final Military Withdrawal from Niger',
+    subheadline:
+      'End of Operation Barkhane creates security vacuum as regional forces struggle to fill gap',
+    date: 'Mar 8, 2026',
+    location: 'Niamey, Niger',
+    source: 'French Ministry of Defense',
+    urgencyBadge: 'URGENT',
+    image: '/img/French forces have maintained Sahel presence since 2013.png',
+    imageCaption: 'French forces maintained Sahel deployments since 2013 before final withdrawal',
+    feedTime: '1 day ago',
+    feedSummary: 'French military announces withdrawal of remaining forces from Niger. Security vacuum expected.',
+    contentHtml: `
+      <p class="report-paragraph">France confirmed full withdrawal of remaining forces from Niger, ending its long-running Sahel military mission and accelerating a regional capability transition.</p>
+      <p class="report-paragraph">The drawdown removes surveillance, rapid reaction, and coordination capacity that regional actors have not yet replaced at comparable scale.</p>
+      <h3 class="report-section-title">Post-Withdrawal Security Landscape</h3>
+      <p class="report-paragraph">Analysts project a near-term activity spike as armed groups test response gaps across border corridors and contested urban approaches.</p>
+      <div class="report-infobox">
+        <div class="report-infobox-title">Strategic Imperatives</div>
+        <ul class="report-list">
+          <li>Prioritize intelligence fusion and rapid cross-border signaling</li>
+          <li>Harden vulnerable mobility corridors and logistics nodes</li>
+          <li>Accelerate national-force training with accountability standards</li>
+          <li>Prevent substitution with opaque external contractor dependency</li>
+        </ul>
+      </div>
+      <div class="report-pullquote">"The transition is both a sovereignty opportunity and a capacity stress test for African-led security."</div>
+    `,
+    sources:
+      'French Ministry of Defense, AU Regional Bureau, G5 Sahel Secretariat, National Defense and Security Briefs',
+  },
+]
+
+const DOSSIER_ARTICLE_LOOKUP: Record<DossierArticleId, DossierArticle> = DOSSIER_ARTICLES.reduce((acc, article) => {
+  return {
+    ...acc,
+    [article.id]: article,
+  }
+}, {} as Record<DossierArticleId, DossierArticle>)
 
 function PlayerProfileBody(): ReactNode {
   const state = useGameStore((s) => s.state)
@@ -1136,127 +1727,494 @@ function MissionBriefBody(): ReactNode {
   const state = useGameStore((s) => s.state)
   const content = state.content
   const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
+  const setSelectedDossierArticle = useUiStore((s) => s.setSelectedDossierArticle)
   const turn = state.session.turn
   const act = getActFromTurn(turn)
   const turnsRemaining = Math.max(state.session.max_turns - turn + 1, 0)
-  const currentTurnDuration = state.config.turn_duration_months?.[turn - 1]
-
-  const actTitle =
-    resolveOptionalLocalizedText(content, `loc.briefing.act${act}.title`) ?? `Act ${act} Briefing`
-  const actTheme = resolveOptionalLocalizedText(content, `loc.briefing.act${act}.theme`)
-  const actFocus = resolveOptionalLocalizedText(content, `loc.briefing.act${act}.focus`)
-  const actFeeling = resolveOptionalLocalizedText(content, `loc.briefing.act${act}.feeling`)
+  const totalMissionWindowMonths = state.config.turn_duration_months?.reduce((sum, months) => sum + months, 0)
 
   const thresholdRows = buildMissionThresholdRows(state)
+  const stabilityThreshold = thresholdRows.find((row) => row.metricKey === 'stability')
+  const insurgencyThreshold = thresholdRows.find((row) => row.metricKey === 'insurgency')
+  const civilianSupportThreshold = thresholdRows.find((row) => row.metricKey === 'civilian_support')
 
   const criticalZones = Object.values(state.zone_state ?? {})
     .filter((zone) => zone.threat_level >= 75)
     .sort((a, b) => b.threat_level - a.threat_level)
     .slice(0, 4)
 
+  const noCriticalZonesOnTrack = criticalZones.length === 0
+  const watchlistText =
+    criticalZones.length === 0
+      ? 'No zones are currently in the critical threat band.'
+      : `Current critical zones: ${criticalZones.map((zone) => resolveZoneName(content, zone.zone_id)).join(', ')}.`
+
+  const victoryConditions: Array<{
+    key: string
+    step: string
+    title: string
+    description: string
+    onTrack: boolean
+  }> = [
+    {
+      key: 'stability',
+      step: '01',
+      title: stabilityThreshold?.thresholdRule
+        ? `Regional Stability ${formatThreshold(stabilityThreshold.thresholdRule.operator, stabilityThreshold.thresholdRule.value)}`
+        : 'Regional Stability',
+      description: `Current score: ${stabilityThreshold?.current ?? state.session.metrics.stability}. Maintain durable security conditions and functioning governance across the theater.`,
+      onTrack: stabilityThreshold?.onTrack ?? false,
+    },
+    {
+      key: 'insurgency',
+      step: '02',
+      title: insurgencyThreshold?.thresholdRule
+        ? `Insurgency Level ${formatThreshold(insurgencyThreshold.thresholdRule.operator, insurgencyThreshold.thresholdRule.value)}`
+        : 'Insurgency Level',
+      description: `Current score: ${insurgencyThreshold?.current ?? state.session.metrics.insurgency}. Reduce organized armed pressure until insurgent groups no longer hold escalation initiative.`,
+      onTrack: insurgencyThreshold?.onTrack ?? false,
+    },
+    {
+      key: 'civilian_support',
+      step: '03',
+      title: civilianSupportThreshold?.thresholdRule
+        ? `Civilian Support ${formatThreshold(civilianSupportThreshold.thresholdRule.operator, civilianSupportThreshold.thresholdRule.value)}`
+        : 'Civilian Support',
+      description: `Current score: ${civilianSupportThreshold?.current ?? state.session.metrics.civilian_support}. Sustain trust that stabilization actions protect communities and address root grievances.`,
+      onTrack: civilianSupportThreshold?.onTrack ?? false,
+    },
+    {
+      key: 'critical_zones',
+      step: '04',
+      title: 'No Critical Zones',
+      description: `${watchlistText} Mission end-state requires all zones below the critical threshold.`,
+      onTrack: noCriticalZonesOnTrack,
+    },
+  ]
+
   return (
-    <div className="campaign-presentation">
-      <div className="campaign-presentation-title">Mission brief</div>
-      <div className="campaign-presentation-meta">
-        <span className="action-config-chip">Act {act}</span>
-        <span className="action-config-chip">Turn {turn} / {state.session.max_turns}</span>
-        <span className="action-config-chip">Turns remaining {turnsRemaining}</span>
-        <span className="action-config-chip">Time remaining {state.session.resources.time_months} months</span>
-        {typeof currentTurnDuration === 'number' && (
-          <span className="action-config-chip">Current turn cost {currentTurnDuration} months</span>
-        )}
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>{actTitle}</SectionTitle>
-        <p className="actor-profile-text">
-          You are the AU Special Envoy coordinating regional stabilization across Mali, Burkina Faso, Niger, Chad, and
-          Mauritania. Keep pressure on high-risk zones while preserving legitimacy and civilian support.
-        </p>
-        {actTheme && <p className="actor-profile-text">{actTheme}</p>}
-        {actFocus && <p className="actor-profile-text">{actFocus}</p>}
-        {actFeeling && <p className="actor-profile-text">{actFeeling}</p>}
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>Envoy profile</SectionTitle>
-        <p className="actor-profile-text">{ENVOY_ROLE_SUMMARY}</p>
-        <div className="campaign-metric-grid">
-          <div className="campaign-metric-row">
-            <span>Current act</span>
-            <strong>{act}</strong>
+    <div className="mission-brief-shell">
+      <div className="mission-brief-header">
+        <div className="mission-brief-badge">
+          <span className="mission-brief-badge-label">Current Act</span>
+          <strong className="mission-brief-badge-value">{act}</strong>
+        </div>
+        <h1 className="mission-brief-title">Mission Brief</h1>
+        <p className="mission-brief-subtitle">Operation Sahel Stabilization - Act {act}</p>
+        <div className="mission-brief-identity">
+          <div className="mission-brief-avatar">
+            <img src="/assets/actors/player.png" alt="Special Envoy avatar" />
           </div>
-          <div className="campaign-metric-row">
-            <span>Current turn</span>
-            <strong>{turn} / {state.session.max_turns}</strong>
-          </div>
-          <div className="campaign-metric-row">
-            <span>Total mandate window</span>
-            <strong>{state.config.total_turns} turns</strong>
-          </div>
-          <div className="campaign-metric-row">
-            <span>Time remaining</span>
-            <strong>{state.session.resources.time_months} months</strong>
+          <div className="mission-brief-role">
+            <div className="mission-brief-role-subtitle">Player Role</div>
+            <div className="mission-brief-role-title">Special Envoy for Sahel Stabilization</div>
+            <p className="mission-brief-role-text">{ENVOY_ROLE_SUMMARY}</p>
           </div>
         </div>
-        <SectionTitle>Background and mandate authority</SectionTitle>
-        <ul style={listStyle}>
-          {ENVOY_BACKGROUND_POINTS.slice(0, 2).map((point) => (
-            <li key={point}>{point}</li>
-          ))}
-          {ENVOY_MANDATE_POINTS.slice(0, 2).map((point) => (
-            <li key={point}>{point}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="campaign-metric-grid">
-        {thresholdRows.map((row) => (
-          <div className="campaign-metric-row" key={row.metricKey}>
-            <span>{formatTokenLabel(row.metricKey)}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <strong>
-                {row.current}
-                {row.thresholdRule ? ` / ${formatThreshold(row.thresholdRule.operator, row.thresholdRule.value)}` : ''}
-              </strong>
-              <span className={`actor-chip ${row.onTrack ? 'active' : 'inactive'}`}>
-                {row.onTrack ? 'On track' : 'At risk'}
-              </span>
-            </div>
+        <div className="mission-brief-stats">
+          <div className="mission-brief-stat">
+            <div className="mission-brief-stat-value">Act {act}</div>
+            <div className="mission-brief-stat-label">Campaign Stage</div>
           </div>
-        ))}
+          <div className="mission-brief-stat">
+            <div className="mission-brief-stat-value">{turn}</div>
+            <div className="mission-brief-stat-label">Current Turn</div>
+          </div>
+          <div className="mission-brief-stat">
+            <div className="mission-brief-stat-value">{turnsRemaining}</div>
+            <div className="mission-brief-stat-label">Turns Remaining</div>
+          </div>
+          <div className="mission-brief-stat">
+            <div className="mission-brief-stat-value">{state.session.resources.time_months}m</div>
+            <div className="mission-brief-stat-label">Time Remaining</div>
+          </div>
+        </div>
       </div>
 
-      <div className="actor-profile-section">
-        <SectionTitle>Critical zone watchlist</SectionTitle>
-        {criticalZones.length === 0 ? (
-          <p className="actor-profile-text">
-            No zones are currently in the critical threat band. Keep monitoring intel and sustain pressure.
+      <div className="mission-brief-content">
+        <section className="mission-brief-section">
+          <h2 className="mission-brief-section-title">Situation Overview</h2>
+          <p className="modal-text">
+            The Sahel faces a compound crisis: insurgent expansion, governance fragmentation, and widening humanitarian
+            displacement across core population corridors.
           </p>
-        ) : (
-          <ul style={listStyle}>
-            {criticalZones.map((zone) => (
-              <li key={zone.zone_id}>
-                {resolveZoneName(content, zone.zone_id)} (Threat {zone.threat_level}, Stability {zone.stability},
-                Insurgency {zone.insurgency})
-              </li>
+          <p className="modal-text">
+            As the African Union Special Envoy, you are responsible for restoring regional stability through
+            African-led coordination while balancing security operations, political legitimacy, and civilian
+            protection.
+          </p>
+        </section>
+
+        <section className="mission-brief-section">
+          <h2 className="mission-brief-section-title">Primary Objectives</h2>
+          <div className="mission-brief-timeline">
+            {MISSION_PRIMARY_OBJECTIVES.map((objective) => (
+              <div className="mission-brief-timeline-item" key={objective.title}>
+                <div className="mission-brief-timeline-step">{objective.step}</div>
+                <div className="mission-brief-timeline-title">{objective.title}</div>
+                <div className="mission-brief-timeline-description">{objective.description}</div>
+              </div>
             ))}
-          </ul>
-        )}
+          </div>
+        </section>
+
+        <section className="mission-brief-section">
+          <h2 className="mission-brief-section-title">Victory Conditions</h2>
+          <p className="modal-text">
+            To complete this mission inside the {totalMissionWindowMonths ?? state.config.total_turns}-{
+              totalMissionWindowMonths ? 'month' : 'turn'
+            } mandate window, all conditions below must be met simultaneously:
+          </p>
+          <div className="mission-brief-timeline">
+            {victoryConditions.map((condition) => (
+              <div className="mission-brief-timeline-item" key={condition.key}>
+                <div className="mission-brief-timeline-step">{condition.step}</div>
+                <div className="mission-brief-timeline-heading">
+                  <div className="mission-brief-timeline-title">{condition.title}</div>
+                  <span className={`mission-brief-status ${condition.onTrack ? 'on-track' : 'at-risk'}`}>
+                    {condition.onTrack ? 'On track' : 'At risk'}
+                  </span>
+                </div>
+                <div className="mission-brief-timeline-description">{condition.description}</div>
+              </div>
+            ))}
+          </div>
+          <p className="mission-brief-note">
+            All four conditions are required before mandate time expires. Partial gains are not enough to secure a
+            durable regional outcome.
+          </p>
+        </section>
+
+        <section className="mission-brief-section">
+          <h2 className="mission-brief-section-title">Strategic Guidance</h2>
+          {MISSION_STRATEGIC_GUIDANCE.map((item) => (
+            <p className="modal-text" key={item.title}>
+              <strong>{item.title}:</strong> {item.description}
+            </p>
+          ))}
+        </section>
+
+        <section className="mission-brief-section">
+          <h2 className="mission-brief-section-title">Strategic Hint</h2>
+          {MISSION_STRATEGIC_HINTS.map((hint) => (
+            <div className="mission-brief-hint" key={hint.title}>
+              <p className="modal-text">
+                <strong>{hint.title}:</strong> {hint.description}
+              </p>
+            </div>
+          ))}
+        </section>
       </div>
 
-      <div className="action-config-review-actions">
-        <button type="button" className="action-config-secondary" onClick={() => openModal('player_profile')}>
-          Open full profile
+      <div className="mission-brief-footer">
+        <button
+          type="button"
+          className="action-config-secondary"
+          onClick={() => {
+            setSelectedDossierArticle(null)
+            openModal('dossier')
+          }}
+        >
+          Dossier
         </button>
-        <button type="button" className="action-config-secondary" onClick={() => openModal('status_report')}>
-          View status report
+        <button
+          type="button"
+          className="action-config-secondary"
+          onClick={() => {
+            openModal('relationship_matrix')
+          }}
+        >
+          Relationship Matrix
         </button>
-        <button type="button" className="action-config-confirm" onClick={() => openModal('action_config')}>
-          Plan next action
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close Brief
         </button>
       </div>
     </div>
+  )
+}
+
+function RelationshipMatrixBody(): ReactNode {
+  const state = useGameStore((s) => s.state)
+  const content = state.content
+  const closeModal = useUiStore((s) => s.closeModal)
+  const openModal = useUiStore((s) => s.openModal)
+
+  if (!content) {
+    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading relationship matrix...</p>
+  }
+
+  const relationshipRows = Object.values(state.actor_sentiments ?? {})
+    .map((sentiment) => {
+      const actor = resolveActorData(content, sentiment.actor_key)
+      if (!actor || !actor.relationship_tracked) return null
+      const name = resolveActorName(content, actor.actor_key)
+      const title = resolveActorTitle(content, actor.actor_key)
+      const baseline = actor.default_relationship_score
+      const delta = baseline === null ? null : sentiment.relationship_score - baseline
+      const location = resolveRelationshipLocation(content, actor)
+      return {
+        actor,
+        sentiment,
+        name,
+        title,
+        baseline,
+        delta,
+        location,
+      }
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null)
+    .sort((a, b) => b.sentiment.relationship_score - a.sentiment.relationship_score)
+
+  const trackedCount = relationshipRows.length
+  const positiveCount = relationshipRows.filter(
+    (row) => row.sentiment.relationship_label === 'allied' || row.sentiment.relationship_label === 'cooperative'
+  ).length
+  const negativeCount = relationshipRows.filter(
+    (row) => row.sentiment.relationship_label === 'hostile' || row.sentiment.relationship_label === 'adversarial'
+  ).length
+  const averageScore = trackedCount > 0
+    ? Math.round(
+      relationshipRows.reduce((sum, row) => sum + row.sentiment.relationship_score, 0) / trackedCount
+    )
+    : 0
+
+  return (
+    <div className="relationship-matrix-layout">
+      <p className="relationship-matrix-intro">
+        Live relationship state for actors with tracked relationship scores in this campaign session.
+      </p>
+
+      <div className="relationship-matrix-stats">
+        <div className="relationship-matrix-stat">
+          <span className="relationship-matrix-stat-label">Tracked Actors</span>
+          <strong className="relationship-matrix-stat-value">{trackedCount}</strong>
+        </div>
+        <div className="relationship-matrix-stat">
+          <span className="relationship-matrix-stat-label">Avg. Score</span>
+          <strong className="relationship-matrix-stat-value">{averageScore}</strong>
+        </div>
+        <div className="relationship-matrix-stat">
+          <span className="relationship-matrix-stat-label">Cooperative/Allied</span>
+          <strong className="relationship-matrix-stat-value">{positiveCount}</strong>
+        </div>
+        <div className="relationship-matrix-stat">
+          <span className="relationship-matrix-stat-label">Hostile/Adversarial</span>
+          <strong className="relationship-matrix-stat-value">{negativeCount}</strong>
+        </div>
+      </div>
+
+      {relationshipRows.length === 0 ? (
+        <div className="actor-profile-section">
+          <p className="actor-profile-text">No relationship-tracked actors are currently loaded in runtime state.</p>
+        </div>
+      ) : (
+        <div className="relationship-matrix-table-wrap">
+          <table className="relationship-matrix-table">
+            <thead>
+              <tr>
+                <th>Actor</th>
+                <th>Location</th>
+                <th>Faction</th>
+                <th>Relationship</th>
+                <th>Score</th>
+                <th>Baseline</th>
+                <th>Delta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {relationshipRows.map((row) => (
+                <tr key={row.actor.actor_key}>
+                  <td>
+                    <div className="relationship-matrix-actor-cell">
+                      <ActorPortrait actor={row.actor} name={row.name} />
+                      <div className="relationship-matrix-actor-copy">
+                        <div className="relationship-matrix-actor-name">{row.name}</div>
+                        <div className="relationship-matrix-actor-title">{row.title}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <RelationshipLocationBadge location={row.location} />
+                  </td>
+                  <td>{formatTokenLabel(row.actor.faction)}</td>
+                  <td>
+                    <span className={`relationship-matrix-chip ${relationshipToneClass(row.sentiment.relationship_label)}`}>
+                      {formatTokenLabel(row.sentiment.relationship_label)}
+                    </span>
+                  </td>
+                  <td>{row.sentiment.relationship_score}</td>
+                  <td>{row.baseline ?? 'N/A'}</td>
+                  <td className={row.delta === null ? '' : row.delta >= 0 ? 'is-positive' : 'is-negative'}>
+                    {row.delta === null ? 'N/A' : `${row.delta > 0 ? '+' : ''}${row.delta}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="action-config-review-actions">
+        <button type="button" className="action-config-secondary" onClick={() => openModal('mission_brief')}>
+          Back to Mission Brief
+        </button>
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function CreditsBody(): ReactNode {
+  const closeModal = useUiStore((s) => s.closeModal)
+
+  return (
+    <div className="campaign-presentation">
+      <div className="campaign-presentation-title">African Mandate - Credits</div>
+      <div className="actor-profile-section">
+        <SectionTitle>Core Contributors</SectionTitle>
+        <p className="actor-profile-text">
+          African Mandate is built by multidisciplinary contributors across design, engineering, narrative systems,
+          geospatial operations, and policy simulation.
+        </p>
+      </div>
+      <div className="actor-profile-section">
+        <SectionTitle>Acknowledgments</SectionTitle>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: '1rem',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.45,
+            fontSize: '0.84rem',
+          }}
+        >
+          <li>African Union policy and stabilization research references</li>
+          <li>Regional data providers and open geospatial map sources</li>
+          <li>Scenario design and narrative prototyping support teams</li>
+        </ul>
+      </div>
+      <div className="action-config-review-actions">
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DossierBody(): ReactNode {
+  const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
+  const setSelectedDossierArticle = useUiStore((s) => s.setSelectedDossierArticle)
+
+  return (
+    <div className="dossier-shell">
+      <div className="dossier-header">
+        <h2 className="dossier-title">Mission Dossier</h2>
+        <p className="dossier-subtitle">Select a briefing to open the full intelligence article.</p>
+      </div>
+
+      <div className="dossier-feed-grid">
+        {DOSSIER_ARTICLES.map((article) => (
+          <button
+            type="button"
+            key={article.id}
+            className={`dossier-feed-item${article.urgencyBadge ? ' urgent' : ''}`}
+            onClick={() => {
+              setSelectedDossierArticle(article.id)
+              openModal('dossier_article')
+            }}
+          >
+            <div className="dossier-feed-time">{article.feedTime}</div>
+            <div className="dossier-feed-main">
+              <div className="dossier-feed-thumb">
+                <img src={article.image} alt={`${article.headline} thumbnail`} loading="lazy" />
+              </div>
+              <div className="dossier-feed-copy">
+                <div className="dossier-feed-masthead">{article.masthead}</div>
+                <div className="dossier-feed-headline">{article.headline}</div>
+                <div className="dossier-feed-subheadline">{article.subheadline}</div>
+                <div className="dossier-feed-summary">{article.feedSummary}</div>
+              </div>
+            </div>
+            <div className="dossier-feed-meta">
+              <span>{article.date}</span>
+              <span>{article.location}</span>
+              <span>{article.source}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="dossier-actions">
+        <button type="button" className="action-config-secondary" onClick={() => openModal('mission_brief')}>
+          Back to Mission Brief
+        </button>
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DossierArticleBody(): ReactNode {
+  const selectedDossierArticleId = useUiStore((s) => s.selectedDossierArticleId)
+  const openModal = useUiStore((s) => s.openModal)
+
+  const selectedArticle =
+    (selectedDossierArticleId &&
+      Object.prototype.hasOwnProperty.call(DOSSIER_ARTICLE_LOOKUP, selectedDossierArticleId) &&
+      DOSSIER_ARTICLE_LOOKUP[selectedDossierArticleId as DossierArticleId]) ||
+    DOSSIER_ARTICLES[0]
+
+  if (!selectedArticle) {
+    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Dossier article unavailable.</p>
+  }
+
+  return (
+    <article className="intel-report-modal-shell">
+      <div className="intel-report-header">
+        {selectedArticle.urgencyBadge && <div className="intel-report-urgent">{selectedArticle.urgencyBadge}</div>}
+        <div className="intel-report-masthead">{selectedArticle.masthead}</div>
+        <h1 className="intel-report-headline">{selectedArticle.headline}</h1>
+        <p className="intel-report-subheadline">{selectedArticle.subheadline}</p>
+        <div className="intel-report-meta">
+          <span>{selectedArticle.date}</span>
+          <span>{selectedArticle.location}</span>
+          <span>{selectedArticle.source}</span>
+        </div>
+      </div>
+
+      <div className="intel-report-content">
+        <div className="intel-report-lead-image">
+          <div className="intel-report-lead-image-placeholder">
+            <img src={selectedArticle.image} alt={selectedArticle.headline} />
+          </div>
+          <div className="intel-report-image-caption">{selectedArticle.imageCaption}</div>
+        </div>
+
+        <div
+          className="intel-report-body"
+          dangerouslySetInnerHTML={{ __html: selectedArticle.contentHtml }}
+        />
+      </div>
+
+      <div className="intel-report-footer">
+        <div className="intel-report-source">
+          <strong>Sources:</strong> {selectedArticle.sources}
+        </div>
+        <div className="intel-report-actions">
+          <button type="button" className="intel-report-btn close" onClick={() => openModal('dossier')}>
+            Close
+          </button>
+        </div>
+      </div>
+    </article>
   )
 }
 
@@ -1685,6 +2643,8 @@ function ActorProfileBody(): ReactNode {
   const actorActive = isActorActive(state, actor)
   const dialogueAvailability = getActorDialogueAvailability(state, actor.actor_key)
   const hasDialogue = dialogueAvailability !== null
+  const actorName = resolveActorName(content, actor.actor_key)
+  const actorDescription = describeActorProfile(actor)
 
   const openDialogue = (): void => {
     if (!hasDialogue) {
@@ -1700,8 +2660,9 @@ function ActorProfileBody(): ReactNode {
   return (
     <div className="actor-profile-layout">
       <div className="actor-profile-header-row">
+        <ActorPortrait actor={actor} name={actorName} />
         <div>
-          <div className="actor-profile-name">{resolveActorName(content, actor.actor_key)}</div>
+          <div className="actor-profile-name">{actorName}</div>
           <div className="actor-profile-title">{resolveActorTitle(content, actor.actor_key)}</div>
         </div>
         <div className={`actor-chip ${actorActive ? 'active' : 'inactive'}`}>
@@ -1710,6 +2671,10 @@ function ActorProfileBody(): ReactNode {
       </div>
 
       <div className="actor-profile-grid">
+        <div className="actor-profile-row">
+          <span>Actor key</span>
+          <strong className="actor-profile-value-code">{actor.actor_key}</strong>
+        </div>
         <div className="actor-profile-row">
           <span>Faction</span>
           <strong>{formatTokenLabel(actor.faction)}</strong>
@@ -1721,6 +2686,18 @@ function ActorProfileBody(): ReactNode {
         <div className="actor-profile-row">
           <span>Profile</span>
           <strong>{formatTokenLabel(actor.profile)}</strong>
+        </div>
+        <div className="actor-profile-row">
+          <span>Default sentiment</span>
+          <strong>{formatTokenLabel(actor.default_sentiment)}</strong>
+        </div>
+        <div className="actor-profile-row">
+          <span>Relationship tracking</span>
+          <strong>{actor.relationship_tracked ? 'Tracked' : 'Untracked'}</strong>
+        </div>
+        <div className="actor-profile-row">
+          <span>Baseline relationship</span>
+          <strong>{formatBaselineRelationship(actor.default_relationship_score)}</strong>
         </div>
         <div className="actor-profile-row">
           <span>Relationship</span>
@@ -1740,6 +2717,15 @@ function ActorProfileBody(): ReactNode {
                 : dialogueAvailability.reason ?? 'Unavailable'}
           </strong>
         </div>
+        <div className="actor-profile-row actor-profile-row--stacked">
+          <span>Portrait asset</span>
+          <strong className="actor-profile-value-code">{actor.portrait_url}</strong>
+        </div>
+      </div>
+
+      <div className="actor-profile-section">
+        <SectionTitle>Description</SectionTitle>
+        <p className="actor-profile-text">{actorDescription}</p>
       </div>
 
       <div className="actor-profile-section">
@@ -1916,12 +2902,42 @@ function DialogueBody(): ReactNode {
   return (
     <div className="actor-profile-layout">
       <div className="actor-profile-header-row">
+        <ActorPortrait actor={actor} name={resolveActorName(content, actor.actor_key)} />
         <div>
           <div className="actor-profile-name">{resolveActorName(content, actor.actor_key)}</div>
           <div className="actor-profile-title">{resolveActorTitle(content, actor.actor_key)}</div>
         </div>
         <div className={`actor-chip ${dialogueAvailability.isAvailable ? 'active' : 'inactive'}`}>
           {dialogueAvailability.isAvailable ? 'Open' : 'Locked'}
+        </div>
+      </div>
+
+      <div className="actor-profile-section">
+        <SectionTitle>Actor Brief</SectionTitle>
+        <p className="actor-profile-text">{describeActorProfile(actor)}</p>
+        <p className="actor-profile-text">{actor.notes ?? 'No additional notes.'}</p>
+      </div>
+
+      <div className="actor-profile-grid">
+        <div className="actor-profile-row">
+          <span>Actor key</span>
+          <strong className="actor-profile-value-code">{actor.actor_key}</strong>
+        </div>
+        <div className="actor-profile-row">
+          <span>Default sentiment</span>
+          <strong>{formatTokenLabel(actor.default_sentiment)}</strong>
+        </div>
+        <div className="actor-profile-row">
+          <span>Relationship tracking</span>
+          <strong>{actor.relationship_tracked ? 'Tracked' : 'Untracked'}</strong>
+        </div>
+        <div className="actor-profile-row">
+          <span>Baseline relationship</span>
+          <strong>{formatBaselineRelationship(actor.default_relationship_score)}</strong>
+        </div>
+        <div className="actor-profile-row actor-profile-row--stacked">
+          <span>Portrait asset</span>
+          <strong className="actor-profile-value-code">{actor.portrait_url}</strong>
         </div>
       </div>
 
@@ -2132,6 +3148,11 @@ interface SelectOption<T extends string> {
   label: string
 }
 
+interface TerritorySelectOption extends SelectOption<TerritoryKey> {
+  flagSrc: string | null
+  fallbackFlag: string | null
+}
+
 function pickPreferredOption<T extends string>(
   preferred: string | null | undefined,
   options: readonly SelectOption<T>[]
@@ -2141,6 +3162,32 @@ function pickPreferredOption<T extends string>(
     if (matched) return matched.value
   }
   return options[0]?.value
+}
+
+function TerritoryFlagBadge({
+  territoryName,
+  flagSrc,
+  fallbackFlag,
+}: {
+  territoryName: string
+  flagSrc: string | null
+  fallbackFlag: string | null
+}): ReactNode {
+  return (
+    <span className="action-config-territory-flag" aria-hidden="true">
+      {flagSrc ? (
+        <img
+          src={flagSrc}
+          alt=""
+          loading="lazy"
+          data-fallback-src={fallbackFlag ?? ''}
+          onError={handleFlagImageError}
+        />
+      ) : (
+        <span className="action-config-territory-code">{actorInitials(territoryName)}</span>
+      )}
+    </span>
+  )
 }
 
 function ActionConfigBody(): ReactNode {
@@ -2194,10 +3241,21 @@ function ActionConfigBody(): ReactNode {
 
   const zoneState = state.zone_state ?? {}
   const allZones = Object.values(zoneState)
-  const territoryOptions: SelectOption<TerritoryKey>[] = Object.values(state.territory_state ?? {}).map((territory) => ({
-    value: territory.territory_key,
-    label: resolveTerritoryName(content, territory.territory_key),
-  }))
+  const territoryOptions: TerritorySelectOption[] = Object.values(state.territory_state ?? {}).map((territory) => {
+    const territoryContent = content.territories.territories.find(
+      (item) => item.territory_key === territory.territory_key
+    )
+    const { primarySrc, fallbackSrc } = resolveTerritoryFlagPaths(
+      territory.territory_key,
+      territoryContent?.flag_url
+    )
+    return {
+      value: territory.territory_key,
+      label: resolveTerritoryName(content, territory.territory_key),
+      flagSrc: primarySrc,
+      fallbackFlag: fallbackSrc,
+    }
+  })
 
   const preferredTerritoryFromZoneSelection = (() => {
     if (selectedTarget?.zone_id) return zoneState[selectedTarget.zone_id]?.territory_key
@@ -2209,6 +3267,9 @@ function ActionConfigBody(): ReactNode {
     selectedTarget?.territory_key ?? selectedTerritoryKey ?? preferredTerritoryFromZoneSelection,
     territoryOptions
   )
+  const selectedTerritoryOption = selectedTerritory
+    ? territoryOptions.find((option) => option.value === selectedTerritory)
+    : territoryOptions[0]
 
   const zoneOptions: SelectOption<string>[] = allZones
     .filter((zone) => (selectedTerritory ? zone.territory_key === selectedTerritory : true))
@@ -2471,22 +3532,54 @@ function ActionConfigBody(): ReactNode {
 
       <label className="action-config-field">
         <span>Territory</span>
-        <select
-          className="action-config-select"
-          value={selectedTerritory ?? ''}
-          disabled={territoryOptions.length === 0}
-          onChange={(event) => handleTerritoryChange(event.target.value)}
-        >
-          {territoryOptions.length === 0 ? (
-            <option value="">No valid targets available</option>
-          ) : (
-            territoryOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))
-          )}
-        </select>
+        {territoryOptions.length === 0 ? (
+          <div className="action-config-territory-trigger is-disabled">
+            <span className="action-config-territory-name">No valid targets available</span>
+          </div>
+        ) : (
+          <details className="action-config-territory-select">
+            <summary className="action-config-territory-trigger">
+              <span className="action-config-territory-option">
+                <TerritoryFlagBadge
+                  territoryName={selectedTerritoryOption?.label ?? 'Territory'}
+                  flagSrc={selectedTerritoryOption?.flagSrc ?? null}
+                  fallbackFlag={selectedTerritoryOption?.fallbackFlag ?? null}
+                />
+                <span className="action-config-territory-name">
+                  {selectedTerritoryOption?.label ?? 'Select territory'}
+                </span>
+              </span>
+              <span className="action-config-territory-chevron">Select</span>
+            </summary>
+            <div className="action-config-territory-menu" role="listbox" aria-label="Territory options">
+              {territoryOptions.map((option) => (
+                <button
+                  type="button"
+                  key={option.value}
+                  className={`action-config-territory-item${option.value === selectedTerritory ? ' is-selected' : ''}`}
+                  role="option"
+                  aria-selected={option.value === selectedTerritory}
+                  onClick={(event) => {
+                    handleTerritoryChange(option.value)
+                    const detailsElement = event.currentTarget.closest('details')
+                    if (detailsElement instanceof HTMLDetailsElement) {
+                      detailsElement.open = false
+                    }
+                  }}
+                >
+                  <span className="action-config-territory-option">
+                    <TerritoryFlagBadge
+                      territoryName={option.label}
+                      flagSrc={option.flagSrc}
+                      fallbackFlag={option.fallbackFlag}
+                    />
+                    <span className="action-config-territory-name">{option.label}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </details>
+        )}
       </label>
 
       <label className="action-config-field">
@@ -2566,25 +3659,6 @@ function ActionConfigBody(): ReactNode {
         ))}
       </div>
 
-      <div className="action-config-summary">
-        <div className="action-config-summary-row">
-          <span>Category</span>
-          <strong>{formatCategoryLabel(action.category)}</strong>
-        </div>
-        <div className="action-config-summary-row">
-          <span>Territory</span>
-          <strong>{selectedTerritory ? resolveTerritoryName(content, selectedTerritory) : 'N/A'}</strong>
-        </div>
-        <div className="action-config-summary-row">
-          <span>Zone</span>
-          <strong>{selectedZone ? resolveZoneName(content, selectedZone) : 'N/A'}</strong>
-        </div>
-        <div className="action-config-summary-row">
-          <span>Action target</span>
-          <strong>{formatTargetLabel(content, resolvedTarget)}</strong>
-        </div>
-      </div>
-
       <p className="action-config-description">
         {resolveActionDescription(content, action.action_id)}
       </p>
@@ -2645,6 +3719,9 @@ function ModalBody(): ReactNode {
   if (modal === 'session_manager') {
     return <SessionManagerBody />
   }
+  if (modal === 'dossier') return <DossierBody />
+  if (modal === 'dossier_article') return <DossierArticleBody />
+  if (modal === 'relationship_matrix') return <RelationshipMatrixBody />
   if (modal === 'action_config') {
     return <ActionConfigBody />
   }
@@ -2663,6 +3740,7 @@ function ModalBody(): ReactNode {
   if (modal === 'campaign_outcome') return <CampaignOutcomeBody />
   if (modal === 'status_report') return <StatusReportBody />
   if (modal === 'mission_brief') return <MissionBriefBody />
+  if (modal === 'credits') return <CreditsBody />
   if (modal === 'leaderboard') {
     return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Leaderboard is deferred in this release scope.</p>
   }
@@ -2672,15 +3750,62 @@ function ModalBody(): ReactNode {
 export function ModalRoot(): ReactNode {
   const modal = useUiStore((s) => s.modal)
   const closeModal = useUiStore((s) => s.closeModal)
+  const previousModalRef = useRef<ModalKind>('none')
+  const revealFrameRef = useRef<number | null>(null)
+  const [missionBriefRevealVisible, setMissionBriefRevealVisible] = useState(false)
+  const [missionBriefFromLoading, setMissionBriefFromLoading] = useState(false)
   const entryGateRequiresChoice = useSessionStore((s) => s.entry_gate_active && !s.entry_gate_confirmed)
   const isBlockingEntryGate = modal === 'session_manager' && entryGateRequiresChoice
   const isBlockingLoading = modal === 'onboarding_loading'
   const isTerritoryOverviewModal = modal === 'territory_overview'
   const isZoneListModal = modal === 'zone_list'
   const isZoneDetailModal = modal === 'zone_detail'
+  const isMissionBriefModal = modal === 'mission_brief'
+  const isDossierModal = modal === 'dossier'
+  const isDossierArticleModal = modal === 'dossier_article'
+  const isRelationshipMatrixModal = modal === 'relationship_matrix'
   const isZoneModal = isZoneListModal || isZoneDetailModal
+  useEffect(() => {
+    if (revealFrameRef.current !== null && typeof window !== 'undefined') {
+      window.cancelAnimationFrame(revealFrameRef.current)
+      revealFrameRef.current = null
+    }
+
+    const previousModal = previousModalRef.current
+    if (modal === 'mission_brief') {
+      setMissionBriefFromLoading(previousModal === 'onboarding_loading')
+      setMissionBriefRevealVisible(false)
+      if (typeof window !== 'undefined') {
+        revealFrameRef.current = window.requestAnimationFrame(() => {
+          setMissionBriefRevealVisible(true)
+          revealFrameRef.current = null
+        })
+      } else {
+        setMissionBriefRevealVisible(true)
+      }
+    } else {
+      setMissionBriefRevealVisible(false)
+      setMissionBriefFromLoading(false)
+    }
+
+    previousModalRef.current = modal
+
+    return () => {
+      if (revealFrameRef.current !== null && typeof window !== 'undefined') {
+        window.cancelAnimationFrame(revealFrameRef.current)
+        revealFrameRef.current = null
+      }
+    }
+  }, [modal])
+
   const isBlockingModal = isBlockingLoading || isBlockingEntryGate
-  const backdropStyle = isBlockingModal ? { ...BACKDROP_STYLE, background: '#000' } : BACKDROP_STYLE
+  const missionBriefEnteringFromLoading =
+    isMissionBriefModal && (missionBriefFromLoading || previousModalRef.current === 'onboarding_loading')
+  const baseBackdropStyle = isBlockingModal ? { ...BACKDROP_STYLE, background: '#000' } : BACKDROP_STYLE
+  const backdropStyle =
+    missionBriefEnteringFromLoading && !missionBriefRevealVisible
+      ? { ...baseBackdropStyle, background: '#000' }
+      : baseBackdropStyle
   const modalStyle = isBlockingEntryGate
     ? {
         ...MODAL_STYLE,
@@ -2715,12 +3840,52 @@ export function ModalRoot(): ReactNode {
             width: 'min(920px, 94vw)',
             maxHeight: '92vh',
           }
+      : isDossierModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(920px, 94vw)',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            padding: 0,
+          }
+      : isDossierArticleModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(920px, 94vw)',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            padding: 0,
+          }
+      : isRelationshipMatrixModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(1120px, 96vw)',
+            maxHeight: '92vh',
+            overflow: 'hidden',
+            padding: '1.1rem',
+          }
+      : isMissionBriefModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(1120px, 96vw)',
+            maxHeight: '92vh',
+            overflow: 'hidden',
+            padding: 0,
+          }
       : MODAL_STYLE
   const modalContentClassName = `modal-content${isBlockingLoading ? ' modal-content-loading' : ''}${
     isBlockingEntryGate ? ' modal-content-entry-gate' : ''
   }${isTerritoryOverviewModal ? ' modal-content-territory-overview' : ''}${
     isZoneListModal ? ' modal-content-zone-list' : ''
-  }${isZoneDetailModal ? ' modal-content-zone-detail' : ''}`
+  }${isZoneDetailModal ? ' modal-content-zone-detail' : ''}${
+    isDossierModal ? ' modal-content-dossier' : ''
+  }${isDossierArticleModal ? ' modal-content-dossier-article' : ''}${
+    isRelationshipMatrixModal ? ' modal-content-relationship-matrix' : ''
+  }${
+    isMissionBriefModal ? ' modal-content-mission-brief' : ''
+  }${isMissionBriefModal && !missionBriefRevealVisible ? ' mission-brief-prep' : ''}${
+    isMissionBriefModal && missionBriefRevealVisible ? ' mission-brief-visible' : ''
+  }`
   const heading = modal === 'session_manager' && entryGateRequiresChoice ? 'Secure Access' : modalTitle(modal)
 
   if (modal === 'none') return null
@@ -2741,9 +3906,14 @@ export function ModalRoot(): ReactNode {
         style={modalStyle}
         onClick={(event) => event.stopPropagation()}
       >
-        {!isBlockingLoading && !isTerritoryOverviewModal && !isZoneModal && (
+        {!isBlockingLoading &&
+          !isTerritoryOverviewModal &&
+          !isZoneModal &&
+          !isMissionBriefModal &&
+          !isDossierModal &&
+          !isDossierArticleModal && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem' }}>{heading}</h2>
+            <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem', fontFamily: 'var(--font-sans)' }}>{heading}</h2>
             {!isBlockingModal && (
               <button
                 type="button"

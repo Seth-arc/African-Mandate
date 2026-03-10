@@ -1,0 +1,25 @@
+{
+  "dossierCardCount": 4,
+  "articles": [
+    {
+      "headline": "Wagner Group Contractors Spotted in Northern Burkina Faso",
+      "src": "/img/Wagner Group contractors have been observed operating in multiple Sahel nations since 2021.png",
+      "loaded": true
+    },
+    {
+      "headline": "ECOWAS Summit Postponed Indefinitely",
+      "src": "/img/ECOWAS headquarters in Abuja.png",
+      "loaded": true
+    },
+    {
+      "headline": "Sahel Climate Crisis Accelerating Food Insecurity",
+      "src": "/img/Drought conditions across the Sahel.png",
+      "loaded": true
+    },
+    {
+      "headline": "France Announces Final Military Withdrawal from Niger",
+      "src": "/img/French forces have maintained Sahel presence since 2013.png",
+      "loaded": true
+    }
+  ]
+}

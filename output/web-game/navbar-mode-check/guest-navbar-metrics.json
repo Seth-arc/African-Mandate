@@ -1,0 +1,10 @@
+{
+  "buttons": [
+    "Mission brief",
+    "Status report"
+  ],
+  "mode": "Guest mode",
+  "hasSessions": false,
+  "hasLeaderboard": false,
+  "hasMenuButton": false
+}

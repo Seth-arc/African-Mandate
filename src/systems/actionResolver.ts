@@ -16,6 +16,7 @@ import type {
   ActionLogEntry,
 } from '../state/types'
 import { GameError } from '../state/types'
+import { reconcileTerritoryStateFromZones } from '../state/territoryStateRuntime'
 
 const METRIC_KEYS = [
   'stability',
@@ -373,7 +374,7 @@ export function applyEffects(
     }
   }
 
-  return nextState
+  return reconcileTerritoryStateFromZones(nextState)
 }
 
 function deriveMetricDeltas(before: Metrics, after: Metrics): Partial<Metrics> {

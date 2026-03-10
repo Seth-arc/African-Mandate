@@ -1,0 +1,13 @@
+{
+  "missionBriefVisible": true,
+  "sectionTitles": [
+    "Situation Overview",
+    "Primary Objectives",
+    "Victory Conditions",
+    "Strategic Guidance",
+    "Strategic Hint"
+  ],
+  "objectiveCount": 4,
+  "victoryCount": 4,
+  "hasFooterButtons": true
+}

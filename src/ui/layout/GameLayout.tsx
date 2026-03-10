@@ -1,8 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore } from '../../state/uiStore'
 import type { TerritoryKey, TerritoryState } from '../../state/types'
-import { describeEndingOutcome, describeFailReason, getActFromTurn, isActTransition } from '../../systems/turnEngine'
+import { describeEndingOutcome, describeFailReason, isActTransition } from '../../systems/turnEngine'
 import { resolveZoneName } from '../../state/selectors'
 import { ResourcePanel } from '../panels/ResourcePanel'
 import { MetricsPanel } from '../panels/MetricsPanel'
@@ -26,21 +26,21 @@ function territoryFromState(
 export function GameLayout(): ReactNode {
   const state = useGameStore((s) => s.state)
   const session = useGameStore((s) => s.state.session)
-  const config = useGameStore((s) => s.state.config)
   const content = useGameStore((s) => s.state.content)
   const territoryState = useGameStore((s) => s.state.territory_state)
   const zoneState = useGameStore((s) => s.state.zone_state)
   const endingType = useGameStore((s) => s.state.ending_type)
   const failReason = useGameStore((s) => s.state.fail_reason)
-  const act = session ? getActFromTurn(session.turn) : 1
   const openModal = useUiStore((s) => s.openModal)
   const setSelectedZone = useUiStore((s) => s.setSelectedZone)
   const selectedTerritoryKey = useUiStore((s) => s.selectedTerritoryKey)
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const authMode = useSessionStore((s) => s.auth_mode)
-  const slots = config?.action_slots_per_turn ?? 3
+  const saveSessionState = useSessionStore((s) => s.saveState)
   const lastObservedTurnRef = useRef<number | null>(null)
   const shownOutcomeRef = useRef<boolean>(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const selectedZone = selectedZoneId ? zoneState?.[selectedZoneId] : undefined
   const effectiveTerritoryKey = selectedZone?.territory_key ?? selectedTerritoryKey
@@ -82,48 +82,136 @@ export function GameLayout(): ReactNode {
     }
   }, [endingType, openModal])
 
+  useEffect(() => {
+    if (!menuOpen || typeof window === 'undefined') return
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (!menuRef.current?.contains(target)) {
+        setMenuOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [menuOpen])
+
+  useEffect(() => {
+    if (authMode !== 'authenticated' && menuOpen) {
+      setMenuOpen(false)
+    }
+  }, [authMode, menuOpen])
+
+  const handleSaveSession = async (): Promise<void> => {
+    setMenuOpen(false)
+    try {
+      await saveSessionState(state, 'manual', 'manual')
+    } finally {
+      openModal('session_manager')
+    }
+  }
+
+  const handleLoadSession = (): void => {
+    setMenuOpen(false)
+    openModal('session_manager')
+  }
+
+  const handleSettings = (): void => {
+    setMenuOpen(false)
+    openModal('session_manager')
+  }
+
+  const handleTutorial = (): void => {
+    setMenuOpen(false)
+    openModal('mission_brief')
+  }
+
+  const handleCredits = (): void => {
+    setMenuOpen(false)
+    openModal('credits')
+  }
+
+  const handleExit = (): void => {
+    setMenuOpen(false)
+    if (typeof window !== 'undefined') {
+      window.location.href = window.location.pathname
+    }
+  }
+
   return (
     <div className="game-shell">
       <header className="game-header">
         <div className="game-header-left">
-          <div className="game-logo">
+          <a className="game-logo game-logo-link" href="/" aria-label="Return to landing page">
             <div className="game-logo-title">African Mandate</div>
             <div className="game-logo-subtitle">Sahel Arena</div>
-          </div>
-          <div className="game-act-turn">
-            <div>
-              <div className="game-act-label">Act</div>
-              <div className="game-act-number">{act}</div>
-            </div>
-            <div className="game-actions-remaining">
-              {session?.actions_remaining ?? 0} / {slots} actions
-            </div>
-          </div>
+          </a>
         </div>
         <nav className="game-header-nav">
-          <button type="button" className="game-nav-btn" id="btn-sessions" onClick={() => openModal('session_manager')}>
-            Sessions
-          </button>
           <button type="button" className="game-nav-btn" id="btn-mission-brief" onClick={() => openModal('mission_brief')}>
             Mission brief
-          </button>
-          <button type="button" className="game-nav-btn" id="btn-leaderboard" onClick={() => openModal('leaderboard')}>
-            Leaderboard
           </button>
           <button type="button" className="game-nav-btn" id="btn-status-report" onClick={() => openModal('status_report')}>
             Status report
           </button>
-          <span className="game-text-muted" style={{ alignSelf: 'center' }}>
-            {authMode === 'authenticated' ? 'Signed in' : 'Guest mode'}
-          </span>
+          {authMode === 'authenticated' ? (
+            <div className="game-menu" ref={menuRef}>
+              <button
+                type="button"
+                className="game-nav-btn game-menu-trigger"
+                id="btn-menu"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((current) => !current)}
+              >
+                Menu
+              </button>
+              {menuOpen && (
+                <div className="game-menu-dropdown" role="menu" aria-label="Account menu">
+                  <button type="button" className="game-menu-item" role="menuitem" onClick={() => void handleSaveSession()}>
+                    Save Session
+                  </button>
+                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleLoadSession}>
+                    Load Session
+                  </button>
+                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleSettings}>
+                    Settings
+                  </button>
+                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleTutorial}>
+                    Tutorial
+                  </button>
+                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleCredits}>
+                    Credits
+                  </button>
+                  <div className="game-menu-divider" />
+                  <button type="button" className="game-menu-item danger" role="menuitem" onClick={handleExit}>
+                    Exit
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <span className="game-mode-status">Guest mode</span>
+          )}
         </nav>
       </header>
 
       <main className="game-main">
         <aside className="sidebar-left">
+          <TurnProgressPanel />
           <ResourcePanel />
           <MetricsPanel />
-          <TurnProgressPanel />
         </aside>
 
         <div className="game-center">
