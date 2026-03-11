@@ -669,6 +669,20 @@
   opacity: 0;
 }
 
+.entry-flow-veil {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 990;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.entry-flow-veil.is-active {
+  opacity: 1;
+}
+
 .interface-reveal-veil.is-active {
   animation: interface-reveal-veil 0.76s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -2939,6 +2953,7 @@
     onboarding-loading-video-in 0.72s cubic-bezier(0.22, 1, 0.36, 1) both,
     onboarding-loading-video-drift 7s ease-in-out 0.72s infinite alternate;
   transition: transform 0.52s ease, filter 0.52s ease, opacity 0.52s ease;
+  will-change: transform, filter, opacity;
 }
 
 .onboarding-loading-shell:not(.is-ready) .onboarding-loading-video {
@@ -2950,18 +2965,23 @@
 }
 
 .onboarding-loading-shell.is-exiting {
-  opacity: 0;
-  transform: scale(1.012);
-  filter: blur(1.6px);
+  opacity: 1;
+  transform: scale(1.003);
+  filter: none;
 }
 
 .onboarding-loading-shell.is-exiting::before {
   opacity: 1;
+  background: #000;
+  transition: opacity 0.2s ease, background 0.2s ease;
 }
 
 .onboarding-loading-shell.is-exiting .onboarding-loading-video {
-  transform: scale(1.055);
-  filter: brightness(0.72) saturate(0.8);
+  animation: none !important;
+  opacity: 0;
+  transform: scale(1.02) translate3d(0, 0, 0);
+  filter: brightness(0.64) saturate(0.74);
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.18s ease;
 }
 
 .onboarding-loading-content {

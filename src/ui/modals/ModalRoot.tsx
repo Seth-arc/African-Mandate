@@ -3751,12 +3751,14 @@ function ActionConfigBody(): ReactNode {
 }
 
 function OnboardingLoadingBody(): ReactNode {
+  const LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
   const closeModal = useUiStore((s) => s.closeModal)
   const [isReady, setIsReady] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const exitTimerRef = useRef<number | null>(null)
   const readyFallbackTimerRef = useRef<number | null>(null)
+  const exitStartedRef = useRef(false)
 
   const markReady = useCallback(() => {
     setIsReady((current) => (current ? current : true))
@@ -3771,6 +3773,10 @@ function OnboardingLoadingBody(): ReactNode {
       readyFallbackTimerRef.current = window.setTimeout(markReady, 420)
     }
 
+    if (video) {
+      void video.play().catch(() => undefined)
+    }
+
     return () => {
       if (exitTimerRef.current !== null && typeof window !== 'undefined') {
         window.clearTimeout(exitTimerRef.current)
@@ -3783,8 +3789,10 @@ function OnboardingLoadingBody(): ReactNode {
     }
   }, [markReady])
 
-  const beginRevealExit = (): void => {
-    if (isExiting) return
+  const beginRevealExit = useCallback((): void => {
+    if (exitStartedRef.current) return
+    exitStartedRef.current = true
+
     setIsExiting(true)
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
@@ -3803,19 +3811,21 @@ function OnboardingLoadingBody(): ReactNode {
     exitTimerRef.current = window.setTimeout(() => {
       closeModal()
       exitTimerRef.current = null
-    }, 420)
-  }
+    }, 220)
+  }, [closeModal])
 
   return (
     <div className={`onboarding-loading-shell${isReady ? ' is-ready' : ''}${isExiting ? ' is-exiting' : ''}`}>
       <video
         ref={videoRef}
         className="onboarding-loading-video"
+        src={LOADING_VIDEO_SRC}
         autoPlay
         muted
         playsInline
         preload="auto"
         onPlaying={markReady}
+        onLoadedData={markReady}
         onCanPlay={() => {
           if (typeof window !== 'undefined' && readyFallbackTimerRef.current === null) {
             readyFallbackTimerRef.current = window.setTimeout(markReady, 220)
@@ -3823,9 +3833,7 @@ function OnboardingLoadingBody(): ReactNode {
         }}
         onEnded={beginRevealExit}
         onError={beginRevealExit}
-      >
-        <source src="/assets/vid/pre-interface%20loading_video.mp4" type="video/mp4" />
-      </video>
+      />
     </div>
   )
 }
@@ -3931,6 +3939,11 @@ export function ModalRoot(): ReactNode {
         width: 'min(560px, 92vw)',
         maxHeight: '90vh',
         overflow: 'hidden',
+        background: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        padding: 0,
+        borderRadius: 0,
       }
       : isBlockingLoading
       ? {

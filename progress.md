@@ -1231,3 +1231,139 @@ pm run build passed.
 - Validation:
   - `npm run typecheck` passed.
   - `npm run build` passed.
+- New issue: during login->pre-interface loading transition, gameplay UI was visible briefly.
+- Fixed entry-flow race and added visual guard:
+  - `src/app/App.tsx`: set `entryFlowPending` before opening `session_manager`.
+  - `src/app/App.tsx`: deferred clearing `entryFlowPending` until the same RAF callback that opens `onboarding_loading` (no pending=false gap frame).
+  - `src/app/App.tsx`: added `entryFlowVeilActive` and rendered `entry-flow-veil` while entry flow is pending and loading modal has not yet taken over.
+  - `src/styles/layout.css`: added `.entry-flow-veil` (`z-index: 990`, solid black, fade transition).
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- Follow-up issue: still seeing UI glitch between login completion and pre-interface loading video.
+- Added pre-entry blackout guard in `src/app/App.tsx`:
+  - New `preEntryFlowVeilActive` condition covers first-paint auth callback window (`body.game-active` + `!entryGateActive` + `modal === 'none'`).
+  - `entryFlowVeilActive` now combines this pre-entry guard with existing pending-flow guard.
+- Existing `entry-flow-veil` CSS in `src/styles/layout.css` remains the visual blocker.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New issue: scrollbar appears just before login modal shows.
+- Root cause: `completeIntro()` released `intro-playing` overflow lock before `activateGameInterface()` executed (~420ms window), allowing landing-page scroll height to briefly reassert and show scrollbar.
+- Fixes in `index.html`:
+  - Added `html.game-active` overflow lock alongside `body.game-active`.
+  - `activateGameInterface()` now sets `document.documentElement.classList.add('game-active')`.
+  - Moved `setIntroPlaybackLock(false)` to execute only after `activateGameInterface()` in both normal and fallback intro-complete paths.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New issue: jitter at the end of `pre-interface loading_video.mp4`.
+- End-of-video handoff smoothing changes:
+  - `src/ui/modals/ModalRoot.tsx` (`OnboardingLoadingBody`):
+    - added `exitStartedRef` guard to prevent duplicate exit triggers,
+    - added `onTimeUpdate` pre-exit trigger when remaining video time <= 0.24s,
+    - pauses video on exit start to avoid last-frame oscillation,
+    - reduced close delay from 420ms to 360ms for cleaner handoff.
+  - `src/styles/layout.css`:
+    - added `will-change` to `.onboarding-loading-video`,
+    - in exit state, disabled video animation (`animation: none !important`) to stop drift jitter,
+    - simplified shell exit transform/filter (removed blur),
+    - aligned exit video transform/transition for stable fade-out.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- Follow-up issue: loading video stopped playing after jitter fix.
+- Adjusted `OnboardingLoadingBody` playback path in `src/ui/modals/ModalRoot.tsx`:
+  - removed aggressive `onTimeUpdate` near-end exit trigger,
+  - removed pause-on-exit behavior that could cut playback,
+  - added explicit `video.play()` attempt on mount (`catch` ignored safely),
+  - added `onLoadedData={markReady}` so visibility no longer depends solely on `onPlaying`/`onCanPlay` timing.
+- Kept duplicate-exit guard (`exitStartedRef`) and existing exit animation tuning.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- Critical fix for loading video not playing:
+  - Diagnosed asset issue: `public/assets/vid/pre-interface loading_video.mp4` was 0 bytes.
+  - Added runtime fallback in `src/ui/modals/ModalRoot.tsx` (`OnboardingLoadingBody`): if primary pre-interface video errors, switch to `/assets/vid/African_Mandate_opening_scene.mp4` instead of immediately exiting.
+  - Added reliable load/play hooks on source changes (`video.play()` attempt + `onLoadedData` readiness).
+  - Restored the pre-interface file by copying a valid MP4 over the broken 0-byte file:
+    - `public/assets/vid/pre-interface loading_video.mp4` now 3,362,693 bytes.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed after code and asset fix.
+- New issue: loading video end looked "stuck" because final paused frame remained visible during fade-out.
+- Exit sequence refinement:
+  - `src/ui/modals/ModalRoot.tsx`: reduced loading modal close delay from 360ms -> 220ms.
+  - `src/styles/layout.css`:
+    - exit state now performs a fast video-to-black dissolve,
+    - `.onboarding-loading-shell.is-exiting` no longer fades whole shell opacity to 0 first,
+    - `.onboarding-loading-shell.is-exiting::before` now forces solid black overlay,
+    - `.onboarding-loading-shell.is-exiting .onboarding-loading-video` now fades opacity to 0 quickly (with matching transform/filter timing).
+- Result: the last paused frame is no longer held on screen before transition.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- User reported wrong post-login video (opening scene shown instead of pre-interface loading video).
+- Root cause found:
+  - `public/assets/vid/pre-interface loading_video.mp4` had previously been replaced with opening-scene content during earlier triage.
+- Fixes applied:
+  - Restored `public/assets/vid/pre-interface loading_video.mp4` from git tracked version (size now 5,189,405 bytes).
+  - Removed fallback-to-opening-scene logic from `OnboardingLoadingBody` in `src/ui/modals/ModalRoot.tsx`; loader now strictly uses `/assets/vid/pre-interface%20loading_video.mp4`.
+  - Kept robust autoplay/readiness hooks (`video.play()` attempt + `onLoadedData` + `onCanPlay`).
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New request: add "African Mandate: Sahel Arena" heading above login modal.
+- Updated entry-gate auth modal markup in `src/ui/modals/SessionManagerBody.tsx`:
+  - inserted `<h2 className="session-auth-game-title">African Mandate: Sahel Arena</h2>` above `.session-auth-card` within `.session-auth-shell`.
+- Added styling in `src/styles/layout.css`:
+  - `.session-auth-shell` now stacks content vertically and centers title + card.
+  - new `.session-auth-game-title` style (gold, uppercase, centered, letter-spaced) matching modal visual language.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- User clarification: title must be above (not inside) login modal and use landing-page heading font.
+- Changes applied:
+  - Removed in-card heading from `src/ui/modals/SessionManagerBody.tsx`.
+  - Added above-modal heading in `src/ui/modals/ModalRoot.tsx` for entry-gate mode:
+    - renders `<h1 class="entry-gate-title-above">African Mandate: Sahel Arena</h1>` as sibling above modal content.
+    - entry-gate backdrop now stacks heading + modal vertically via `resolvedBackdropStyle` (`flexDirection: column`, spacing/padding).
+  - Added new style in `src/styles/layout.css`:
+    - `.entry-gate-title-above` uses `font-family: 'Playfair Display', serif` to match landing-page font.
+    - centered, larger display sizing and subtle shadow for readability over blackout backdrop.
+  - Restored `.session-auth-shell` to simple centered card layout now that title is no longer inside the card.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- Follow-up: entry-gate heading was not rendering in Playfair Display due to global `.game-shell h1 { font-family: var(--font-sans) !important; }` override.
+- Fix: forced Playfair on `.entry-gate-title-above` with `font-family: 'Playfair Display', serif !important;` in `src/styles/layout.css`.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- User requested removal of heading.
+- Reverted entry-gate title feature entirely:
+  - `src/ui/modals/ModalRoot.tsx`: removed above-modal `<h1 class="entry-gate-title-above">...` render.
+  - `src/ui/modals/ModalRoot.tsx`: removed entry-gate-specific backdrop layout override and restored `style={backdropStyle}`.
+  - `src/ui/modals/ModalRoot.tsx`: removed now-unused `CSSProperties` import.
+  - `src/styles/layout.css`: removed `.entry-gate-title-above` style block.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New request: remove Google sign-in option.
+- Updated `src/ui/modals/SessionManagerBody.tsx`:
+  - removed Google-specific divider + button (`Continue with Google`) from entry-gate card.
+  - changed `handleSignIn` signature to only `'signup' | 'login'`.
+  - removed Google-specific error copy; now uses generic `Sign-up failed.` / `Sign-in failed.`.
+  - replaced `Sign in with Google` CTA in guest panel with neutral `Sign in`.
+  - updated `Enable cloud save` CTA to use `handleSignIn('login')`.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.
+- New request: make login modal container invisible so credentials appear directly on black screen.
+- Updated entry-gate modal container style in `src/ui/modals/ModalRoot.tsx` (`isBlockingEntryGate` branch):
+  - `background: transparent`, `border: none`, `boxShadow: none`, `padding: 0`, `borderRadius: 0`.
+  - retained sizing and overflow controls.
+- Result: outer modal panel chrome is removed while auth form controls remain usable over black backdrop.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed.

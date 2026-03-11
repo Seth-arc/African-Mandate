@@ -51,8 +51,8 @@ function App(): ReactNode {
       setInterfaceRevealActive(false)
       autoTourTriggeredRef.current = false
       beginEntryGate()
-      openModal('session_manager')
       setEntryFlowPending(true)
+      openModal('session_manager')
     }
 
     window.addEventListener('african-mandate:start-flow', handleStartFlow)
@@ -73,14 +73,17 @@ function App(): ReactNode {
     if (modal !== 'session_manager') return
 
     if (typeof window === 'undefined') {
-      setEntryFlowPending(false)
       openModal('onboarding_loading')
+      setEntryFlowPending(false)
       return
     }
-    window.requestAnimationFrame(() => {
+    const frame = window.requestAnimationFrame(() => {
       openModal('onboarding_loading')
+      setEntryFlowPending(false)
     })
-    setEntryFlowPending(false)
+    return () => {
+      window.cancelAnimationFrame(frame)
+    }
   }, [entryFlowPending, entryGateConfirmed, modal, openModal])
 
   useEffect(() => {
@@ -88,9 +91,16 @@ function App(): ReactNode {
     if (!entryGateConfirmed) return
     if (modal !== 'none') return
 
-    setEntryFlowPending(false)
     openModal('onboarding_loading')
+    setEntryFlowPending(false)
   }, [entryFlowPending, entryGateConfirmed, modal, openModal])
+
+  const preEntryFlowVeilActive =
+    typeof document !== 'undefined' &&
+    document.body.classList.contains('game-active') &&
+    !entryGateActive &&
+    modal === 'none'
+  const entryFlowVeilActive = preEntryFlowVeilActive || (entryFlowPending && modal !== 'onboarding_loading')
 
   useEffect(() => {
     const previousModal = previousModalRef.current
@@ -167,6 +177,7 @@ function App(): ReactNode {
     <ErrorBoundary>
       <>
         <GameLayout />
+        <div className={`entry-flow-veil${entryFlowVeilActive ? ' is-active' : ''}`} aria-hidden="true" />
         <div className={`interface-reveal-veil${interfaceRevealActive ? ' is-active' : ''}`} aria-hidden="true" />
         <DemoTourOverlay />
       </>

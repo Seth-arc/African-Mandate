@@ -60,16 +60,12 @@ export function SessionManagerBody(): ReactNode {
     }
   }
 
-  const handleSignIn = async (flow: 'signup' | 'login' | 'google' = 'google'): Promise<void> => {
+  const handleSignIn = async (flow: 'signup' | 'login' = 'login'): Promise<void> => {
     setStatusMessage(null)
     try {
       await sessionStore.signInWithGoogle()
     } catch {
-      if (flow === 'google') {
-        setStatusMessage('Google sign-in failed.')
-      } else {
-        setStatusMessage('Sign-in failed. Use Google authentication in this build.')
-      }
+      setStatusMessage(flow === 'signup' ? 'Sign-up failed.' : 'Sign-in failed.')
     }
   }
 
@@ -137,20 +133,6 @@ export function SessionManagerBody(): ReactNode {
               </button>
             </div>
 
-            <div className="session-auth-divider">
-              <span>Or sign up with</span>
-            </div>
-
-            <button
-              type="button"
-              className="session-auth-google"
-              onClick={() => void handleSignIn('google')}
-              disabled={sessionStore.loading}
-            >
-              <span className="session-auth-google-icon">G</span>
-              Continue with Google
-            </button>
-
             <button
               type="button"
               className="session-auth-guest"
@@ -184,8 +166,8 @@ export function SessionManagerBody(): ReactNode {
               <p className="actor-profile-text">
                 Guest mode is playable, but session save/load is disabled. Sign in to enable persistence.
               </p>
-              <button type="button" className="action-config-secondary" onClick={() => void handleSignIn('google')}>
-                Sign in with Google
+              <button type="button" className="action-config-secondary" onClick={() => void handleSignIn('login')}>
+                Sign in
               </button>
             </>
           )}
@@ -271,7 +253,7 @@ export function SessionManagerBody(): ReactNode {
             <button type="button" className="action-config-secondary" onClick={handleNewCampaign}>
               New campaign
             </button>
-            <button type="button" className="action-config-confirm" onClick={() => void handleSignIn('google')}>
+            <button type="button" className="action-config-confirm" onClick={() => void handleSignIn('login')}>
               Enable cloud save
             </button>
           </div>

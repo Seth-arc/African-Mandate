@@ -74,6 +74,7 @@
             overflow: hidden;
         }
 
+        html.game-active,
         body.game-active {
             overflow: hidden;
         }
@@ -1508,6 +1509,7 @@
 
         function activateGameInterface() {
             document.body.classList.add('game-active');
+            document.documentElement.classList.add('game-active');
             if (landingShell) {
                 landingShell.classList.remove('entering');
             }
@@ -1519,13 +1521,13 @@
             if (introCompleted) return;
             introCompleted = true;
             introTransitionInProgress = false;
-            setIntroPlaybackLock(false);
             setEnterButtonLoading(false);
             setIntroLoadingVisible(false);
 
             if (!introVideoOverlay || !introVideo) {
                 activateGameInterface();
                 lenis.stop();
+                setIntroPlaybackLock(false);
                 return;
             }
 
@@ -1536,6 +1538,7 @@
             window.setTimeout(() => {
                 activateGameInterface();
                 lenis.stop();
+                setIntroPlaybackLock(false);
 
                 window.setTimeout(() => {
                     introVideoOverlay.classList.add('leaving');
