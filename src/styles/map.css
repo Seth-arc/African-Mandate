@@ -55,6 +55,10 @@
   pointer-events: none;
 }
 
+.leaflet-pane.map-intel-pane {
+  z-index: 640;
+}
+
 /* Keep territory/city labels legible above tactical fills. */
 .map-top-labels-layer .leaflet-tile {
   opacity: 0.95;
@@ -129,6 +133,18 @@
 .map-zone--crisis {
   transition: fill-opacity var(--transition-default),
               stroke-width var(--transition-fast);
+}
+
+.map-zone--intel-active {
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.22));
+}
+
+.map-zone--intel-unread {
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.36));
+}
+
+.map-zone--intel-overlay {
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.28));
 }
 
 /* Hatch pattern overlays for zone types */
@@ -327,6 +343,58 @@
   }
 }
 
+.map-intel-pin-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-intel-pin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.58);
+  background: rgba(12, 14, 20, 0.88);
+  box-shadow: 0 0 0 1px rgba(12, 14, 20, 0.66), 0 0 8px rgba(212, 175, 55, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.map-intel-pin .map-intel-pin-core {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.map-intel-pin.is-unread {
+  animation: map-intel-pin-pulse 1.6s ease-in-out infinite;
+}
+
+.map-intel-pin.is-urgent {
+  border-color: rgba(207, 85, 85, 0.72);
+  box-shadow: 0 0 0 1px rgba(12, 14, 20, 0.66), 0 0 10px rgba(207, 85, 85, 0.34);
+}
+
+.map-intel-pin.is-urgent .map-intel-pin-core {
+  background: var(--red-bright);
+}
+
+.map-intel-pin.is-regional {
+  border-style: dashed;
+}
+
+@keyframes map-intel-pin-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
+
 /* ═══════════════════════════════════════════════
    INCIDENT MARKERS
    ═══════════════════════════════════════════════ */
@@ -448,6 +516,13 @@
   color: var(--purple);
   font-size: 10px;
   font-weight: 500;
+}
+
+.map-tooltip-intel {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .map-neighbour-tooltip {

@@ -1,0 +1,22 @@
+{
+  "actionTriggered": true,
+  "before": {
+    "markerCount": 0,
+    "unreadMarkerCount": 0,
+    "urgentMarkerCount": 0,
+    "regionalMarkerCount": 0,
+    "activeZoneClassCount": 0,
+    "unreadZoneClassCount": 0,
+    "intelFeedUnreadBadge": null
+  },
+  "after": {
+    "markerCount": 1,
+    "unreadMarkerCount": 1,
+    "urgentMarkerCount": 1,
+    "regionalMarkerCount": 0,
+    "activeZoneClassCount": 0,
+    "unreadZoneClassCount": 0,
+    "intelFeedUnreadBadge": null
+  },
+  "intelModalOpened": false
+}

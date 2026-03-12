@@ -1,0 +1,808 @@
+Thanks for joining me once again
+as we talk about game design.
+So far, we've talked a lot
+about the mechanics side of game design,
+but there is this other area -
+that of the story,
+the plot,
+the narrative.
+If you remember 3 to 15 and tic tac toe,
+those are mechanically
+the same game in the abstract.
+They're different
+themings
+made them feel
+very different to play though.
+Or if you prefer,
+you could take a high fantasy game
+with dragons and wizards
+and fireballs and re-theme
+it to science fiction
+where instead of dragons
+there are giant battlecruiser spaceships,
+instead of wizards throwing fireballs,
+you have aliens with laser weapons
+and it all works the same,
+but it can feel different.
+So let's talk about story.
+As I've said before, games
+are an interactive medium.
+The concept of player choices
+and decision-making
+are what generally defined games
+as distinct from things
+like books or movies.
+You might think that telling stories
+in games needs special techniques
+to make the stories interactive
+and make sure that players have a choice
+not just in the mechanics,
+but in the narrative too.
+And we do have techniques for that.
+We'll cover those in the next module.
+But many games have linear stories
+and focus on decisions
+with mechanics alone
+and even with stories that have choice,
+each of those choice
+paths still has to make sense
+as a linear story.
+So to understand
+all that,
+you have to understand the fundamentals
+of storytelling in general.
+As far as writing stories go,
+one of the longest
+lasting books is “Poetics” by Aristotle.
+Yes, that Aristotle.
+So we're talking about a book
+that's very, very old.
+And unless you speak ancient Greek,
+if you were going to read this,
+you would need to find a translation
+to read it.
+Despite the name,
+it has nothing to do with poetry.
+It's about writing stories.
+Specifically, stories
+that take place in the real world
+can still be fiction,
+but nothing supernatural.
+You've probably heard some of the advice
+that comes from this before.
+If you've ever heard
+a story is supposed to have a beginning,
+a middle, and an end,
+that was from “Poetics”.
+Really what he meant by beginning,
+middle, and end is to introduce
+the concept of the three
+act story structure,
+which is common in stories even today.
+Basically, in the first act you introduce
+what's going on in the world,
+the setting,
+the important characters,
+and it ends with the main
+conflict of the story identified
+and the audience understanding
+what this story is going to be about.
+It's usually about the first quarter
+of the story in life.
+Act two is the largest portion,
+about half the length of the story,
+and involves
+the main character
+struggling with the main conflict,
+whatever it is, and ends
+when the main character
+finally realizes
+what they have to do to resolve it.
+In Act three,
+the last quarter of the story,
+the conflict is resolved
+one way or another.
+Either the main character
+permanently fixes the problem
+or is somehow maneuvered into a situation
+where the problem can never be fixed.
+I've heard this described before
+as in act one,
+you get the hero up the tree.
+In act two, you throw rocks at them.
+In an act three, they come down.
+Another thing Aristotle complained
+about with these stories of his day
+is that so
+often you'd see this unrelated
+series of events.
+This happens and then that happens.
+And that other thing happens.
+It happens in time order,
+but there's no connection,
+there's no cause and effect.
+And that generally
+feels like weak writing
+when it happens.
+Tends to create a much stronger story,
+if individual scenes
+logically follow each other.
+This happens,
+and then because of that,
+this other thing happens.
+And then as a consequence of that,
+this other thing happens.
+This is especially important
+for the protagonist,
+the main character of the story.
+Ideally, everything that happens to
+the main character should be caused
+by that character's choices.
+The main character takes an action
+and then the audience gets
+to see the plausible
+and inevitable result of that action.
+It helps the audience to pity
+and empathize with the hero.
+Because if something bad
+happens to the hero,
+it's because they displayed
+human weakness
+of a kind
+that we as the audience can appreciate
+as fellow humans ourselves.
+We might not personally like or agree
+with what the hero did,
+but we can at least understand
+why they did it
+and how it led to a bad outcome.
+Aristotle really hated
+Deus Ex Machina endings
+that literally means God by a machine
+because a lot of ancient
+Greek stage plays would end
+act two
+with the hero in some kind
+of apparently untenable position
+where the audience would wonder, okay,
+how can they possibly get out of this?
+And then the stagehands
+would move
+image of a Greek God on a crane
+to fly over the stage
+and magically fix everything
+because they're a God,
+and they can do that.
+Even if we don't have a literal
+God on a literal machine
+today,
+there are still plenty of stories today
+that end this way too.
+Think if you can remember any stories
+that ended with the hero
+about to be defeated
+and then some other super
+strong character
+came out of nowhere
+and saved them, or any stories
+that had the hero in a really bad place,
+and then they woke up
+and it was all just a bad dream.
+And you can see why now,
+why Aristotle hated this
+Deus Ex Machina ending so much.
+Because the hero had absolutely nothing
+to do with the resolution
+of the main conflict.
+The hero isn't the cause of the ending.
+They have no control
+and no agency over the story
+of what happens to them
+and those around them.
+You can see two applications of this
+in games.
+One is just
+don't end your game with lazy writing,
+but the other is that this explains
+why it can be so frustrating as a player
+when something big happens
+in a non interactive cutscene
+like a major character dying, right?
+The one time that you as a player
+don't have any choice or any agency,
+that's the one time
+that the plot advances.
+And since you are supposedly
+the one controlling the main character,
+it can feel a bit
+like you've been cheated.
+The last big takeaway
+I want to mention from “Poetics”
+is that Aristotle defined a stage play.
+He was writing about stage plays
+as having these six elements, and yeah,
+he was specifically writing
+about stories and stage
+plays here, not other media
+like books or games or movies,
+but you'll see that
+a lot of these carry over
+between different media.
+So the first is Plot,
+which is basically
+what we think
+of as the story,
+the narrative that describes
+what actually happens.
+The next is Theme,
+that's the “Why”, the meaning behind it all.
+What is the audience
+supposed to take away
+from this experience?
+Why did this happen? What's the message?
+Then there are the Characters,
+as in all of the individual roles
+within the story.
+It's pretty straightforward.
+Diction is the word
+used for the spoken dialogue
+of the characters, and for stage plays,
+this includes
+both the words themselves
+and also the actor’s
+delivery of those words.
+Rhythm is a strange word to use here
+since there isn't necessarily any music,
+but he was referring
+to the rhythm of human speech,
+like the patterns of what syllables
+are stressed or unstressed
+that can make normal speech
+feel more like song.
+If you've heard rap music,
+that's a great example
+of how spoken language
+can have a rhythm to it,
+even if there aren't
+any musical instruments involved.
+Poetry often does this too.
+And lastly, spectacle, which is the word
+he used to describe
+basically special effects and eye candy.
+Yes.
+So in ancient Greece,
+they didn't
+exactly have massive explosions
+or holograms or lasers or anything,
+but they did
+still have their own version of what
+we might call special effects today.
+And Aristotle
+totally was complaining
+thousands of years ago
+that too many plays were all spectacle
+and nothing else and warned against that.
+So today we would probably say,
+don't expect to hide a bad game
+and a bad story behind
+really cool graphics.
+It will not save you.
+So that brings us
+to this other book, “Story”,
+which is more or less
+a retelling of “Poetics”,
+but written today for screenwriters
+who are writing scripts to movies.
+Since “Story” wasn't written 2000 years ago
+and it references movies
+you might have actually heard of,
+it's a lot easier to read than “Poetics”,
+so you don't have to read
+either one of these.
+But if you had to read
+one of the two, I'd go for “Story”.
+It's much easier, it's
+more immediately useful.
+It is a big book,
+but it's written
+in a conversational style,
+so it's not as hard to read.
+One of the things
+the author says over and over again
+is that writing
+a story is not about following a formula.
+It's about understanding
+in common forms.
+You don't write
+a stage play or a movie
+by filling in the blanks in a template,
+but you should understand
+the commonalities
+between different stories,
+so that you can make one that is unique.
+The general form
+that most stories take goes
+something like this.
+First,
+there's some kind of inciting incident
+that happens,
+basically the event that kicks
+off the main conflict.
+This is where the protagonist,
+the main character,
+realizes that they have a goal
+of some kind.
+Then the protagonist tries
+to reach that goal, but a gap opens up.
+Now, this doesn't necessarily
+mean a physical gap.
+It could be,
+but usually just means
+they run into some kind of obstacle
+that prevents them from immediately
+reaching their goal.
+Next, the protagonist tries
+to cross that gap.
+That is,
+they come up with a plan
+to remove the obstacle or work around it
+so that they can reach the goal anyway.
+And when they put that plan into action,
+one of two things happens.
+Either they fail
+because the gap was actually a bit bigger
+than they realized,
+so their plan doesn't work, or
+you know,
+and then they have a
+larger gap to deal with,
+or they succeed
+and a new obstacle appears
+and we keep going like this
+with the main character
+crossing gaps or failing to cross gaps
+and having to reassess
+in order to cross it again,
+and then the gaps continuing to widen
+or new ones appearing
+until the protagonist
+reaches the final gap,
+the final challenge,
+and then irreversibly either
+crosses it and completes their goal
+or it becomes clear
+that the final gap can never be crossed,
+and they have permanently failed.
+In either case,
+the main conflict is resolved
+and the story ends.
+And in a typical three act structure,
+there are two new gaps that appear,
+which are called reversals
+between the act.
+So one reversal at the end of act one,
+and another reversal
+at the end of act two.
+Another big point made in
+this book is
+that stories are at their heart
+about change.
+Every scene in a story
+should end
+in a different state than it began.
+And if you have a scene
+where nothing has changed,
+consider removing it from your story.
+Think of it like this.
+Imagine if someone was going
+to make a two hour movie
+about your life so far.
+Yes, your personal life.
+You've been alive
+for longer than 2 hours.
+So some things have happened to you
+that would not be shown,
+at least not in real time.
+But if you think about it,
+an awful lot of our lives
+are really just grind anyway.
+You know,
+if you were making
+this movie of your life,
+would you really show the boring parts
+that are the same every day?
+Or the parts were just the parts
+where something big happens
+and changes in your life?
+Probably you’d show the changes
+and the audience can assume
+that everything
+in between scenes is boring,
+normal stuff.
+This explains
+why some games can create very strong
+emergent narratives,
+even if they don't have
+a strong embedded story.
+Because games are about players
+making decisions
+that cause a change in the game state.
+Games have an uncertain outcome,
+and it's only at the end of the game
+that the goal of the game is met
+or not met
+in some kind of irreversible manner.
+Right?
+All of the elements of a story exist
+in the play of a game.
+Now, McKee in this book
+also makes a distinction
+between character and characterization.
+Here we're talking about the nature
+of what makes one of the characters
+in the story
+who they are
+and distinct
+from all the other characters.
+What he calls characterization
+are the surface elements:
+how tall a person is,
+what do they look like,
+what color is their hair,
+how much can they bench press?
+What stats
+would be on their character sheet?
+You might need to know this stuff,
+but it doesn't really tell
+you much about who they are.
+What McKee
+calls their character,
+as in their moral character.
+The character of a person isn't something
+you can tell the audience,
+it’s something you have to show them.
+If someone is the type of person
+who would willingly run
+into a burning building to save a baby,
+even though they're
+risking their own life,
+you have to actually put them
+in that situation
+and show the audience that they’d do it.
+You could say
+that you're the type of person
+who'd go into that building,
+but until you actually do,
+it's just talk.
+So with character,
+to show character,
+you have to actually put the person
+in conflict,
+that forces them to show that character.
+Now, this gets a bit harder with games.
+There are two ways to show a thing,
+either during a non interactive cut scene
+where the player has no agency
+or in gameplay
+where the player is making the decisions.
+If it happens in a cut scene,
+you can certainly show
+a person's character,
+you know, their moral character,
+but that also means
+the player isn't in control of the story,
+even though they're supposed to be
+controlling the main characters.
+So there is an internal conflict there.
+If it happens during play, though,
+then the player can choose
+what kind of character
+the protagonist has.
+But there's still a disconnect
+between the protagonist and the player
+because the stakes are different.
+For the protagonist inside the game,
+the choice they're making
+may be one of life and death,
+but in the real world,
+the human player isn't
+under a real threat at all.
+This is play, it's only a game,
+the player is safe.
+They have nothing in
+the real world to lose.
+So the player is not making choices
+that reflect their own
+personal character,
+which makes it really obvious
+that there's a gap between the player
+and the protagonist,
+and it reminds the player
+that they are not actually the same
+as the character they're controlling.
+So we end up with the same core problem
+as if things happened during a cut scene.
+Right? Player does not feel like
+they are character.
+Now, another book that most game
+writers are familiar
+with is Joseph Campbell's
+“Hero of a Thousand Faces”.
+This one is a little bit different
+than the other two in that
+it is a study
+specifically about hero
+stories that appear in myths
+and legends across cultures
+looking at commonalities
+between all these different stories.
+This is definitely not a perfect work,
+but it does provide a form
+for this kind of story,
+which he calls the monomyth,
+or the hero's journey.
+It starts with the protagonist
+as an everyday person,
+not a hero yet,
+just an everyday person
+in an everyday world,
+when they receive
+some kind of call
+to adventure, a reason
+to leave their normal life.
+They may not, may
+or may not accept this call.
+They might reject it.
+If they do reject the call to adventure,
+then circumstances will force them
+to go on the journey anyway,
+such as maybe they hide in their homeland
+and then their homeland is attacked
+and forces them to flee for their lives.
+Then they meet up
+with some other characters.
+Often one of them is a mentor
+who may give them gifts or assistance
+to help them on their journey.
+The protagonist
+then crosses a threshold or barrier.
+This may be a physical barrier
+or just a metaphor,
+but it represents a change
+from leaving their known world
+to the unknown.
+Sometimes it symbolizes
+the transition between the living world
+and the underworld of death and decay.
+The threshold is often guarded
+by some kind of guardian,
+which must be defeated
+or otherwise bypassed.
+After crossing that first barrier,
+the protagonist then goes through
+what is called the Trail of Trials,
+a series of challenges
+leading them on their quest.
+Often
+they'll meet other archetypal characters,
+some helpful, some not.
+They may need a mentor.
+They may need a trickster
+or temptress
+that may cause them to go
+the wrong way or fall into a trap.
+The important thing in this section
+is that the protagonist
+isn't just overcoming challenges,
+they're actually growing as a person
+and becoming an actual hero.
+This doesn't just mean leveling up
+with experienced points
+and cool loot drops.
+It means the main character
+understanding that
+their quest is bigger than they are,
+and that despite them
+being only one person
+and relatively powerless,
+they are representing the hopes
+and dreams of everyone else
+that they know and love.
+And they are performing
+acts of selflessness
+and putting themselves in danger
+because there are
+things more important
+than their own personal safety.
+These trials then prepare them
+for an ultimate confrontation.
+And at the end,
+the protagonist,
+who has now grown into a true hero,
+confronts the great evil, triumphs over it,
+and takes the prize that they came for.
+This prize might be an actual trophy
+or a magical artifact or powerful object
+could be a person
+they're rescuing,
+or it might be something more abstract,
+like a piece of knowledge.
+Then at this point,
+the hero still has to get out
+and return with the prize to their home.
+They are now greater than they were.
+They’ve transformed into a hero,
+but they still have to get back.
+And that's not always trivial.
+If they've made compromises,
+bargains or other mistakes
+along the way to get to where they are,
+this is where they
+have to pay their dues.
+When they return across the barrier
+into their original world,
+they may face a second guardian,
+though they are now
+a hero and able to pass
+and they finally
+return to the living world,
+their original home
+with the prize
+that improves the life of everyone
+around them.
+The others from their normal world
+are still as they were,
+but the hero has grown.
+They have changed
+and will never be the same again.
+And that is the journey,
+the transformation and change
+from an everyday person into a hero.
+And the nature of that change
+is what drives that story.
+Now, as I mentioned earlier,
+this is an overall form
+and it is specific to hero stories.
+This is not a template or formula
+where you can just fill in the blanks.
+This is just a set of common
+elements of hero stories.
+But it is important
+if you're writing one,
+to understand
+what purpose each element has,
+what it symbolizes,
+and how it fits
+to support the overall narrative
+so that you can understand how it would
+or wouldn't work for your story.
+And again, keep in mind,
+this is only for stories about heroes
+which are common in games,
+which is why we referenced
+Campbell a lot.
+But not all stories are about heroes.
+So it may not even be appropriate
+to your project.
+With all that said,
+we do still have to remember
+that we are making games here.
+If you just want to write stories,
+that's great.
+Go write a short story or a novel
+or a stage play or a film script.
+But if you are writing for games,
+remember that your story
+is probably going
+to be secondary to the gameplay.
+So while the story is the central focus
+of something like a movie or a novel,
+it's really just playing
+a supporting role in most games.
+And since games again are interactive
+and involve player choice and agency,
+some of the traditional advice
+for writing stories kind of falls apart,
+like “Poetics” and “Story”
+both say that a story
+has a beginning, middle and an end.
+But in games
+there might be multiple beginnings,
+multiple middles, multiple ends,
+and they might be told out of order.
+The three act structure
+works great for a two hour
+movie or play,
+but might not be appropriate
+for a ten minute board game,
+a year’s
+long tabletop RPG campaign or an 80 hour
+console video game.
+The hero's journey
+is limited to hero story,
+so it's not even useful
+if you're telling
+a different kind of story.
+This might feel demoralizing.
+Here we have all this advice
+on how to write stories,
+and we can't even use it in games?
+But it is still useful.
+We have to start somewhere
+and understanding
+what makes good stories
+and in other media provides
+a useful starting point.
+For many games,
+we do tell a completely linear
+or traditional story,
+and the gameplay is
+what draws the player through that story.
+So in those games this is very applicable
+for games
+where the player has
+some agency over the story.
+Yeah, we'll talk about that
+in the next module.
+So while I quoted from three books here
+on traditional storytelling,
+I'm not going to actually recommend
+those books here.
+If you do go on to become
+a professional writer,
+you will probably encounter
+them and be forced
+to read them in school anyway.
+But at this point in your design journey,
+they're all a bit heavy
+and more of a time investment
+than you need right now.
+But do keep them in mind for later.
+For the time being, though,
+there are some shorter
+things I can point you to.
+The first two links here are summaries
+of the hero's journey
+and the key story
+as applied to game writing
+specifically.
+They're both just a few pages.
+The third one is different,
+a bit different.
+It's a critique of an older game.
+The original BioShock,
+and specifically
+how the message of narrative conflicts
+with the message
+of the mechanics of the game.
+There is a term for this,
+Ludonarrative Dissonance,
+and in fact,
+that term was coined by this article,
+which is why I include it.
+Now obviously, BioShock was a very successful
+and influential game,
+but the takeaway here is
+that you do want to think about
+not just your story on its own,
+but specifically how the story interacts
+with your gameplay and your mechanics.
+Are there
+and there are a lot of ways
+that the story can either support
+or conflict with the gameplay.
+Are the most dramatic elements
+of your story happening
+during the most intense parts
+of the gameplay, or are those different?
+Do the themes of the gameplay
+and the story support each other?
+This is something you want
+to at least be thinking about
+as you write the story for a game.
+And with that, I'll remind you
+once again to take your assessment
+so you can get your certification
+from HP Gaming Garage,
+and I'll see you next time when we talk
+about interactive narrative.

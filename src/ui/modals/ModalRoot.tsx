@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { useGameStore } from '../../state/gameStore'
-import { useUiStore, type ModalKind } from '../../state/uiStore'
+import { useUiStore, type ModalKind, type RevealMode } from '../../state/uiStore'
 import { useSessionStore } from '../../state/sessionStore'
 import type {
   ActorData,
@@ -36,6 +36,8 @@ import { executeDialogueChoice, getActorDialogueAvailability, isActorActive } fr
 import { markIntelReportRead } from '../../systems/intelResolver'
 import { describeEndingOutcome, describeFailReason, getActFromTurn } from '../../systems/turnEngine'
 import { GameError } from '../../state/types'
+import { recordTelemetryEvent } from '../../utils/telemetry'
+import { playUiSfx } from '../../utils/uiSfx'
 import { SessionManagerBody } from './SessionManagerBody'
 
 const BACKDROP_STYLE = {
@@ -62,6 +64,9 @@ const MODAL_STYLE = {
 
 function modalTitle(modal: ModalKind): string {
   if (modal === 'onboarding_loading') return 'Initializing'
+  if (modal === 'turn_loading') return 'Turn Transition'
+  if (modal === 'action_transition') return 'Operational Transition'
+  if (modal === 'cutscene_player') return 'Cutscene'
   if (modal === 'session_manager') return 'Sessions'
   if (modal === 'dossier') return 'Dossier'
   if (modal === 'dossier_article') return 'Dossier article'
@@ -81,6 +86,45 @@ function modalTitle(modal: ModalKind): string {
   if (modal === 'credits') return 'Credits'
   if (modal === 'leaderboard') return 'Leaderboard'
   return 'Modal'
+}
+
+const PRIMARY_CTA_SELECTORS: Partial<Record<ModalKind, string[]>> = {
+  session_manager: ['.session-auth-guest:not(:disabled)', '.action-config-confirm:not(:disabled)'],
+  action_config: [
+    '.action-config-review-actions .action-config-confirm:not(:disabled)',
+    '.action-config-confirm:not(:disabled)',
+  ],
+  action_transition: ['.action-transition-actions .action-config-confirm:not(:disabled)'],
+  cutscene_player: ['.cutscene-player-action-buttons .action-config-confirm:not(:disabled)'],
+}
+
+const PRIMARY_CTA_FALLBACK_SELECTORS = ['.action-config-confirm:not(:disabled)'] as const
+
+function isVisibleElement(element: HTMLElement): boolean {
+  return element.offsetParent !== null && !element.hidden
+}
+
+function pickPrimaryCtaButton(root: HTMLElement, modal: ModalKind): HTMLButtonElement | null {
+  const selectors = [
+    ...(PRIMARY_CTA_SELECTORS[modal] ?? []),
+    ...PRIMARY_CTA_FALLBACK_SELECTORS,
+  ]
+
+  for (const selector of selectors) {
+    const candidates = Array.from(root.querySelectorAll(selector)).filter(
+      (node): node is HTMLButtonElement => node instanceof HTMLButtonElement && isVisibleElement(node)
+    )
+    if (candidates.length > 0) return candidates[0] ?? null
+  }
+
+  return null
+}
+
+function isTextEntryElement(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  if (target.isContentEditable) return true
+  const tagName = target.tagName
+  return tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT'
 }
 
 type LoadedContent = NonNullable<ReturnType<typeof useGameStore.getState>['state']['content']>
@@ -1193,56 +1237,178 @@ function ZoneDetailBody(): ReactNode {
 
 function StatusReportBody(): ReactNode {
   const session = useGameStore((s) => s.state.session)
+  const zoneState = useGameStore((s) => s.state.zone_state)
   const actionLog = useGameStore((s) => s.state.action_log ?? [])
   const content = useGameStore((s) => s.state.content)
 
+  const recentEntries = [...actionLog].slice(-10).reverse()
+  const metricRows: Array<{ label: string; value: number }> = [
+    { label: 'Stability', value: session.metrics.stability },
+    { label: 'Insurgency', value: session.metrics.insurgency },
+    { label: 'Civilian support', value: session.metrics.civilian_support },
+    { label: 'Global legitimacy', value: session.metrics.global_legitimacy },
+    { label: 'Regional synergy', value: session.metrics.regional_synergy },
+  ]
+
   return (
-    <div style={{ display: 'grid', gap: '0.8rem' }}>
-      <div style={{ color: 'var(--text)', fontWeight: 700 }}>Turn {session.turn} operational report</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <span style={chipStyle}>Actions remaining {session.actions_remaining}</span>
-        <span style={chipStyle}>Budget {session.resources.budget.toLocaleString()}</span>
-        <span style={chipStyle}>Personnel {session.resources.personnel.toLocaleString()}</span>
-        <span style={chipStyle}>Intel {session.resources.intel_points}</span>
+    <div className="campaign-presentation status-report-layout">
+      <div className="campaign-presentation-title">Turn {session.turn} Operational Report</div>
+      <div className="campaign-presentation-meta status-report-meta">
+        <span className="action-config-chip">Actions remaining {session.actions_remaining}</span>
+        <span className="action-config-chip">Budget {session.resources.budget.toLocaleString()}</span>
+        <span className="action-config-chip">Personnel {session.resources.personnel.toLocaleString()}</span>
+        <span className="action-config-chip">Intel {session.resources.intel_points}</span>
+        <span className="action-config-chip">Logged actions {actionLog.length}</span>
       </div>
-      <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-        Metrics and resources are updated by confirmed actions and turn progression.
+      <p className="campaign-presentation-body">
+        Metrics and resources update from confirmed actions, dialogue effects, event outcomes, and turn progression.
       </p>
-      <div>
-        <SectionTitle>Action log</SectionTitle>
-        {actionLog.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No actions recorded yet.</p>
+
+      <div className="campaign-metric-grid">
+        {metricRows.map((row) => (
+          <div className="campaign-metric-row" key={row.label}>
+            <span>{row.label}</span>
+            <strong>{row.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      <section className="modal-section status-report-log-section">
+        <h3 className="modal-section-title">Action Log</h3>
+        <p className="status-report-log-summary">
+          Showing {recentEntries.length} most recent entry{recentEntries.length === 1 ? '' : 'ies'}.
+        </p>
+        {recentEntries.length === 0 ? (
+          <p className="status-report-log-empty">No actions recorded yet.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.45rem' }}>
-            {[...actionLog].slice(-8).reverse().map((entry, index) => (
-              <div
-                key={`${entry.turn}-${entry.action_id}-${index}`}
-                style={{
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '6px',
-                  background: 'var(--bg-panel)',
-                  padding: '0.5rem 0.65rem',
-                  display: 'grid',
-                  gap: '0.3rem',
-                }}
-              >
-                <div style={{ color: 'var(--text)', fontSize: '0.82rem', fontWeight: 600 }}>
-                  Turn {entry.turn}: {resolveActionName(content, entry.action_id)}
-                </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                  Target: {formatTargetLabel(content, entry.target)}
-                </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                  Resource delta: {formatResourceDelta(entry.resource_deltas)}
-                </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                  Metric delta: {formatMetricDelta(entry.metric_deltas)}
-                </div>
-              </div>
-            ))}
+          <div className="status-report-log-table-wrap">
+            <table className="status-report-log-table">
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Resource Delta</th>
+                  <th>Metric Delta</th>
+                  <th>Turn</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentEntries.map((entry, index) => {
+                  const actionName = resolveActionName(content, entry.action_id)
+                  const actionDefinition = content?.actions.actions.find((item) => item.action_id === entry.action_id)
+                  const actionCategoryLabel = actionDefinition
+                    ? formatCategoryLabel(actionDefinition.category)
+                    : 'Operational Action'
+                  const targetLabel = formatTargetLabel(content, entry.target)
+                  const targetActor = entry.target.actor_key ? resolveActorData(content, entry.target.actor_key) : undefined
+                  const targetActorName = targetActor ? resolveActorName(content, targetActor.actor_key) : null
+                  const targetActorTitle = targetActor ? resolveActorTitle(content, targetActor.actor_key) : null
+                  const targetTerritoryKey =
+                    entry.target.territory_key ??
+                    (entry.target.zone_id ? zoneState?.[entry.target.zone_id]?.territory_key ?? null : null)
+                  const targetTerritory = targetTerritoryKey
+                    ? content?.territories.territories.find((item) => item.territory_key === targetTerritoryKey)
+                    : undefined
+                  const targetTerritoryName = targetTerritoryKey ? resolveTerritoryName(content, targetTerritoryKey) : null
+                  const targetTerritoryFlags = targetTerritoryKey
+                    ? resolveTerritoryFlagPaths(targetTerritoryKey, targetTerritory?.flag_url)
+                    : null
+                  const resourceEntries = collectSignedDeltaEntries(entry.resource_deltas)
+                  const metricEntries = collectSignedDeltaEntries(entry.metric_deltas)
+
+                  return (
+                    <tr key={`${entry.turn}-${entry.action_id}-${index}`}>
+                      <td>
+                        <div className="status-report-action-cell">
+                          <span className="status-report-action-avatar" aria-hidden="true">
+                            {actorInitials(actionName)}
+                          </span>
+                          <div className="status-report-action-copy">
+                            <div className="status-report-log-title">{actionName}</div>
+                            <div className="status-report-action-subtitle">{actionCategoryLabel}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {targetActor && targetActorName ? (
+                          <div className="status-report-target-cell">
+                            <ActorPortrait actor={targetActor} name={targetActorName} />
+                            <div className="status-report-target-copy">
+                              <div className="status-report-target-name">{targetActorName}</div>
+                              <div className="status-report-target-subtitle">{targetActorTitle ?? 'Stakeholder'}</div>
+                            </div>
+                          </div>
+                        ) : targetTerritoryName && targetTerritoryFlags ? (
+                          <div className="status-report-target-cell">
+                            <TerritoryFlagBadge
+                              territoryName={targetTerritoryName}
+                              flagSrc={targetTerritoryFlags.primarySrc}
+                              fallbackFlag={targetTerritoryFlags.fallbackSrc}
+                            />
+                            <div className="status-report-target-copy">
+                              <div className="status-report-target-name">{targetLabel}</div>
+                              {targetTerritoryName !== targetLabel && (
+                                <div className="status-report-target-subtitle">{targetTerritoryName}</div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span>{targetLabel}</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="status-report-delta-stack">
+                          {resourceEntries.length === 0 ? (
+                            <span className="relationship-matrix-delta-chip neutral">No change</span>
+                          ) : (
+                            resourceEntries.map(({ key, value }) => {
+                              const tone = value > 0 ? 'positive' : 'negative'
+                              const label = isResourceKey(key) ? RESOURCE_LABELS[key] : formatTokenLabel(key)
+                              const formatted = isResourceKey(key)
+                                ? formatResourceSignedValue(key, value)
+                                : formatSignedDelta(value)
+                              return (
+                                <span className={`relationship-matrix-delta-chip ${tone}`} key={key}>
+                                  {label} {formatted}
+                                </span>
+                              )
+                            })
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="status-report-delta-stack">
+                          {metricEntries.length === 0 ? (
+                            <span className="relationship-matrix-delta-chip neutral">No change</span>
+                          ) : (
+                            metricEntries.map(({ key, value }) => {
+                              const tone = isMetricKey(key)
+                                ? isFavorableDelta(key, value)
+                                  ? 'positive'
+                                  : 'negative'
+                                : value > 0
+                                  ? 'positive'
+                                  : 'negative'
+                              return (
+                                <span className={`relationship-matrix-delta-chip ${tone}`} key={key}>
+                                  {formatTokenLabel(key)} {formatSignedDelta(value)}
+                                </span>
+                              )
+                            })
+                          )}
+                        </div>
+                      </td>
+                      <td className="status-report-turn-cell">
+                        <span className="actor-chip">Turn {entry.turn}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }
@@ -1969,6 +2135,7 @@ function RelationshipMatrixBody(): ReactNode {
   const content = state.content
   const closeModal = useUiStore((s) => s.closeModal)
   const openModal = useUiStore((s) => s.openModal)
+  const setSelectedActorKey = useUiStore((s) => s.setSelectedActorKey)
 
   if (!content) {
     return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading relationship matrix...</p>
@@ -2050,11 +2217,12 @@ function RelationshipMatrixBody(): ReactNode {
                 <th>Score</th>
                 <th>Baseline</th>
                 <th>Delta</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {relationshipRows.map((row) => (
-                <tr key={row.actor.actor_key}>
+                <tr className="relationship-matrix-row" key={row.actor.actor_key}>
                   <td>
                     <div className="relationship-matrix-actor-cell">
                       <ActorPortrait actor={row.actor} name={row.name} />
@@ -2067,16 +2235,47 @@ function RelationshipMatrixBody(): ReactNode {
                   <td>
                     <RelationshipLocationBadge location={row.location} />
                   </td>
-                  <td>{formatTokenLabel(row.actor.faction)}</td>
+                  <td>
+                    <span className="relationship-matrix-chip neutral">
+                      {formatTokenLabel(row.actor.faction)}
+                    </span>
+                  </td>
                   <td>
                     <span className={`relationship-matrix-chip ${relationshipToneClass(row.sentiment.relationship_label)}`}>
                       {formatTokenLabel(row.sentiment.relationship_label)}
                     </span>
                   </td>
-                  <td>{row.sentiment.relationship_score}</td>
-                  <td>{row.baseline ?? 'N/A'}</td>
+                  <td>
+                    <div className="relationship-matrix-score-cell">
+                      <strong>{row.sentiment.relationship_score}</strong>
+                      <span className="relationship-matrix-score-bar" aria-hidden="true">
+                        <span style={{ width: `${Math.max(0, Math.min(100, row.sentiment.relationship_score))}%` }} />
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="relationship-matrix-baseline">{row.baseline ?? 'N/A'}</span>
+                  </td>
                   <td className={row.delta === null ? '' : row.delta >= 0 ? 'is-positive' : 'is-negative'}>
-                    {row.delta === null ? 'N/A' : `${row.delta > 0 ? '+' : ''}${row.delta}`}
+                    <span
+                      className={`relationship-matrix-delta-chip ${
+                        row.delta === null ? 'neutral' : row.delta >= 0 ? 'positive' : 'negative'
+                      }`}
+                    >
+                      {row.delta === null ? 'N/A' : `${row.delta > 0 ? '+' : ''}${row.delta}`}
+                    </span>
+                  </td>
+                  <td className="relationship-matrix-action-cell">
+                    <button
+                      type="button"
+                      className="action-config-secondary relationship-matrix-open-btn"
+                      onClick={() => {
+                        setSelectedActorKey(row.actor.actor_key)
+                        openModal('actor_profile')
+                      }}
+                    >
+                      Open
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -2273,6 +2472,7 @@ function IntelReportBody(): ReactNode {
   const intelFeed = state.intel_feed
   const selectedReportKey = useUiStore((s) => s.selectedReportKey)
   const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
   const autosaveState = useSessionStore((s) => s.autosaveState)
 
   const intelReport = selectedReportKey ? resolveIntelReport(content, selectedReportKey) : undefined
@@ -2311,61 +2511,94 @@ function IntelReportBody(): ReactNode {
     ? Math.max(0, feedItem.occurred_at + intelReport.expiry_turns - state.session.turn)
     : intelReport.expiry_turns
   const intelTitle = resolveOptionalLocalizedText(content, 'loc.intel.template.title') ?? 'Intelligence briefing'
+  const urgencyTone =
+    intelReport.urgency === 'critical' ? 'critical' : intelReport.urgency === 'high' ? 'high' : 'routine'
+  const acknowledgement = feedItem?.is_read ? 'Acknowledged' : 'Pending acknowledgement'
+  const reportReference = selectedReportKey.replace(/_/g, '-').toUpperCase()
+  const directive =
+    intelReport.urgency === 'critical'
+      ? 'Immediate command-level response is advised before further field deterioration.'
+      : intelReport.urgency === 'high'
+        ? 'Treat as priority input for the next confirmed action and actor engagement.'
+        : 'Track in regular planning cadence and watch for corroborating updates.'
 
   return (
-    <div className="campaign-presentation">
-      <div className="campaign-presentation-title">{intelTitle}</div>
-      <div className="campaign-presentation-meta">
-        <span className={`actor-chip ${intelReport.urgency === 'critical' ? 'inactive' : 'active'}`}>
-          Urgency {urgencyLabel}
-        </span>
-        <span className="actor-chip">Confidence {confidenceLabel}</span>
-        <span className="actor-chip">{feedItem?.is_read ? 'Read' : 'Unread'}</span>
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>{intelReport.headline_text}</SectionTitle>
-        <p className="actor-profile-text">{intelReport.body_text}</p>
-      </div>
-
-      <div className="campaign-metric-grid">
-        <div className="campaign-metric-row">
-          <span>Scope</span>
-          <strong>{scope}</strong>
+    <article className="intel-demarche-shell">
+      <header className="intel-demarche-header">
+        <div className="intel-demarche-topline">
+          <span className="intel-demarche-kicker">African Union Peace and Security Council</span>
+          <span className={`intel-demarche-classification ${urgencyTone}`}>
+            {urgencyLabel} priority
+          </span>
         </div>
-        <div className="campaign-metric-row">
-          <span>Generated by</span>
-          <strong>{generatorLabel}</strong>
-        </div>
-        <div className="campaign-metric-row">
-          <span>First seen</span>
-          <strong>{feedItem ? `Turn ${feedItem.occurred_at}` : 'Unknown'}</strong>
-        </div>
-        <div className="campaign-metric-row">
-          <span>Expiry window</span>
-          <strong>{turnsUntilExpiry} turns remaining</strong>
-        </div>
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>Sources</SectionTitle>
-        {intelReport.sources.length === 0 ? (
-          <p className="actor-profile-text">No sources listed for this report.</p>
-        ) : (
-          <div className="dialogue-choice-effects">
-            {intelReport.sources.map((source) => (
-              <span className="actor-chip" key={source}>{formatTokenLabel(source)}</span>
-            ))}
+        <h2 className="intel-demarche-title">{intelReport.headline_text}</h2>
+        <p className="intel-demarche-subtitle">{intelTitle} - Formal D&apos;Marche</p>
+        <div className="intel-demarche-meta-grid">
+          <div className="intel-demarche-meta-item">
+            <span className="intel-demarche-meta-label">Reference</span>
+            <strong className="intel-demarche-meta-value">{reportReference}</strong>
           </div>
-        )}
+          <div className="intel-demarche-meta-item">
+            <span className="intel-demarche-meta-label">Scope</span>
+            <strong className="intel-demarche-meta-value">{scope}</strong>
+          </div>
+          <div className="intel-demarche-meta-item">
+            <span className="intel-demarche-meta-label">Confidence</span>
+            <strong className="intel-demarche-meta-value">{confidenceLabel}</strong>
+          </div>
+          <div className="intel-demarche-meta-item">
+            <span className="intel-demarche-meta-label">Filed By</span>
+            <strong className="intel-demarche-meta-value">{generatorLabel}</strong>
+          </div>
+          <div className="intel-demarche-meta-item">
+            <span className="intel-demarche-meta-label">First Seen</span>
+            <strong className="intel-demarche-meta-value">{feedItem ? `Turn ${feedItem.occurred_at}` : 'Unknown'}</strong>
+          </div>
+          <div className="intel-demarche-meta-item">
+            <span className="intel-demarche-meta-label">Status</span>
+            <strong className="intel-demarche-meta-value">{acknowledgement}</strong>
+          </div>
+        </div>
+      </header>
+
+      <div className="intel-demarche-content">
+        <section className="intel-demarche-section">
+          <h3 className="intel-demarche-section-title">Executive Assessment</h3>
+          <p className="intel-demarche-section-text">{intelReport.body_text}</p>
+        </section>
+
+        <section className="intel-demarche-section">
+          <h3 className="intel-demarche-section-title">Operational Directive</h3>
+          <p className="intel-demarche-section-text">{directive}</p>
+          <div className="intel-demarche-deadline">
+            <span className="intel-demarche-deadline-label">Validity Window</span>
+            <strong className="intel-demarche-deadline-value">{turnsUntilExpiry} turns remaining</strong>
+          </div>
+        </section>
+
+        <section className="intel-demarche-section">
+          <h3 className="intel-demarche-section-title">Source Attribution</h3>
+          {intelReport.sources.length === 0 ? (
+            <p className="intel-demarche-section-text">No sources listed for this report.</p>
+          ) : (
+            <div className="intel-demarche-source-list">
+              {intelReport.sources.map((source) => (
+                <span className="intel-demarche-source-chip" key={source}>{formatTokenLabel(source)}</span>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
-      <div className="action-config-review-actions">
-        <button type="button" className="action-config-secondary" onClick={() => openModal('action_config')}>
+      <div className="intel-demarche-actions">
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close briefing
+        </button>
+        <button type="button" className="action-config-confirm" onClick={() => openModal('action_config')}>
           Plan response
         </button>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -3057,17 +3290,6 @@ function DialogueBody(): ReactNode {
   )
 }
 
-const chipStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  padding: '0.2rem 0.55rem',
-  border: '1px solid var(--border-subtle)',
-  borderRadius: '999px',
-  color: 'var(--text)',
-  fontSize: '0.74rem',
-  background: 'var(--bg-panel)',
-} as const
-
 const listStyle = {
   margin: 0,
   paddingLeft: '1rem',
@@ -3076,17 +3298,38 @@ const listStyle = {
   fontSize: '0.86rem',
 } as const
 
-function formatResourceDelta(deltas: Record<string, number | undefined>): string {
-  const values = Object.entries(deltas)
+interface SignedDeltaEntry {
+  key: string
+  value: number
+}
+
+function collectSignedDeltaEntries(deltas: Record<string, number | undefined>): SignedDeltaEntry[] {
+  return Object.entries(deltas)
     .filter((entry): entry is [string, number] => typeof entry[1] === 'number' && entry[1] !== 0)
-    .map(([key, value]) => `${key} ${value > 0 ? '+' : ''}${value}`)
+    .map(([key, value]) => ({ key, value }))
+}
+
+function isResourceKey(key: string): key is keyof Resources {
+  return key === 'budget' || key === 'personnel' || key === 'political_capital' || key === 'intel_points' || key === 'time_months'
+}
+
+function isMetricKey(key: string): key is keyof Metrics {
+  return (
+    key === 'stability' ||
+    key === 'insurgency' ||
+    key === 'civilian_support' ||
+    key === 'global_legitimacy' ||
+    key === 'regional_synergy'
+  )
+}
+
+function formatResourceDelta(deltas: Record<string, number | undefined>): string {
+  const values = collectSignedDeltaEntries(deltas).map(({ key, value }) => `${key} ${value > 0 ? '+' : ''}${value}`)
   return values.length > 0 ? values.join(', ') : 'No resource changes'
 }
 
 function formatMetricDelta(deltas: Record<string, number | undefined>): string {
-  const values = Object.entries(deltas)
-    .filter((entry): entry is [string, number] => typeof entry[1] === 'number' && entry[1] !== 0)
-    .map(([key, value]) => `${key} ${value > 0 ? '+' : ''}${value}`)
+  const values = collectSignedDeltaEntries(deltas).map(({ key, value }) => `${key} ${value > 0 ? '+' : ''}${value}`)
   return values.length > 0 ? values.join(', ') : 'No metric changes'
 }
 
@@ -3113,6 +3356,272 @@ function formatTokenLabel(value: string): string {
     .filter((token) => token.length > 0)
     .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
     .join(' ')
+}
+
+type ForecastConfidenceTier = 'low' | 'medium' | 'high'
+
+interface ForecastConfidence {
+  tier: ForecastConfidenceTier
+  label: 'Low' | 'Medium' | 'High'
+  rationale: string
+  score: number
+}
+
+interface ForecastMetricImpact {
+  key: keyof Metrics
+  delta: number
+  favorable: boolean
+  source: 'direct' | 'delayed' | 'risk'
+}
+
+interface ActionForecast {
+  confidence: ForecastConfidence
+  expectedGains: string[]
+  likelyRisks: string[]
+  affectedZones: string[]
+  affectedActors: string[]
+  affectedMetricLabels: string[]
+  riskCount: number
+  hasModeledRisk: boolean
+}
+
+const ZONE_EFFECT_LABELS: Record<string, string> = {
+  threat_level: 'Threat level',
+  stability: 'Zone stability',
+  insurgency: 'Zone insurgency',
+  civilian_support: 'Zone civilian support',
+  displaced: 'Displacement pressure',
+  climate_resilience: 'Climate resilience',
+}
+
+function formatZoneEffectLabel(key: string): string {
+  return ZONE_EFFECT_LABELS[key] ?? formatTokenLabel(key)
+}
+
+function formatZoneEffectDelta(key: string, value: number): string {
+  if (key === 'displaced') {
+    const sign = value >= 0 ? '+' : '-'
+    return `${sign}${Math.abs(Math.round(value)).toLocaleString()}`
+  }
+  return formatSignedDelta(value)
+}
+
+function isFavorableZoneEffect(key: string, value: number): boolean {
+  if (key === 'threat_level' || key === 'insurgency' || key === 'displaced') {
+    return value < 0
+  }
+  return value > 0
+}
+
+function buildForecastConfidence(
+  state: StoreState,
+  action: ActionDefinition,
+  hasModeledRisk: boolean,
+  unfavorableCount: number
+): ForecastConfidence {
+  const intelConfidence = state.session.ai_state.intel_confidence
+  const intelGate = action.intel_gate ?? state.config.default_intel_gate ?? 0
+  let score = intelConfidence >= 70 ? 2 : intelConfidence >= 45 ? 1 : 0
+
+  if (intelGate > intelConfidence - 5) {
+    score = Math.min(score, 1)
+  }
+  if (action.delay_turns && action.delay_turns > 0) {
+    score = Math.min(score, 1)
+  }
+  if (hasModeledRisk) {
+    score -= 1
+  }
+  if (unfavorableCount >= 2) {
+    score -= 1
+  }
+
+  const clampedScore = Math.max(0, Math.min(2, score))
+  const tier: ForecastConfidenceTier = clampedScore >= 2 ? 'high' : clampedScore === 1 ? 'medium' : 'low'
+  const label: ForecastConfidence['label'] = tier === 'high' ? 'High' : tier === 'medium' ? 'Medium' : 'Low'
+  const rationaleParts = [`Intel ${intelConfidence}/100`, `gate ${intelGate}`]
+  if (action.delay_turns && action.delay_turns > 0) {
+    rationaleParts.push(`delayed impact +${action.delay_turns} turn`)
+  }
+  if (hasModeledRisk) {
+    rationaleParts.push('active risk profile')
+  }
+
+  return {
+    tier,
+    label,
+    rationale: rationaleParts.join(' | '),
+    score: clampedScore,
+  }
+}
+
+function deriveActionForecast({
+  state,
+  content,
+  action,
+  target,
+  cost,
+}: {
+  state: StoreState
+  content: NonNullable<StoreState['content']>
+  action: ActionDefinition
+  target: ActionTarget
+  cost: Resources
+}): ActionForecast {
+  const expectedGains: string[] = []
+  const likelyRisks: string[] = []
+  const metricImpacts: ForecastMetricImpact[] = []
+
+  const directMetrics = action.effects.metrics ?? {}
+  for (const [metricKey, rawDelta] of Object.entries(directMetrics)) {
+    if (!isMetricKey(metricKey) || typeof rawDelta !== 'number' || rawDelta === 0) continue
+    const favorable = isFavorableDelta(metricKey, rawDelta)
+    metricImpacts.push({ key: metricKey, delta: rawDelta, favorable, source: 'direct' })
+    const copy = `${formatTokenLabel(metricKey)} ${formatSignedDelta(rawDelta)}`
+    if (favorable) {
+      expectedGains.push(copy)
+    } else {
+      likelyRisks.push(copy)
+    }
+  }
+
+  if (action.delayed_effects?.metrics) {
+    for (const [metricKey, rawDelta] of Object.entries(action.delayed_effects.metrics)) {
+      if (!isMetricKey(metricKey) || typeof rawDelta !== 'number' || rawDelta === 0) continue
+      const favorable = isFavorableDelta(metricKey, rawDelta)
+      metricImpacts.push({ key: metricKey, delta: rawDelta, favorable, source: 'delayed' })
+      const copy = `Delayed (+${action.delay_turns ?? 0} turn): ${formatTokenLabel(metricKey)} ${formatSignedDelta(rawDelta)}`
+      if (favorable) {
+        expectedGains.push(copy)
+      } else {
+        likelyRisks.push(copy)
+      }
+    }
+  }
+
+  if (action.effects.resources) {
+    for (const key of ALLOCATION_RESOURCE_KEYS) {
+      const delta = action.effects.resources[key]
+      if (typeof delta !== 'number' || delta === 0) continue
+      const copy = `${RESOURCE_LABELS[key]} ${formatResourceSignedValue(key, delta)}`
+      if (delta > 0) {
+        expectedGains.push(copy)
+      } else {
+        likelyRisks.push(copy)
+      }
+    }
+  }
+
+  if (action.effects.zone_effects) {
+    for (const [key, value] of Object.entries(action.effects.zone_effects)) {
+      if (typeof value !== 'number' || value === 0) continue
+      const favorable = isFavorableZoneEffect(key, value)
+      const copy = `${formatZoneEffectLabel(key)} ${formatZoneEffectDelta(key, value)}`
+      if (favorable) {
+        expectedGains.push(copy)
+      } else {
+        likelyRisks.push(copy)
+      }
+    }
+  }
+
+  if (typeof action.effects.actor_effects?.relationship_score === 'number' && action.effects.actor_effects.relationship_score !== 0) {
+    const relationshipDelta = action.effects.actor_effects.relationship_score
+    const actorLabel = target.actor_key ? resolveActorName(content, target.actor_key) : 'target actor'
+    const copy = `Relationship ${relationshipDelta > 0 ? '+' : ''}${relationshipDelta} (${actorLabel})`
+    if (relationshipDelta > 0) {
+      expectedGains.push(copy)
+    } else {
+      likelyRisks.push(copy)
+    }
+  }
+
+  const explicitRiskEffects = action.effects.risks
+  if (typeof explicitRiskEffects?.civilian_harm_chance === 'number') {
+    likelyRisks.push(`Civilian harm probability ${Math.round(explicitRiskEffects.civilian_harm_chance * 100)}%`)
+  }
+  if (explicitRiskEffects?.civilian_harm_effects) {
+    for (const [metricKey, rawDelta] of Object.entries(explicitRiskEffects.civilian_harm_effects)) {
+      if (!isMetricKey(metricKey) || typeof rawDelta !== 'number' || rawDelta === 0) continue
+      metricImpacts.push({ key: metricKey, delta: rawDelta, favorable: false, source: 'risk' })
+      likelyRisks.push(`Risk: ${formatTokenLabel(metricKey)} ${formatSignedDelta(rawDelta)}`)
+    }
+  }
+
+  if (expectedGains.length === 0) {
+    expectedGains.push('No direct upside modeled beyond immediate command continuity.')
+  }
+  if (likelyRisks.length === 0) {
+    likelyRisks.push('No explicit downside modeled; monitor opportunity cost of committed resources.')
+  }
+
+  const affectedZones = new Set<string>()
+  if (target.zone_id) {
+    affectedZones.add(resolveZoneName(content, target.zone_id))
+  }
+  if (target.territory_key) {
+    const zones = Object.values(state.zone_state ?? {}).filter((zone) => zone.territory_key === target.territory_key)
+    if (zones.length > 0) {
+      zones.forEach((zone) => affectedZones.add(resolveZoneName(content, zone.zone_id)))
+    } else {
+      affectedZones.add(resolveTerritoryName(content, target.territory_key))
+    }
+  }
+  if (target.actor_key) {
+    const actorTerritory = RELATIONSHIP_ACTOR_TERRITORY_MAP[target.actor_key]
+    if (actorTerritory) {
+      const zones = Object.values(state.zone_state ?? {}).filter((zone) => zone.territory_key === actorTerritory)
+      zones.forEach((zone) => affectedZones.add(resolveZoneName(content, zone.zone_id)))
+    }
+  }
+
+  const affectedActors = new Set<string>()
+  if (target.actor_key) {
+    affectedActors.add(resolveActorName(content, target.actor_key))
+  } else if (action.target_scope === 'actor') {
+    const actorPool = action.target_actors && action.target_actors.length > 0
+      ? action.target_actors
+      : Object.keys(state.actor_sentiments ?? {})
+    actorPool.forEach((actorKey) => affectedActors.add(resolveActorName(content, actorKey)))
+  } else if (action.effects.actor_effects && action.target_actors && action.target_actors.length > 0) {
+    action.target_actors.forEach((actorKey) => affectedActors.add(resolveActorName(content, actorKey)))
+  }
+
+  const affectedMetricLabels = metricImpacts.map((impact) => {
+    const suffix = impact.source === 'risk' ? ' (risk)' : impact.source === 'delayed' ? ' (delayed)' : ''
+    return `${formatTokenLabel(impact.key)} ${formatSignedDelta(impact.delta)}${suffix}`
+  })
+
+  const hasModeledRisk = Boolean(action.effects.risks)
+  const confidence = buildForecastConfidence(
+    state,
+    action,
+    hasModeledRisk,
+    metricImpacts.filter((impact) => !impact.favorable).length
+  )
+
+  const resourceCommitment = [
+    `Budget -${formatResourceValue('budget', cost.budget)}`,
+    `Personnel -${formatResourceValue('personnel', cost.personnel)}`,
+    `Political -${formatResourceValue('political_capital', cost.political_capital)}`,
+    `Intel -${formatResourceValue('intel_points', cost.intel_points)}`,
+  ].join(' | ')
+  if (cost.time_months > 0) {
+    likelyRisks.push(`Time commitment ${formatResourceValue('time_months', cost.time_months)}`)
+  }
+  likelyRisks.push(`Resource commitment ${resourceCommitment}`)
+  const riskCount = likelyRisks.length
+
+  return {
+    confidence,
+    expectedGains,
+    likelyRisks,
+    affectedZones: Array.from(affectedZones),
+    affectedActors: Array.from(affectedActors),
+    affectedMetricLabels,
+    riskCount,
+    hasModeledRisk,
+  }
 }
 
 function findDialogueChoiceNode(dialogue: DialogueData): { choices: DialogueChoiceData[] } | undefined {
@@ -3239,6 +3748,585 @@ function TerritoryFlagBadge({
   )
 }
 
+type TransitionTone = 'improved' | 'worsened'
+const ACTION_TRANSITION_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
+const ACTION_TRANSITION_LOADING_SFX_SRC = '/assets/audio/effects/scenario_loading.mp3'
+const FAST_REVEAL_AUTO_RETURN_MS = 1100
+
+interface RelationshipRevealChange {
+  actorKey: string
+  name: string
+  title: string
+  beforeScore: number | null
+  afterScore: number
+  tone: TransitionTone
+  delta: number
+}
+
+interface TerritoryRevealChange {
+  territoryKey: TerritoryKey
+  name: string
+  beforeStatus: TerritoryState['status']
+  afterStatus: TerritoryState['status']
+  tone: TransitionTone
+}
+
+interface ActorUnlockRevealEntry {
+  actorKey: string
+  name: string
+  title: string
+  dialogueId: string | null
+}
+
+interface IntelRevealUpdate {
+  reportKey: string
+  kind: 'new' | 'updated'
+  headline: string
+}
+
+const TERRITORY_STATUS_RANK: Record<TerritoryState['status'], number> = {
+  low: 0,
+  moderate: 1,
+  high: 2,
+  critical: 3,
+}
+
+function isActorEngageable(state: StoreState, actor: ActorData): boolean {
+  const dialogueAvailability = getActorDialogueAvailability(state, actor.actor_key)
+  return isActorActive(state, actor) && dialogueAvailability?.isAvailable === true && Boolean(dialogueAvailability.dialogueId)
+}
+
+function territoryTransitionTone(beforeStatus: TerritoryState['status'], afterStatus: TerritoryState['status']): TransitionTone {
+  return TERRITORY_STATUS_RANK[afterStatus] < TERRITORY_STATUS_RANK[beforeStatus] ? 'improved' : 'worsened'
+}
+
+function ActionTransitionBody(): ReactNode {
+  const transition = useUiStore((s) => s.pendingActionTransition)
+  const setPendingActionTransition = useUiStore((s) => s.setPendingActionTransition)
+  const closeModal = useUiStore((s) => s.closeModal)
+  const intelFeedMinimized = useUiStore((s) => s.intelFeedMinimized)
+  const toggleIntelFeed = useUiStore((s) => s.toggleIntelFeed)
+  const revealMode = useUiStore((s) => s.revealMode)
+  const fastRevealUnlocked = useUiStore((s) => s.fastRevealUnlocked)
+  const setRevealMode = useUiStore((s) => s.setRevealMode)
+  const unlockFastReveal = useUiStore((s) => s.unlockFastReveal)
+  const turnLoopStartedAtMs = useUiStore((s) => s.turnLoopStartedAtMs)
+  const clearTurnLoop = useUiStore((s) => s.clearTurnLoop)
+  const autosaveState = useSessionStore((s) => s.autosaveState)
+  const [phase, setPhase] = useState<'loading' | 'reveal'>('loading')
+  const [revealReady, setRevealReady] = useState(false)
+  const [revealStage, setRevealStage] = useState(0)
+  const [flashActive, setFlashActive] = useState(false)
+  const loadingAudioRef = useRef<HTMLAudioElement | null>(null)
+  const commitStartedRef = useRef(false)
+  const selectedRevealMode: RevealMode = revealMode === 'fast' && fastRevealUnlocked ? 'fast' : 'full'
+  const isFastReveal = selectedRevealMode === 'fast'
+
+  const onRevealModeSelect = useCallback(
+    (nextMode: RevealMode): void => {
+      if (nextMode === 'fast' && !fastRevealUnlocked) return
+      setRevealMode(nextMode)
+    },
+    [fastRevealUnlocked, setRevealMode]
+  )
+
+  useEffect(() => {
+    if (!transition) return
+    recordTelemetryEvent('reveal_mode_selected', {
+      mode: selectedRevealMode,
+      fast_reveal_unlocked: fastRevealUnlocked,
+      turn: transition.afterState.session.turn,
+    })
+  }, [fastRevealUnlocked, selectedRevealMode, transition])
+
+  useEffect(() => {
+    commitStartedRef.current = false
+  }, [transition])
+
+  useEffect(() => {
+    if (!transition) {
+      setPhase('loading')
+      setRevealReady(false)
+      setRevealStage(0)
+      setFlashActive(false)
+      return
+    }
+
+    setPhase(isFastReveal ? 'reveal' : 'loading')
+    setRevealReady(false)
+    setRevealStage(0)
+    setFlashActive(false)
+
+    if (typeof window === 'undefined') {
+      setPhase('reveal')
+      setRevealReady(true)
+      setRevealStage(4)
+      return
+    }
+
+    playUiSfx('modal_open')
+    if (isFastReveal) {
+      const fastRevealTimer = window.setTimeout(() => {
+        setRevealStage(4)
+        setRevealReady(true)
+        playUiSfx('active_button_click')
+      }, 220)
+      return () => {
+        window.clearTimeout(fastRevealTimer)
+      }
+    }
+
+    const flashStartTimer = window.setTimeout(() => setFlashActive(true), 1650)
+    const revealStartTimer = window.setTimeout(() => {
+      setPhase('reveal')
+      setFlashActive(false)
+      playUiSfx('modal_open')
+    }, 1940)
+    const stageOneTimer = window.setTimeout(() => {
+      setRevealStage(1)
+      playUiSfx('active_button_hover')
+    }, 2300)
+    const stageTwoTimer = window.setTimeout(() => setRevealStage(2), 2660)
+    const stageThreeTimer = window.setTimeout(() => setRevealStage(3), 3040)
+    const stageFourTimer = window.setTimeout(() => {
+      setRevealStage(4)
+      setRevealReady(true)
+      playUiSfx('active_button_click')
+    }, 3460)
+    return () => {
+      window.clearTimeout(flashStartTimer)
+      window.clearTimeout(revealStartTimer)
+      window.clearTimeout(stageOneTimer)
+      window.clearTimeout(stageTwoTimer)
+      window.clearTimeout(stageThreeTimer)
+      window.clearTimeout(stageFourTimer)
+    }
+  }, [isFastReveal, transition])
+
+  useEffect(() => {
+    const stopLoadingAudio = (): void => {
+      const audio = loadingAudioRef.current
+      if (!audio) return
+      audio.pause()
+      try {
+        audio.currentTime = 0
+      } catch {
+        // Keep best-effort reset for browser implementations that block seek while paused.
+      }
+    }
+
+    if (typeof window === 'undefined' || typeof Audio === 'undefined') {
+      return undefined
+    }
+
+    if (!transition || phase !== 'loading') {
+      stopLoadingAudio()
+      return undefined
+    }
+
+    if (!loadingAudioRef.current) {
+      const audio = new Audio(ACTION_TRANSITION_LOADING_SFX_SRC)
+      audio.preload = 'auto'
+      audio.loop = true
+      audio.volume = 0.44
+      loadingAudioRef.current = audio
+    }
+
+    const audio = loadingAudioRef.current
+    if (!audio) return undefined
+    try {
+      audio.currentTime = 0
+    } catch {
+      // Ignore and still attempt playback.
+    }
+    const playPromise = audio.play()
+    if (playPromise && typeof playPromise.catch === 'function') {
+      void playPromise.catch(() => undefined)
+    }
+
+    return () => {
+      stopLoadingAudio()
+    }
+  }, [phase, transition])
+
+  const revealData = useMemo(() => {
+    if (!transition) return null
+    const beforeState = transition.beforeState
+    const afterState = transition.afterState
+    const content = afterState.content
+    if (!content) return null
+
+    const beforeSentiments: Record<string, ActorSentiment> = beforeState.actor_sentiments ?? {}
+    const afterSentiments: Record<string, ActorSentiment> = afterState.actor_sentiments ?? {}
+    const relationshipChanges = Object.values(afterSentiments)
+      .flatMap((afterSentiment) => {
+        const actor = resolveActorData(content, afterSentiment.actor_key)
+        if (!actor || !actor.relationship_tracked) return []
+        const beforeSentiment = beforeSentiments[afterSentiment.actor_key]
+        const delta = beforeSentiment
+          ? afterSentiment.relationship_score - beforeSentiment.relationship_score
+          : afterSentiment.relationship_score
+        if (delta === 0) return []
+        const tone: TransitionTone = delta > 0 ? 'improved' : 'worsened'
+        return [{
+          actorKey: afterSentiment.actor_key,
+          name: resolveActorName(content, afterSentiment.actor_key),
+          title: resolveActorTitle(content, afterSentiment.actor_key),
+          beforeScore: beforeSentiment?.relationship_score ?? null,
+          afterScore: afterSentiment.relationship_score,
+          tone,
+          delta,
+        }] as RelationshipRevealChange[]
+      })
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+
+    const beforeTerritories: Record<TerritoryKey, TerritoryState> =
+      beforeState.territory_state ?? ({} as Record<TerritoryKey, TerritoryState>)
+    const afterTerritories: Record<TerritoryKey, TerritoryState> =
+      afterState.territory_state ?? ({} as Record<TerritoryKey, TerritoryState>)
+    const territoryChanges = Object.values(afterTerritories)
+      .flatMap((afterTerritory) => {
+        const beforeTerritory = beforeTerritories[afterTerritory.territory_key]
+        if (!beforeTerritory || beforeTerritory.status === afterTerritory.status) return []
+        return [{
+          territoryKey: afterTerritory.territory_key,
+          name: resolveTerritoryName(content, afterTerritory.territory_key),
+          beforeStatus: beforeTerritory.status,
+          afterStatus: afterTerritory.status,
+          tone: territoryTransitionTone(beforeTerritory.status, afterTerritory.status),
+        }] as TerritoryRevealChange[]
+      })
+      .sort((a, b) => TERRITORY_STATUS_RANK[b.afterStatus] - TERRITORY_STATUS_RANK[a.afterStatus])
+
+    const unlockedActors = content.actors.actors
+      .flatMap((actor) => {
+        const wasEngageable = isActorEngageable(beforeState, actor)
+        const nowEngageable = isActorEngageable(afterState, actor)
+        if (wasEngageable || !nowEngageable) return []
+        const dialogueAvailability = getActorDialogueAvailability(afterState, actor.actor_key)
+        return [{
+          actorKey: actor.actor_key,
+          name: resolveActorName(content, actor.actor_key),
+          title: resolveActorTitle(content, actor.actor_key),
+          dialogueId: dialogueAvailability?.dialogueId ?? null,
+        }] as ActorUnlockRevealEntry[]
+      })
+
+    const beforeFeedMap = new Map((beforeState.intel_feed ?? []).map((item) => [item.report_key, item] as const))
+    const intelUpdates = (afterState.intel_feed ?? [])
+      .flatMap<{ reportKey: string; kind: 'new' | 'updated' }>((item) => {
+        const beforeItem = beforeFeedMap.get(item.report_key)
+        if (!beforeItem) {
+          return [{ reportKey: item.report_key, kind: 'new' as const }]
+        }
+        if (
+          beforeItem.occurred_at !== item.occurred_at ||
+          beforeItem.is_read !== item.is_read ||
+          beforeItem.is_urgent !== item.is_urgent
+        ) {
+          return [{ reportKey: item.report_key, kind: 'updated' as const }]
+        }
+        return []
+      })
+      .map((item) => {
+        const resolved = resolveIntelReport(content, item.reportKey)
+        return {
+          ...item,
+          headline: resolved?.headline_text ?? item.reportKey,
+        }
+      }) as IntelRevealUpdate[]
+
+    return {
+      content,
+      relationshipChanges,
+      territoryChanges,
+      unlockedActors,
+      intelUpdates,
+      actionName: resolveActionName(content, transition.logEntry.action_id),
+      targetLabel: formatTargetLabel(content, transition.logEntry.target),
+      resourceDelta: formatResourceDelta(transition.logEntry.resource_deltas),
+      metricDelta: formatMetricDelta(transition.logEntry.metric_deltas),
+      relationshipImprovedCount: relationshipChanges.filter((item) => item.tone === 'improved').length,
+      relationshipWorsenedCount: relationshipChanges.filter((item) => item.tone === 'worsened').length,
+      territoryImprovedCount: territoryChanges.filter((item) => item.tone === 'improved').length,
+      territoryWorsenedCount: territoryChanges.filter((item) => item.tone === 'worsened').length,
+    }
+  }, [transition])
+
+  const commitTransition = useCallback((): void => {
+    if (commitStartedRef.current) return
+    commitStartedRef.current = true
+
+    if (!transition) {
+      closeModal()
+      return
+    }
+
+    const completedAtMs = Date.now()
+    const turn = transition.afterState.session.turn
+    recordTelemetryEvent('turn_loop_completed', {
+      turn,
+      reveal_mode: selectedRevealMode,
+      started_at_ms: turnLoopStartedAtMs,
+      completed_at_ms: completedAtMs,
+    })
+
+    if (typeof turnLoopStartedAtMs === 'number') {
+      recordTelemetryEvent('turn_loop_duration_ms', {
+        turn,
+        reveal_mode: selectedRevealMode,
+        duration_ms: Math.max(0, completedAtMs - turnLoopStartedAtMs),
+      })
+    }
+
+    if (selectedRevealMode === 'fast') {
+      recordTelemetryEvent('fast_reveal_used', {
+        turn,
+        auto_return_ms: FAST_REVEAL_AUTO_RETURN_MS,
+      })
+    } else if (!fastRevealUnlocked) {
+      unlockFastReveal()
+    }
+
+    clearTurnLoop()
+
+    if (intelFeedMinimized && revealData && revealData.intelUpdates.length > 0) {
+      toggleIntelFeed()
+    }
+    useGameStore.setState({ state: transition.afterState })
+    void autosaveState(transition.afterState, 'after_action').catch(() => undefined)
+    setPendingActionTransition(null)
+    closeModal()
+  }, [
+    autosaveState,
+    clearTurnLoop,
+    closeModal,
+    fastRevealUnlocked,
+    intelFeedMinimized,
+    revealData,
+    selectedRevealMode,
+    setPendingActionTransition,
+    toggleIntelFeed,
+    transition,
+    turnLoopStartedAtMs,
+    unlockFastReveal,
+  ])
+
+  useEffect(() => {
+    if (!transition || !isFastReveal || !revealReady || revealStage < 4) return
+    if (typeof window === 'undefined') {
+      commitTransition()
+      return
+    }
+    const autoReturnTimer = window.setTimeout(() => {
+      commitTransition()
+    }, FAST_REVEAL_AUTO_RETURN_MS)
+    return () => {
+      window.clearTimeout(autoReturnTimer)
+    }
+  }, [commitTransition, isFastReveal, revealReady, revealStage, transition])
+
+  if (!transition || !revealData) {
+    return (
+      <div className="action-transition-shell">
+        <p className="action-transition-fallback">No action transition payload is available.</p>
+        <div className="action-transition-actions">
+          <button type="button" className="action-config-confirm" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'loading') {
+    return (
+      <div className="action-transition-shell action-transition-shell--loading">
+        <video
+          className="action-transition-video"
+          src={ACTION_TRANSITION_VIDEO_SRC}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        />
+        <div className={`action-transition-flash${flashActive ? ' is-active' : ''}`} aria-hidden="true" />
+        <div className="action-transition-noise" aria-hidden="true" />
+        <p className="action-transition-kicker">Action Confirmed</p>
+        <h3 className="action-transition-title">Synchronizing operational consequences...</h3>
+        <p className="action-transition-copy">
+          Rebuilding regional posture, diplomatic response vectors, and human terrain availability.
+        </p>
+        <div className="action-transition-diagnostics" aria-hidden="true">
+          <span>Compiling cross-theater impact matrix</span>
+          <span>Correlating stakeholder reaction vectors</span>
+          <span>Verifying AU command synchronization</span>
+        </div>
+        <div className="action-transition-loader" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <p className="action-transition-loader-label">Decrypting field updates</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="action-transition-shell action-transition-shell--reveal">
+      <div className="action-transition-noise" aria-hidden="true" />
+      <div className="action-transition-head">
+        <p className="action-transition-kicker">Action Reveal</p>
+        <div className="action-transition-mode">
+          <span className="action-transition-mode-label">Reveal mode</span>
+          <div className="action-transition-mode-toggle" role="group" aria-label="Reveal mode selector">
+            <button
+              type="button"
+              className={`action-transition-mode-button${selectedRevealMode === 'full' ? ' is-active' : ''}`}
+              onClick={() => onRevealModeSelect('full')}
+            >
+              Full
+            </button>
+            <button
+              type="button"
+              className={`action-transition-mode-button${selectedRevealMode === 'fast' ? ' is-active' : ''}`}
+              onClick={() => onRevealModeSelect('fast')}
+              disabled={!fastRevealUnlocked}
+              title={fastRevealUnlocked ? 'Fast Reveal enabled' : 'Complete one full reveal to unlock Fast Reveal'}
+            >
+              Fast Reveal
+            </button>
+          </div>
+          {!fastRevealUnlocked && (
+            <span className="action-transition-mode-note">Complete one full reveal to unlock Fast Reveal.</span>
+          )}
+          {fastRevealUnlocked && selectedRevealMode === 'fast' && (
+            <span className="action-transition-mode-note">Fast Reveal active. Returning to command automatically.</span>
+          )}
+        </div>
+        <h3 className="action-transition-title">{revealData.actionName}</h3>
+        <p className="action-transition-copy">
+          Target: <strong>{revealData.targetLabel}</strong> | Resources: <strong>{revealData.resourceDelta}</strong> |
+          Metrics: <strong>{revealData.metricDelta}</strong>
+        </p>
+        <div className="action-transition-command-strip">
+          <span>Relationship: +{revealData.relationshipImprovedCount} / -{revealData.relationshipWorsenedCount}</span>
+          <span>Map: {revealData.territoryImprovedCount} stabilized, {revealData.territoryWorsenedCount} escalated</span>
+          <span>Actors unlocked: {revealData.unlockedActors.length}</span>
+        </div>
+        <div className="action-transition-stage-meter" aria-hidden="true">
+          <span className={revealStage >= 1 ? 'is-filled' : ''} />
+          <span className={revealStage >= 2 ? 'is-filled' : ''} />
+          <span className={revealStage >= 3 ? 'is-filled' : ''} />
+          <span className={revealStage >= 4 ? 'is-filled' : ''} />
+        </div>
+      </div>
+
+      <div className="action-transition-grid">
+        <section className={`action-transition-panel${revealStage >= 1 ? ' is-revealed' : ''}`}>
+          <div className="action-transition-panel-title">Relationship Matrix Deltas</div>
+          {revealStage < 1 ? (
+            <p className="action-transition-empty">Awaiting diplomatic signal lock...</p>
+          ) : revealData.relationshipChanges.length === 0 ? (
+            <p className="action-transition-empty">No relationship score changes from this action.</p>
+          ) : (
+            <ul className="action-transition-list">
+              {revealData.relationshipChanges.map((change) => (
+                <li key={change.actorKey}>
+                  <span className="action-transition-list-primary">
+                    {change.name} ({change.delta > 0 ? '+' : ''}{change.delta})
+                  </span>
+                  <span className="action-transition-list-secondary">
+                    {change.title} | {change.beforeScore ?? 'N/A'} {'->'} {change.afterScore}
+                  </span>
+                  <span className={`actor-chip ${change.tone === 'improved' ? 'active' : 'inactive'}`}>
+                    {change.tone === 'improved' ? 'Improved' : 'Worsened'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className={`action-transition-panel${revealStage >= 2 ? ' is-revealed' : ''}`}>
+          <div className="action-transition-panel-title">Territory Status Changes</div>
+          {revealStage < 2 ? (
+            <p className="action-transition-empty">Awaiting territorial telemetry...</p>
+          ) : revealData.territoryChanges.length === 0 ? (
+            <p className="action-transition-empty">No territory status shifts detected.</p>
+          ) : (
+            <ul className="action-transition-list">
+              {revealData.territoryChanges.map((change) => (
+                <li key={change.territoryKey}>
+                  <span className="action-transition-list-primary">
+                    {change.name}: {change.beforeStatus.toUpperCase()} {'->'} {change.afterStatus.toUpperCase()}
+                  </span>
+                  <span className={`actor-chip ${change.tone === 'improved' ? 'active' : 'inactive'}`}>
+                    {change.tone === 'improved' ? 'Stabilized' : 'Escalated'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className={`action-transition-panel${revealStage >= 3 ? ' is-revealed' : ''}`}>
+          <div className="action-transition-panel-title">New Actor Engagements</div>
+          {revealStage < 3 ? (
+            <p className="action-transition-empty">Scanning newly available stakeholders...</p>
+          ) : revealData.unlockedActors.length === 0 ? (
+            <p className="action-transition-empty">No new engageable actors unlocked.</p>
+          ) : (
+            <ul className="action-transition-list">
+              {revealData.unlockedActors.map((actor) => (
+                <li key={actor.actorKey}>
+                  <span className="action-transition-list-primary">{actor.name}</span>
+                  <span className="action-transition-list-secondary">{actor.title}</span>
+                  <span className="actor-chip active">Engageable now</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <div className={`action-transition-intel${revealStage >= 4 ? ' is-revealed' : ''}`}>
+        <span className="action-transition-intel-label">Intelligence Feed</span>
+        {revealStage < 4 ? (
+          <span className="action-transition-intel-copy">Holding feed refresh until reveal sequence completes...</span>
+        ) : revealData.intelUpdates.length === 0 ? (
+          <span className="action-transition-intel-copy">No new intel packets queued.</span>
+        ) : (
+          <span className="action-transition-intel-copy">
+            {revealData.intelUpdates.length} update{revealData.intelUpdates.length === 1 ? '' : 's'} queued:
+            {' '}
+            {revealData.intelUpdates.slice(0, 2).map((item) => item.headline).join(' | ')}
+          </span>
+        )}
+      </div>
+
+      <div className="action-transition-actions">
+        <button
+          type="button"
+          className="action-config-confirm"
+          disabled={!revealReady}
+          onClick={commitTransition}
+        >
+          {revealReady
+            ? selectedRevealMode === 'fast'
+              ? 'Return to Command'
+              : 'Resume Operations'
+            : selectedRevealMode === 'fast'
+              ? 'Preparing Fast Reveal'
+              : `Preparing Final Reveal (${Math.min(revealStage, 4)}/4)`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function ActionConfigBody(): ReactNode {
   const state = useGameStore((s) => s.state)
   const content = useGameStore((s) => s.state.content)
@@ -3255,8 +4343,10 @@ function ActionConfigBody(): ReactNode {
   const setActionAllocation = useUiStore((s) => s.setActionAllocation)
   const setActionAllocationValue = useUiStore((s) => s.setActionAllocationValue)
   const setActionOutcome = useUiStore((s) => s.setActionOutcome)
+  const setPendingActionTransition = useUiStore((s) => s.setPendingActionTransition)
+  const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
-  const autosaveState = useSessionStore((s) => s.autosaveState)
+  const reviewForecastTelemetryRef = useRef<string | null>(null)
 
   if (!content) {
     return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading action definitions...</p>
@@ -3391,6 +4481,23 @@ function ActionConfigBody(): ReactNode {
 
   const requestedAllocation = buildRequestedAllocation(action, actionAllocation)
   const cost = getResolvedCost(action, requestedAllocation)
+  const actionForecast = useMemo(
+    () =>
+      deriveActionForecast({
+        state,
+        content,
+        action,
+        target: resolvedTarget,
+        cost,
+      }),
+    [
+      action,
+      content,
+      cost,
+      resolvedTarget,
+      state,
+    ]
+  )
   const allocationSpecs = ALLOCATION_RESOURCE_KEYS.map((key) => {
     const range = action.costs[key]
     const available = state.session.resources[key]
@@ -3420,13 +4527,87 @@ function ActionConfigBody(): ReactNode {
     validationError = error instanceof GameError ? error.message : 'Action cannot be executed with current state.'
   }
 
+  const reviewForecastTelemetryKey = [
+    state.session.turn,
+    action.action_id,
+    resolvedTarget.zone_id ?? '',
+    resolvedTarget.territory_key ?? '',
+    resolvedTarget.actor_key ?? '',
+    cost.budget,
+    cost.personnel,
+    cost.political_capital,
+    cost.intel_points,
+    cost.time_months,
+  ].join(':')
+
+  useEffect(() => {
+    if (actionFlowStep !== 'review') {
+      reviewForecastTelemetryRef.current = null
+      return
+    }
+    if (reviewForecastTelemetryRef.current === reviewForecastTelemetryKey) {
+      return
+    }
+    reviewForecastTelemetryRef.current = reviewForecastTelemetryKey
+
+    recordTelemetryEvent('forecast_card_viewed', {
+      turn: state.session.turn,
+      action_id: action.action_id,
+      target_scope: action.target_scope,
+    })
+    recordTelemetryEvent('forecast_confidence_rendered', {
+      turn: state.session.turn,
+      action_id: action.action_id,
+      confidence_tier: actionForecast.confidence.tier,
+      confidence_score: actionForecast.confidence.score,
+    })
+    recordTelemetryEvent('forecast_risk_rendered', {
+      turn: state.session.turn,
+      action_id: action.action_id,
+      risk_count: actionForecast.riskCount,
+      has_modeled_risk: actionForecast.hasModeledRisk,
+    })
+  }, [
+    action.action_id,
+    action.target_scope,
+    actionFlowStep,
+    actionForecast.confidence.score,
+    actionForecast.confidence.tier,
+    actionForecast.hasModeledRisk,
+    actionForecast.riskCount,
+    reviewForecastTelemetryKey,
+    state.session.turn,
+  ])
+
+  const handleCancelFromReview = (source: 'back_button'): void => {
+    recordTelemetryEvent('action_cancelled_from_review', {
+      turn: state.session.turn,
+      action_id: action.action_id,
+      source,
+    })
+    setActionFlowStep('configure')
+  }
+
   const executeAction = (): void => {
+    recordTelemetryEvent('action_confirmed_from_review', {
+      turn: state.session.turn,
+      action_id: action.action_id,
+      target_scope: action.target_scope,
+      target_zone: resolvedTarget.zone_id ?? null,
+      target_territory: resolvedTarget.territory_key ?? null,
+      target_actor: resolvedTarget.actor_key ?? null,
+      confidence_tier: actionForecast.confidence.tier,
+      risk_count: actionForecast.riskCount,
+    })
     try {
       const result = executeActionWithLog(state, action, resolvedTarget, requestedAllocation)
-      useGameStore.setState({ state: result.state })
-      void autosaveState(result.state, 'after_action').catch(() => undefined)
       setActionOutcome(result.logEntry)
-      setActionFlowStep('outcome')
+      setPendingActionTransition({
+        beforeState: state,
+        afterState: result.state,
+        logEntry: result.logEntry,
+      })
+      openModal('action_transition')
     } catch (error: unknown) {
       if (error instanceof GameError) {
         window.alert(`Action failed: ${error.message}`)
@@ -3466,6 +4647,54 @@ function ActionConfigBody(): ReactNode {
           ))}
         </div>
 
+        <section className="action-forecast-card" aria-label="Action forecast">
+          <div className="action-forecast-head">
+            <span className={`action-forecast-confidence is-${actionForecast.confidence.tier}`}>
+              Confidence {actionForecast.confidence.label}
+            </span>
+            <p className="action-forecast-rationale">{actionForecast.confidence.rationale}</p>
+          </div>
+
+          <div className="action-forecast-grid">
+            <article className="action-forecast-column">
+              <h4>Expected gains</h4>
+              <ul className="action-forecast-list">
+                {actionForecast.expectedGains.map((item, index) => (
+                  <li key={`${index}-${item.slice(0, 28)}`}>{item}</li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="action-forecast-column">
+              <h4>Likely risks</h4>
+              <ul className="action-forecast-list">
+                {actionForecast.likelyRisks.map((item, index) => (
+                  <li key={`${index}-${item.slice(0, 28)}`}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
+
+          <div className="action-forecast-affected">
+            <div className="action-forecast-affected-row">
+              <span>Affected zones</span>
+              <strong>{actionForecast.affectedZones.length > 0 ? actionForecast.affectedZones.join(' | ') : 'None directly'}</strong>
+            </div>
+            <div className="action-forecast-affected-row">
+              <span>Affected actors</span>
+              <strong>{actionForecast.affectedActors.length > 0 ? actionForecast.affectedActors.join(' | ') : 'None directly'}</strong>
+            </div>
+            <div className="action-forecast-affected-row">
+              <span>Affected metrics</span>
+              <strong>
+                {actionForecast.affectedMetricLabels.length > 0
+                  ? actionForecast.affectedMetricLabels.join(' | ')
+                  : 'No direct metric impacts modeled'}
+              </strong>
+            </div>
+          </div>
+        </section>
+
         {validationError && (
           <div className="action-config-validation">
             {validationError}
@@ -3476,7 +4705,7 @@ function ActionConfigBody(): ReactNode {
           <button
             type="button"
             className="action-config-secondary"
-            onClick={() => setActionFlowStep('configure')}
+            onClick={() => handleCancelFromReview('back_button')}
           >
             Back
           </button>
@@ -3742,10 +4971,204 @@ function ActionConfigBody(): ReactNode {
         type="button"
         className="action-config-confirm"
         onClick={() => setActionFlowStep('review')}
-        disabled={validationError !== null}
       >
         Review action
       </button>
+    </div>
+  )
+}
+
+const TURN_LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
+const TURN_LOADING_CLOCK_SFX_SRC = '/assets/audio/effects/slow-cinematic-clock-ticking-357979.mp3'
+const TURN_LOADING_FALLBACK_MS = 5600
+
+function TurnLoadingBody(): ReactNode {
+  const transition = useUiStore((s) => s.pendingTurnTransition)
+  const closeModal = useUiStore((s) => s.closeModal)
+  const clearTakeActionSelection = useUiStore((s) => s.clearTakeActionSelection)
+  const autosaveState = useSessionStore((s) => s.autosaveState)
+  const [isReady, setIsReady] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const clockAudioRef = useRef<HTMLAudioElement | null>(null)
+  const readyFallbackTimerRef = useRef<number | null>(null)
+  const completionFallbackTimerRef = useRef<number | null>(null)
+  const exitTimerRef = useRef<number | null>(null)
+  const exitStartedRef = useRef(false)
+
+  const markReady = useCallback(() => {
+    setIsReady((current) => (current ? current : true))
+  }, [])
+
+  const stopClockAudio = useCallback((): void => {
+    const audio = clockAudioRef.current
+    if (!audio) return
+    audio.pause()
+    try {
+      audio.currentTime = 0
+    } catch {
+      // Keep a best-effort seek reset for browsers with paused-seek restrictions.
+    }
+  }, [])
+
+  const completeTransition = useCallback((): void => {
+    if (exitStartedRef.current) return
+    exitStartedRef.current = true
+    stopClockAudio()
+    setIsExiting(true)
+    const nextState = transition?.nextState
+
+    if (typeof window === 'undefined') {
+      closeModal()
+      if (nextState) {
+        clearTakeActionSelection()
+        useGameStore.setState({ state: nextState })
+        void autosaveState(nextState, 'end_turn').catch(() => undefined)
+      }
+      return
+    }
+
+    if (exitTimerRef.current !== null) {
+      window.clearTimeout(exitTimerRef.current)
+    }
+    exitTimerRef.current = window.setTimeout(() => {
+      closeModal()
+      if (nextState) {
+        clearTakeActionSelection()
+        useGameStore.setState({ state: nextState })
+        void autosaveState(nextState, 'end_turn').catch(() => undefined)
+      }
+      exitTimerRef.current = null
+    }, 220)
+  }, [autosaveState, clearTakeActionSelection, closeModal, stopClockAudio, transition])
+
+  useEffect(() => {
+    if (!transition) {
+      setIsReady(false)
+      setIsExiting(false)
+      exitStartedRef.current = false
+      return
+    }
+    setIsReady(false)
+    setIsExiting(false)
+    exitStartedRef.current = false
+  }, [transition])
+
+  useEffect(() => {
+    if (!transition) {
+      stopClockAudio()
+      return undefined
+    }
+
+    const video = videoRef.current
+    if (video && video.readyState >= 3 && !video.paused) {
+      markReady()
+    } else if (video && video.readyState >= 2 && typeof window !== 'undefined') {
+      readyFallbackTimerRef.current = window.setTimeout(markReady, 420)
+    }
+
+    if (video) {
+      void video.play().catch(() => undefined)
+    }
+
+    if (typeof window !== 'undefined') {
+      completionFallbackTimerRef.current = window.setTimeout(completeTransition, TURN_LOADING_FALLBACK_MS)
+    }
+
+    return () => {
+      if (readyFallbackTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(readyFallbackTimerRef.current)
+        readyFallbackTimerRef.current = null
+      }
+      if (completionFallbackTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(completionFallbackTimerRef.current)
+        completionFallbackTimerRef.current = null
+      }
+      if (exitTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(exitTimerRef.current)
+        exitTimerRef.current = null
+      }
+      stopClockAudio()
+    }
+  }, [completeTransition, markReady, stopClockAudio, transition])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof Audio === 'undefined') {
+      return undefined
+    }
+    if (!transition || isExiting) {
+      stopClockAudio()
+      return undefined
+    }
+
+    if (!clockAudioRef.current) {
+      const audio = new Audio(TURN_LOADING_CLOCK_SFX_SRC)
+      audio.preload = 'auto'
+      audio.loop = true
+      audio.volume = 0.46
+      clockAudioRef.current = audio
+    }
+
+    const audio = clockAudioRef.current
+    if (!audio) return undefined
+    try {
+      audio.currentTime = 0
+    } catch {
+      // Ignore and still attempt playback.
+    }
+    const playPromise = audio.play()
+    if (playPromise && typeof playPromise.catch === 'function') {
+      void playPromise.catch(() => undefined)
+    }
+
+    return () => {
+      stopClockAudio()
+    }
+  }, [isExiting, stopClockAudio, transition])
+
+  if (!transition) {
+    return (
+      <div className="action-transition-shell">
+        <p className="action-transition-fallback">Turn transition payload unavailable.</p>
+        <div className="action-transition-actions">
+          <button type="button" className="action-config-confirm" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`onboarding-loading-shell${isReady ? ' is-ready' : ''}${isExiting ? ' is-exiting' : ''}`}>
+      <video
+        ref={videoRef}
+        className="onboarding-loading-video"
+        src={TURN_LOADING_VIDEO_SRC}
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        onPlaying={markReady}
+        onLoadedData={markReady}
+        onCanPlay={() => {
+          if (typeof window !== 'undefined' && readyFallbackTimerRef.current === null) {
+            readyFallbackTimerRef.current = window.setTimeout(markReady, 220)
+          }
+        }}
+        onEnded={completeTransition}
+        onError={completeTransition}
+      />
+      <div className="onboarding-loading-content">
+        <div className="onboarding-loading-kicker">End Turn Confirmed</div>
+        <div className="onboarding-loading-title">Resolving Regional Timeline</div>
+        <p className="onboarding-loading-subtitle">
+          Updating field telemetry, resource balances, and mandate trajectory for the next operational phase.
+        </p>
+        <div className="onboarding-loading-bar" aria-hidden="true">
+          <span />
+        </div>
+      </div>
     </div>
   )
 }
@@ -3838,10 +5261,201 @@ function OnboardingLoadingBody(): ReactNode {
   )
 }
 
+function CutscenePlayerBody(): ReactNode {
+  const content = useGameStore((s) => s.state.content)
+  const pendingCutsceneId = useUiStore((s) => s.pendingCutsceneId)
+  const pendingCutsceneFollowup = useUiStore((s) => s.pendingCutsceneFollowup)
+  const setPendingCutscene = useUiStore((s) => s.setPendingCutscene)
+  const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
+  const [videoFailed, setVideoFailed] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const [isRevealed, setIsRevealed] = useState(false)
+  const revealTimerRef = useRef<number | null>(null)
+  const autoAdvanceTimerRef = useRef<number | null>(null)
+  const completionRef = useRef(false)
+
+  const cutscene = useMemo(() => {
+    if (!content || !pendingCutsceneId) return null
+    return content.cutscenes.cutscenes.find((scene) => scene.cutscene_id === pendingCutsceneId) ?? null
+  }, [content, pendingCutsceneId])
+
+  const proceed = useCallback((): void => {
+    if (completionRef.current) return
+    completionRef.current = true
+    const followupModal = pendingCutsceneFollowup
+    setPendingCutscene(null, null)
+    if (followupModal && followupModal !== 'none' && followupModal !== 'cutscene_player') {
+      openModal(followupModal)
+      return
+    }
+    closeModal()
+  }, [closeModal, openModal, pendingCutsceneFollowup, setPendingCutscene])
+
+  useEffect(() => {
+    completionRef.current = false
+    setVideoFailed(false)
+    setVideoReady(false)
+    setIsRevealed(false)
+
+    if (typeof window !== 'undefined') {
+      revealTimerRef.current = window.setTimeout(() => setIsRevealed(true), 80)
+    }
+
+    if (cutscene?.auto_advance && typeof window !== 'undefined') {
+      const durationMs = Math.max(1200, Math.round(cutscene.duration_seconds * 1000))
+      autoAdvanceTimerRef.current = window.setTimeout(() => {
+        proceed()
+      }, durationMs)
+    }
+
+    return () => {
+      if (revealTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(revealTimerRef.current)
+        revealTimerRef.current = null
+      }
+      if (autoAdvanceTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(autoAdvanceTimerRef.current)
+        autoAdvanceTimerRef.current = null
+      }
+    }
+  }, [cutscene, proceed])
+
+  useEffect(() => {
+    if (!cutscene?.skippable || typeof window === 'undefined') return undefined
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        proceed()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [cutscene?.skippable, proceed])
+
+  if (!pendingCutsceneId || !content) {
+    return (
+      <div className="cutscene-player-shell is-fallback">
+        <p className="cutscene-player-fallback-copy">No cutscene is queued.</p>
+        <div className="cutscene-player-actions">
+          <button type="button" className="action-config-confirm" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!cutscene) {
+    return (
+      <div className="cutscene-player-shell is-fallback">
+        <p className="cutscene-player-fallback-copy">The selected cutscene could not be found.</p>
+        <div className="cutscene-player-actions">
+          <button type="button" className="action-config-confirm" onClick={proceed}>
+            Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const mediaSrc = normalizeAssetSrc(cutscene.media_url)
+  const fallbackImageSrc = normalizeAssetSrc(cutscene.fallback_image_url)
+  const narration =
+    resolveOptionalLocalizedText(content, cutscene.text_key) ??
+    'Transmission text unavailable. Continue to operational briefing.'
+  const speaker = resolveActorName(content, cutscene.speaker_key)
+  const cutsceneLabel = formatTokenLabel(cutscene.cutscene_id.replace(/^cutscene_/, ''))
+  const creditLines = narration
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+  const runtimeSeconds = Math.max(1, Math.round(cutscene.duration_seconds))
+
+  return (
+    <div className={`cutscene-player-shell${isRevealed ? ' is-revealed' : ''}`}>
+      <div className="cutscene-player-visual" aria-hidden="true">
+        {mediaSrc && !videoFailed ? (
+          <video
+            className="cutscene-player-video"
+            src={mediaSrc}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            onCanPlay={() => setVideoReady(true)}
+            onPlaying={() => setVideoReady(true)}
+            onEnded={() => {
+              if (cutscene.auto_advance) {
+                proceed()
+              }
+            }}
+            onError={() => setVideoFailed(true)}
+          />
+        ) : fallbackImageSrc ? (
+          <img className="cutscene-player-image" src={fallbackImageSrc} alt={`${cutsceneLabel} still`} />
+        ) : (
+          <div className="cutscene-player-fallback-visual" />
+        )}
+        <div className="cutscene-player-overlay" />
+      </div>
+
+      <div className="cutscene-player-content">
+        <div className="cutscene-player-head">
+          <span className="cutscene-player-kicker">
+            {cutscene.cutscene_id.includes('ending') ? 'Final Transmission' : `Act ${cutscene.act} Transition`}
+          </span>
+          <span className="cutscene-player-reference">{cutscene.cutscene_id.replace(/^cutscene_/, '').toUpperCase()}</span>
+        </div>
+        <h3 className="cutscene-player-title">{cutsceneLabel}</h3>
+        <p className="cutscene-player-speaker">Speaker: {speaker}</p>
+
+        <div className="cutscene-player-credits" role="document" aria-label="Cutscene narration">
+          {creditLines.map((line, index) => (
+            <p
+              className="cutscene-player-credit-line"
+              style={{ animationDelay: `${index * 0.22}s` }}
+              key={`${index}-${line.slice(0, 24)}`}
+            >
+              {line}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <div className="cutscene-player-actions">
+        <span className="cutscene-player-runtime">
+          {runtimeSeconds}s sequence {videoReady || videoFailed ? '' : '| buffering'}
+        </span>
+        <div className="cutscene-player-action-buttons">
+          {cutscene.auto_advance && cutscene.skippable && (
+            <button type="button" className="action-config-secondary" onClick={proceed}>
+              Skip
+            </button>
+          )}
+          {!cutscene.auto_advance && (
+            <button type="button" className="action-config-confirm" onClick={proceed}>
+              Continue
+            </button>
+          )}
+          {cutscene.auto_advance && !cutscene.skippable && (
+            <span className="cutscene-player-autoadvance">Auto advancing...</span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ModalBody(): ReactNode {
   const modal = useUiStore((s) => s.modal)
 
   if (modal === 'onboarding_loading') return <OnboardingLoadingBody />
+  if (modal === 'turn_loading') return <TurnLoadingBody />
+  if (modal === 'action_transition') return <ActionTransitionBody />
+  if (modal === 'cutscene_player') return <CutscenePlayerBody />
   if (modal === 'session_manager') {
     return <SessionManagerBody />
   }
@@ -3876,22 +5490,58 @@ function ModalBody(): ReactNode {
 export function ModalRoot(): ReactNode {
   const modal = useUiStore((s) => s.modal)
   const closeModal = useUiStore((s) => s.closeModal)
+  const openModal = useUiStore((s) => s.openModal)
+  const actionFlowStep = useUiStore((s) => s.actionFlowStep)
+  const setActionFlowStep = useUiStore((s) => s.setActionFlowStep)
+  const dialogueFlowStep = useUiStore((s) => s.dialogueFlowStep)
+  const setDialogueFlowStep = useUiStore((s) => s.setDialogueFlowStep)
+  const selectedActionId = useUiStore((s) => s.selectedActionId)
+  const selectedTarget = useUiStore((s) => s.selectedTarget)
+  const takeActionSelectionTurn = useUiStore((s) => s.takeActionSelectionTurn)
+  const setTakeActionSelectionTurn = useUiStore((s) => s.setTakeActionSelectionTurn)
+  const clearTakeActionSelection = useUiStore((s) => s.clearTakeActionSelection)
+  const startTurnLoop = useUiStore((s) => s.startTurnLoop)
+  const clearTurnLoop = useUiStore((s) => s.clearTurnLoop)
+  const fallbackActionId = useGameStore((s) => s.state.content?.actions.actions[0]?.action_id ?? null)
+  const sessionTurn = useGameStore((s) => s.state.session.turn)
+  const actionsRemaining = useGameStore((s) => s.state.session.actions_remaining)
   const previousModalRef = useRef<ModalKind>('none')
+  const modalContentRef = useRef<HTMLDivElement | null>(null)
+  const keyboardPrimaryTriggerRef = useRef(false)
   const revealFrameRef = useRef<number | null>(null)
   const [missionBriefRevealVisible, setMissionBriefRevealVisible] = useState(false)
   const [missionBriefFromLoading, setMissionBriefFromLoading] = useState(false)
   const entryGateRequiresChoice = useSessionStore((s) => s.entry_gate_active && !s.entry_gate_confirmed)
   const isBlockingEntryGate = modal === 'session_manager' && entryGateRequiresChoice
-  const isBlockingLoading = modal === 'onboarding_loading'
+  const isOnboardingLoadingModal = modal === 'onboarding_loading'
+  const isTurnLoadingModal = modal === 'turn_loading'
+  const isBlockingLoading = isOnboardingLoadingModal || isTurnLoadingModal
+  const isActionTransitionModal = modal === 'action_transition'
+  const isCutscenePlayerModal = modal === 'cutscene_player'
   const isTerritoryOverviewModal = modal === 'territory_overview'
   const isZoneListModal = modal === 'zone_list'
   const isZoneDetailModal = modal === 'zone_detail'
   const isMissionBriefModal = modal === 'mission_brief'
   const isDossierModal = modal === 'dossier'
   const isDossierArticleModal = modal === 'dossier_article'
+  const isIntelReportModal = modal === 'intel_report'
+  const isDialogueModal = modal === 'dialogue'
   const isRelationshipMatrixModal = modal === 'relationship_matrix'
   const isZoneModal = isZoneListModal || isZoneDetailModal
-  const loadingEnteringFromEntryGate = isBlockingLoading && previousModalRef.current === 'session_manager'
+  const loadingEnteringFromEntryGate = isOnboardingLoadingModal && previousModalRef.current === 'session_manager'
+
+  const closeCurrentModal = useCallback(() => {
+    if (modal === 'none') return
+    if (modal === 'action_config' && actionFlowStep === 'review') {
+      recordTelemetryEvent('action_cancelled_from_review', {
+        turn: sessionTurn,
+        action_id: selectedActionId ?? fallbackActionId,
+        source: 'close',
+      })
+    }
+    closeModal()
+  }, [actionFlowStep, closeModal, fallbackActionId, modal, selectedActionId, sessionTurn])
+
   useEffect(() => {
     if (revealFrameRef.current !== null && typeof window !== 'undefined') {
       window.cancelAnimationFrame(revealFrameRef.current)
@@ -3899,6 +5549,44 @@ export function ModalRoot(): ReactNode {
     }
 
     const previousModal = previousModalRef.current
+    if (modal !== previousModal) {
+      if (previousModal !== 'none') {
+        recordTelemetryEvent('modal_closed', {
+          modal: previousModal,
+          next_modal: modal,
+        })
+      }
+      if (modal !== 'none') {
+        recordTelemetryEvent('modal_opened', {
+          modal,
+          previous_modal: previousModal,
+        })
+      }
+    }
+
+    if (modal === 'action_config' && previousModal !== 'action_config') {
+      if (takeActionSelectionTurn !== null && takeActionSelectionTurn !== sessionTurn) {
+        clearTakeActionSelection()
+      } else if (takeActionSelectionTurn === sessionTurn && (selectedActionId !== null || selectedTarget !== null)) {
+        recordTelemetryEvent('take_action_state_restored', {
+          turn: sessionTurn,
+          action_id: selectedActionId,
+          has_target: Boolean(selectedTarget),
+        })
+      }
+      setTakeActionSelectionTurn(sessionTurn)
+      const startedAtMs = Date.now()
+      startTurnLoop(startedAtMs)
+      recordTelemetryEvent('turn_loop_started', {
+        turn: sessionTurn,
+        actions_remaining: actionsRemaining,
+        started_at_ms: startedAtMs,
+      })
+    }
+    if (previousModal === 'action_config' && modal !== 'action_config' && modal !== 'action_transition') {
+      clearTurnLoop()
+    }
+
     if (modal === 'mission_brief') {
       setMissionBriefFromLoading(previousModal === 'onboarding_loading')
       setMissionBriefRevealVisible(false)
@@ -3923,9 +5611,125 @@ export function ModalRoot(): ReactNode {
         revealFrameRef.current = null
       }
     }
+  }, [
+    actionsRemaining,
+    clearTakeActionSelection,
+    clearTurnLoop,
+    modal,
+    selectedActionId,
+    selectedTarget,
+    sessionTurn,
+    setTakeActionSelectionTurn,
+    startTurnLoop,
+    takeActionSelectionTurn,
+  ])
+
+  useEffect(() => {
+    if (modal === 'none') return
+    const root = modalContentRef.current
+    if (!root) return
+
+    const applyPrimaryCta = (): void => {
+      Array.from(root.querySelectorAll('button[data-primary-cta="true"]')).forEach((node) => {
+        node.removeAttribute('data-primary-cta')
+      })
+      const primaryButton = pickPrimaryCtaButton(root, modal)
+      primaryButton?.setAttribute('data-primary-cta', 'true')
+    }
+
+    applyPrimaryCta()
+    if (typeof MutationObserver === 'undefined') return undefined
+
+    const observer = new MutationObserver(() => applyPrimaryCta())
+    observer.observe(root, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['disabled', 'class', 'style', 'aria-hidden'],
+    })
+
+    return () => {
+      observer.disconnect()
+    }
   }, [modal])
 
-  const isBlockingModal = isBlockingLoading || isBlockingEntryGate
+  useEffect(() => {
+    if (modal === 'none') return undefined
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented) return
+
+      if (event.key === 'Enter' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+        if (isTextEntryElement(event.target)) return
+        if (event.target instanceof HTMLButtonElement) return
+
+        const root = modalContentRef.current
+        const primaryButton = root?.querySelector('button[data-primary-cta="true"]:not(:disabled)')
+        if (!(primaryButton instanceof HTMLButtonElement)) return
+
+        event.preventDefault()
+        keyboardPrimaryTriggerRef.current = true
+        primaryButton.click()
+        return
+      }
+
+      if (event.key !== 'Escape') return
+      if (isBlockingEntryGate || isBlockingLoading || isActionTransitionModal || isCutscenePlayerModal) return
+
+      event.preventDefault()
+      if (modal === 'action_config' && actionFlowStep === 'review') {
+        recordTelemetryEvent('action_cancelled_from_review', {
+          turn: sessionTurn,
+          action_id: selectedActionId ?? fallbackActionId,
+          source: 'escape',
+        })
+        setActionFlowStep('configure')
+        recordTelemetryEvent('modal_escape_used', { modal, behavior: 'step_back' })
+        return
+      }
+      if (isDialogueModal && dialogueFlowStep === 'outcome') {
+        setDialogueFlowStep('choices')
+        recordTelemetryEvent('modal_escape_used', { modal, behavior: 'step_back' })
+        return
+      }
+      if (modal === 'zone_detail') {
+        openModal('zone_list')
+        recordTelemetryEvent('modal_escape_used', { modal, behavior: 'step_back' })
+        return
+      }
+      if (modal === 'dossier_article') {
+        openModal('dossier')
+        recordTelemetryEvent('modal_escape_used', { modal, behavior: 'step_back' })
+        return
+      }
+
+      recordTelemetryEvent('modal_escape_used', { modal, behavior: 'close' })
+      closeCurrentModal()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [
+    actionFlowStep,
+    closeCurrentModal,
+    dialogueFlowStep,
+    isActionTransitionModal,
+    isBlockingEntryGate,
+    isBlockingLoading,
+    isCutscenePlayerModal,
+    isDialogueModal,
+    modal,
+    openModal,
+    fallbackActionId,
+    selectedActionId,
+    sessionTurn,
+    setActionFlowStep,
+    setDialogueFlowStep,
+  ])
+
+  const isBlockingModal = isBlockingLoading || isBlockingEntryGate || isActionTransitionModal || isCutscenePlayerModal
   const missionBriefEnteringFromLoading =
     isMissionBriefModal && (missionBriefFromLoading || previousModalRef.current === 'onboarding_loading')
   const baseBackdropStyle = isBlockingModal ? { ...BACKDROP_STYLE, background: '#000' } : BACKDROP_STYLE
@@ -3953,6 +5757,26 @@ export function ModalRoot(): ReactNode {
           overflow: 'hidden',
           background: 'linear-gradient(180deg, rgba(10,10,10,0.96), rgba(6,6,6,0.98))',
           border: '1px solid rgba(212, 175, 55, 0.28)',
+        }
+      : isActionTransitionModal
+      ? {
+          ...MODAL_STYLE,
+          width: 'min(980px, 95vw)',
+          maxHeight: '92vh',
+          overflow: 'hidden',
+          background: 'radial-gradient(circle at top, rgba(30, 24, 14, 0.96), rgba(7, 7, 7, 0.98))',
+          border: '1px solid rgba(212, 175, 55, 0.3)',
+          padding: 0,
+        }
+      : isCutscenePlayerModal
+      ? {
+          ...MODAL_STYLE,
+          width: 'min(1080px, 96vw)',
+          maxHeight: '92vh',
+          overflow: 'hidden',
+          background: '#070707',
+          border: '1px solid rgba(212, 175, 55, 0.28)',
+          padding: 0,
         }
       : isTerritoryOverviewModal
         ? {
@@ -3988,6 +5812,14 @@ export function ModalRoot(): ReactNode {
             overflow: 'hidden',
             padding: 0,
           }
+      : isIntelReportModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(920px, 94vw)',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            padding: 0,
+          }
       : isRelationshipMatrixModal
         ? {
             ...MODAL_STYLE,
@@ -4010,10 +5842,14 @@ export function ModalRoot(): ReactNode {
   }${
     isBlockingEntryGate ? ' modal-content-entry-gate' : ''
   }${isTerritoryOverviewModal ? ' modal-content-territory-overview' : ''}${
+    isActionTransitionModal ? ' modal-content-action-transition' : ''
+  }${isCutscenePlayerModal ? ' modal-content-cutscene-player' : ''}${
     isZoneListModal ? ' modal-content-zone-list' : ''
   }${isZoneDetailModal ? ' modal-content-zone-detail' : ''}${
     isDossierModal ? ' modal-content-dossier' : ''
   }${isDossierArticleModal ? ' modal-content-dossier-article' : ''}${
+    isIntelReportModal ? ' modal-content-intel-report' : ''
+  }${
     isRelationshipMatrixModal ? ' modal-content-relationship-matrix' : ''
   }${
     isMissionBriefModal ? ' modal-content-mission-brief' : ''
@@ -4033,12 +5869,34 @@ export function ModalRoot(): ReactNode {
       style={backdropStyle}
       onClick={(event) => {
         if (isBlockingModal) return
-        if (event.target === event.currentTarget) closeModal()
+        if (event.target === event.currentTarget) closeCurrentModal()
       }}
     >
       <div
+        ref={modalContentRef}
         className={modalContentClassName}
         style={modalStyle}
+        onClickCapture={(event) => {
+          const target = event.target
+          if (!(target instanceof Element)) {
+            keyboardPrimaryTriggerRef.current = false
+            return
+          }
+          const clickedButton = target.closest('button')
+          if (!(clickedButton instanceof HTMLButtonElement)) {
+            keyboardPrimaryTriggerRef.current = false
+            return
+          }
+          if (clickedButton.getAttribute('data-primary-cta') === 'true') {
+            const clickDetail = typeof event.detail === 'number' ? event.detail : 1
+            recordTelemetryEvent('modal_primary_cta_clicked', {
+              modal,
+              cta_label: clickedButton.textContent?.trim() ?? '',
+              activation: keyboardPrimaryTriggerRef.current || clickDetail === 0 ? 'enter' : 'click',
+            })
+          }
+          keyboardPrimaryTriggerRef.current = false
+        }}
         onClick={(event) => event.stopPropagation()}
       >
         {!isBlockingLoading &&
@@ -4046,14 +5904,17 @@ export function ModalRoot(): ReactNode {
           !isTerritoryOverviewModal &&
           !isZoneModal &&
           !isMissionBriefModal &&
+          !isActionTransitionModal &&
+          !isCutscenePlayerModal &&
           !isDossierModal &&
-          !isDossierArticleModal && (
+          !isDossierArticleModal &&
+          !isIntelReportModal && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem', fontFamily: 'var(--font-sans)' }}>{heading}</h2>
             {!isBlockingModal && (
               <button
                 type="button"
-                onClick={closeModal}
+                onClick={closeCurrentModal}
                 style={{
                   background: 'none',
                   border: 'none',

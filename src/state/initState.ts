@@ -115,13 +115,9 @@ function buildActorSentiments(content: GameContent): Record<string, ActorSentime
   }, {})
 }
 
-function buildIntelFeed(content: GameContent): IntelFeedItem[] {
-  return content.intel_reports.intel_reports.map((report) => ({
-    report_key: report.report_key,
-    is_urgent: report.urgency === 'high' || report.urgency === 'critical',
-    occurred_at: 1,
-    is_read: false,
-  }))
+function buildIntelFeed(_content: GameContent): IntelFeedItem[] {
+  // Start empty: reports appear only after their generator action/event fires.
+  return []
 }
 
 /**

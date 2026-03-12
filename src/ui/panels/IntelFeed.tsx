@@ -29,80 +29,78 @@ export function IntelFeed(): ReactNode {
     <div
       className={`intel-feed ${minimized ? 'minimized' : ''}`}
       id="intel-feed"
-      style={{ marginBottom: '1.5rem' }}
     >
       <button
         type="button"
         className="intel-feed-header"
         onClick={toggle}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%',
-          marginBottom: '0.75rem',
-          background: 'none',
-          border: 'none',
-          color: 'inherit',
-          cursor: 'pointer',
-          padding: 0,
-          textAlign: 'left',
-        }}
       >
-        <span className="sidebar-panel-title" style={{ marginBottom: 0 }}>
-          Intelligence feed
+        <span className="sidebar-panel-title intel-feed-title">
+          <svg
+            className="intel-feed-title-icon"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="6" width="18" height="12" rx="2" />
+            <path d="M3 8l9 6 9-6" />
+          </svg>
+          <span>Intelligence Feed</span>
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span className="actor-chip">{unreadCount} unread</span>
-          <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{minimized ? '+' : '-'}</span>
+        <div className="intel-feed-meta">
+          <span className="actor-chip intel-feed-status" aria-label={`${unreadCount} unread`}>
+            <span>{unreadCount} unread</span>
+            <span className="intel-feed-status-divider" aria-hidden="true" />
+            <span className="intel-feed-status-toggle" aria-hidden="true">{minimized ? '+' : '-'}</span>
+          </span>
         </div>
       </button>
       {!minimized && (
         <div className="intel-feed-content">
-          {intel_feed === undefined && <p className="game-text-muted">Loading...</p>}
+          {intel_feed === undefined && <p className="intel-feed-empty">Loading intelligence briefings...</p>}
           {intel_feed !== undefined && intel_feed.length === 0 && (
-            <p className="game-text-muted">No intel reports yet.</p>
+            <p className="intel-feed-empty">No briefings filed yet.</p>
           )}
           {intel_feed !== undefined && intel_feed.length > 0 && (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <ul className="intel-feed-list">
               {intel_feed.map((item) => {
                 const report = resolveIntelReport(content, item.report_key)
                 const zoneScope = report?.zone_scope ? resolveZoneName(content, report.zone_scope) : 'Regional scope'
                 return (
                   <li
                     key={item.report_key}
-                    className={`intel-item ${item.is_urgent ? 'urgent' : ''}`}
-                    style={{
-                      background: 'var(--bg-card)',
-                      borderLeft: `3px solid ${item.is_urgent ? 'var(--alert)' : 'var(--gold)'}`,
-                      padding: '0.75rem',
-                      marginBottom: '0.6rem',
-                      borderRadius: '0 4px 4px 0',
-                      cursor: 'pointer',
-                      display: 'grid',
-                      gap: '0.35rem',
-                    }}
+                    className={`intel-feed-item${item.is_urgent ? ' urgent' : ''}${!item.is_read ? ' unread' : ''}`}
                     onClick={() => handleItemClick(item.report_key)}
                     onKeyDown={(event) => event.key === 'Enter' && handleItemClick(item.report_key)}
                     role="button"
                     tabIndex={0}
+                    aria-label={`Open briefing ${report?.headline_text ?? item.report_key}`}
                   >
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
-                      <strong style={{ color: 'var(--gold)' }}>{report?.headline_text ?? item.report_key}</strong>
-                      {item.is_urgent && (
-                        <span style={{ color: 'var(--alert)', fontSize: '0.72rem', fontWeight: 700 }}>Urgent</span>
-                      )}
-                      {!item.is_read && (
-                        <span style={{ color: 'var(--gold-bright)', fontSize: '0.72rem', fontWeight: 700 }}>New</span>
-                      )}
+                    <div className="intel-feed-item-topline">
+                      <span className="intel-feed-item-kicker">AU D&apos;Marche</span>
+                      <div className="intel-feed-item-badges">
+                        {item.is_urgent && <span className="actor-chip inactive">Urgent</span>}
+                        {!item.is_read && <span className="actor-chip active">New</span>}
+                      </div>
                     </div>
+                    <div className="intel-feed-item-title">{report?.headline_text ?? item.report_key}</div>
                     {report && (
-                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem' }}>
+                      <div className="intel-feed-item-summary">
                         {formatTokenLabel(report.urgency)} urgency | {formatTokenLabel(report.confidence_level)} confidence
                       </div>
                     )}
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>
-                      Turn {item.occurred_at} | {zoneScope}
+                    <div className="intel-feed-item-meta">
+                      <span>Turn {item.occurred_at}</span>
+                      <span className="intel-feed-item-meta-divider" aria-hidden="true" />
+                      <span>{zoneScope}</span>
+                      <span className="intel-feed-item-meta-divider" aria-hidden="true" />
+                      <span>{report ? formatTokenLabel(report.generated_by) : 'Field channel'}</span>
                     </div>
                   </li>
                 )

@@ -8,6 +8,7 @@ import {
 } from '../../state/selectors'
 import type { Metrics } from '../../state/types'
 import { getActFromTurn } from '../../systems/turnEngine'
+import { deriveOperationalPressure, formatDeadlineSignal } from '../operationalPressure'
 
 const METRIC_LABELS: Record<keyof Metrics, string> = {
   stability: 'Stability',
@@ -46,6 +47,7 @@ export function TurnProgressPanel(): ReactNode {
   const state = useGameStore((s) => s.state)
   const content = state.content
   const session = state.session
+  const pressure = deriveOperationalPressure(state)
 
   if (!session) {
     return (
@@ -72,6 +74,11 @@ export function TurnProgressPanel(): ReactNode {
   const turnDelta =
     latestResolvedMetrics !== undefined ? metricDeltaSummary(baselineMetrics, latestResolvedMetrics) : []
   const act = getActFromTurn(session.turn)
+  const deadlineSignal = formatDeadlineSignal(pressure.turnsToDeadline, pressure.nearestDeadlineTurn)
+  const criticalZoneSignal =
+    pressure.intelCriticalZoneAdditions > 0
+      ? `Critical zones ${pressure.criticalZoneCount} (+${pressure.intelCriticalZoneAdditions} intel)`
+      : `Critical zones ${pressure.criticalZoneCount}`
 
   const hasAnyProgress = latestAction !== null || latestResolvedTurn !== null
 
@@ -93,6 +100,32 @@ export function TurnProgressPanel(): ReactNode {
           <span className="turn-progress-now-label">Actions</span>
           <strong className="turn-progress-now-value">{session.actions_remaining} left</strong>
         </div>
+      </div>
+      <div className={`turn-pressure-block turn-pressure-block--${pressure.level}`}>
+        <div className="turn-pressure-head">
+          <span className="turn-pressure-label">Operational pressure</span>
+          <strong className="turn-pressure-value">
+            {pressure.label} | {pressure.score}/100
+          </strong>
+        </div>
+        <div
+          className="turn-pressure-meter"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pressure.score}
+          aria-label="Operational pressure index"
+        >
+          <span className={`turn-pressure-meter-fill turn-pressure-meter-fill--${pressure.level}`} style={{ width: `${pressure.score}%` }} />
+        </div>
+        <div className="turn-pressure-signals">
+          <span className="turn-pressure-signal">{criticalZoneSignal}</span>
+          <span className="turn-pressure-signal">Intel alerts {pressure.activeUrgentIntelCount}</span>
+          <span className="turn-pressure-signal">Opposition {pressure.oppositionPressure}</span>
+          <span className="turn-pressure-signal">Mandate clock {pressure.timeMonthsRemaining} months</span>
+          <span className="turn-pressure-signal">{deadlineSignal}</span>
+        </div>
+        <p className="turn-pressure-summary">{pressure.summary}</p>
       </div>
 
       {!hasAnyProgress && (

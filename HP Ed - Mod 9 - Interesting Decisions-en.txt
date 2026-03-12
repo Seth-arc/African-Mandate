@@ -1,0 +1,857 @@
+Good to see you here again.
+In this module,
+we're going to talk about decisions.
+Players making decisions is largely
+what makes games different
+from other types of entertainment media,
+like books or movies.
+Yes, I know you can have games
+like Candyland and
+Snakes and Ladders with no decisions
+and something like a choose
+your own adventure book
+that has decisions.
+But on the whole,
+this is the kind of defining thing
+about games.
+So let's talk about it.
+I may have mentioned this quote before,
+and even if I didn't,
+you might have heard it before.
+It's a pretty famous line.
+Sid never meant this
+as any kind of definition for games.
+What he was trying to say
+is that a good game
+is a series of interesting decisions.
+Basically that the quality of gameplay
+comes down to the quality of choices
+that the players make
+and how interesting they are.
+Now keep in mind Sid Meier is
+best known for the
+Civilization series of games.
+So yeah,
+if you're making a game in the 4X genre,
+decisions are pretty much
+at the core of that.
+If you're making a walking sim,
+like Gone Home or
+Edith Finch or To the Moon,
+those games are more about telling
+a compelling story in pieces
+and they're highly linear
+with almost no player choice,
+just some light exploration.
+So this isn't even universal.
+And lastly, it's worth asking,
+even for games
+where decisions are important,
+what makes a choice interesting
+or not interesting?
+Well, this is starting to sound a lot
+like saying good games are fun, right?
+Does interesting actually
+have any meaning?
+In this case,
+I think it is possible
+to be a little more precise
+about what kinds of decisions
+are interesting and why.
+But first,
+I'd like to talk about the opposite.
+Decisions that are not interesting.
+I'm going to talk about three kinds
+of uninteresting decisions,
+but I will caution you
+the words
+I'm using to describe
+these are just words
+that I made up to describe them.
+These are used in my lectures
+and my writing to describe them,
+but they are not common
+terminology in the game industry
+or among game designers.
+We don't really have words
+to talk about this,
+which is why I invented some
+just so I could talk about them
+in my classes.
+At any rate,
+the first type of uninteresting decision
+is what I call a meaningless decision.
+The player is given a decision,
+but no matter what they choose,
+it has no effect on gameplay.
+I remember this happening a lot
+in very early console
+RPGs like the first Dragon Warrior game
+where you'd wander up to a castle guard
+and they'd ask,
+“Wouldst thou like to see the king?”,
+and you'd be given a yes or no choice.
+But if you say no, then they say,
+“But thous must! Wouldst thou like to see the king?”
+And then they give you the
+same question until you say yes.
+So it wasn't really a choice.
+But Thou Must
+is even the name of this trope
+on the TV Tropes website.
+The problem with meaningless decisions
+is that they aren't
+really a decision at all.
+Yes, you make a choice,
+but the choice doesn't matter,
+so why bother giving it to me?
+In most cases you're better off
+just removing the choice entirely
+or else making the difference
+between the choices meaningful.
+Next are what
+I would call obvious decisions.
+You're given a decision,
+it has an effect on gameplay,
+but one of the choices
+is very clearly superior to the others,
+so there's no reason for you to choose
+anything else.
+It's a choice,
+but not an interesting one,
+because there's only one viable option.
+One example of
+this is the board game, Talisman.
+In this game
+you roll a die,
+then move around the board,
+but you can move left or right,
+so there is a choice.
+However, much of the time,
+one space is clearly
+better than the other.
+Like one space says game for gold
+and the other says lose a turn.
+The board game,
+Trivial Pursuit,
+also tends to be like this,
+where moving one direction
+takes you to a space that helps
+you satisfy a victory condition
+and the other directions don't.
+So of course you pick the one that does,
+or you're given a choice of two spaces
+with different trivia categories
+when you're better
+at one category than the other.
+So of course
+you go for your stronger category.
+Sometimes you see this
+in video games too.
+In the first Mass Effect game,
+you were given many choices
+throughout the game
+to accomplish things
+one of two ways,
+which were marked as either
+Paragon or Renegade.
+And you got bonuses
+for acquiring a certain number
+of Paragon points or Renegade points
+that made some situations easier.
+So going Paragon or Renegade
+was a meaningful choice,
+but once you decide
+which one you're going to do,
+there wasn't much incentives to switch.
+So if you're already doing
+a Paragon playthrough
+and the game gives you a choice
+of doing something
+the Paragon way or the Renegade way,
+that's an obvious decision.
+You go Paragon
+because that's the character
+you're playing and the game
+strongly incentivizes you
+in the mechanics
+to go all in with one or the other.
+As with meaningless decisions,
+if you have an obvious decision,
+the usual answer is to either
+make it meaningful
+by giving something positive
+or negative to both choices
+so that it's more of a tradeoff
+or just remove the choice entirely,
+automate it,
+automatically choose the right one
+so the player doesn't have to.
+The last kind of uninteresting decision
+is what I call a blind decision.
+Blind decisions
+have an effect on the game
+so they aren't meaningless
+and the right answer
+isn't immediately clear.
+So it's not obvious.
+But the problem here is that players
+don't have enough knowledge
+about the game state
+for the decision to have meaning.
+Playing Rock, Paper, Scissors
+against a truly random
+opponent is like this.
+You have no way of knowing
+what your opponent is going to choose.
+So even though your choice
+has an effect on the outcome
+and it's not obvious what to pick,
+you still also have no information
+about what your opponent might pick,
+so you may as well just guess randomly.
+Lots of gambling games are like this,
+guessing a hidden
+number, placing money
+on a specific number
+on the roulette wheel,
+anything where you're given a choice,
+but ultimately it's random
+and that any choice of yours
+is just as likely as any other choice.
+There are plenty of cases
+of blind decisions in games.
+A lot of level designs are like this
+where, say you walk down
+a hallway that ends in a T intersection,
+you can either head left or right,
+or there's a hallway with three doors
+and you have to choose
+which door to enter next.
+If they all look the same,
+which way you go is just a random guess.
+Now, if the level designer adds
+some environmental clues
+like putting a bunch
+of skulls and blood
+down the left side
+to suggest more danger that way,
+then it's more meaningful.
+Another common
+example in games
+is something like
+the player being given a set of face down
+shuffled cards and being told to pick one,
+and you get what's under it.
+Or picking two cards
+and you get a prize if they match.
+If the cards are truly
+randomly shuffled,
+and you only get one guess,
+you might as well guess randomly
+or have the game
+make a random guess for you.
+Or you can make it more interesting
+by adding more information.
+In Super Mario 3, for example,
+you played this memory game,
+which seems random at first,
+but if you play enough,
+you'll eventually realize
+there are only eight distinct shuffles,
+so it's not completely random.
+And if you know what those shuffles are,
+you can choose specific spots
+on the board to determine
+which of the eight boards you're on,
+and then if you have the boards
+memorized,
+you should be able to clear the board
+completely on every single try.
+So it's more a test of memory,
+which is at least
+something that a player can fail at,
+so it's better than random chance,
+and it's at least initially
+a puzzle solving
+aspect of figuring out the optimal
+first picks to determine
+and what board you're on,
+once you identify
+what the eight shuffles are.
+So while these types of decisions
+are usually not great,
+there are some key exceptions
+to be aware of.
+First, meaningless
+decisions can still be worth
+keeping around
+if they have emotional impact.
+My favorite example of
+this is the board game, Monopoly.
+If you played Monopoly,
+what playing piece do you choose?
+Is it the car,
+the shoe, the dog, the top hat?
+This has no meaning in the game,
+none of the pieces have
+any special abilities or powers
+that make it distinct
+from any of the others,
+mechanically speaking.
+The pieces don't even make sense,
+like one of them is a thimble,
+one is a clothes iron.
+What do those have to do
+with real estate development?
+And yet most people have a favorite.
+And there have been fights over
+who gets to be in the wheelbarrow
+or the battleship or whatever.
+Likewise, in most video
+games, your main character's
+appearance has no effect on the game,
+but some players will spend hours
+in the character creator
+just getting their look right.
+So, a choice can be emotionally
+meaningful to a player,
+even if it isn't mechanically meaningful.
+An exception
+to the obvious decisions
+being meaningless
+is that they become
+a whole lot more challenging
+if there's time pressure.
+If you've ever played a rhythm game
+like Dance Dance Revolution,
+Guitar Hero, or Rock Band,
+your goal is just to hit the notes
+with the right timing.
+So for each note,
+there's an obvious choice.
+You hit the note or you don't.
+Obviously,
+the choice is to hit the correct note.
+You never want to miss intentionally,
+but the notes come at you quickly enough
+that just doing
+the obvious thing is challenging.
+There are some card games where players
+flip over cards one at a time,
+according to simple rules.
+But if you flip up
+two of the same card
+in a row,
+first player to slap the pile
+gets some kind of gameplay advantage.
+Again, no one's deciding,
+“Hmm, do I slap the pile or not?
+If I slap it, I get an advantage.
+If I don't, then I don't.”
+It's just whether you can notice
+a gameplay situation
+faster than anyone else.
+Some decisions
+which might otherwise be blind,
+can come down to psychology.
+In Rock, Paper, Scissors,
+or other guessing type games
+like that against a human opponent,
+you can try to read the other player’s
+body language
+and try to figure out
+what they're trying to do.
+In poker, so much of the game
+is keeping a poker face
+to avoid giving information away
+while looking for
+tells from your opponent
+to try and figure out
+whether they're bluffing
+or whether they have a really good hand.
+Mechanically, the decision is blind
+but you are playing
+with other humans,
+and their behaviors do in fact
+give some key information sometimes,
+and your goal is to read that information
+while avoiding
+giving out that same information
+to your opponents.
+Among Us,
+pictured here
+also a great example of this.
+Suppose Orange calls
+an emergency meeting and says,
+“Hey, I found the body of Blue
+but I didn't see anything there.”
+And then Yellow says,
+“I saw that Pink is the impostor.”
+And Pink says,
+“No, I saw it, Yellow is the impostor.”
+Who do you believe?
+It's a blind decision,
+except that you're able
+to take into account
+player behavior,
+like how different players
+voted and reacted in the past.
+And if you're playing with people
+you know,
+and especially if you're in the same room
+where you can discuss a person
+and hear everyone's tone of voice
+and body posture,
+you can take that into account as well.
+When dealing with multiplayer games
+where you're trying to figure out
+what other players are doing,
+blind decisions aren't
+always quite as blind as they appear.
+Another example of blind decisions
+is many gambling games like roulette
+or craps or slot machines.
+These are compelling,
+mainly
+because there's a real world outcome
+the player cares about,
+specifically money.
+In these cases,
+it's the thrill of winning or losing money
+that's compelling
+because that has a real effect
+outside of the magic circle of the game.
+Remove the money component
+and it's much less interesting.
+Imagine if you had a roulette wheel at home
+and wanted to play with your friends
+where you just gave everyone a hundred chips
+and kept letting people bet on each spin,
+but no real money would change hands.
+You're just playing for fun
+with no real stakes.
+That game
+suddenly is not very interesting
+at that point.
+So now that we've covered
+the uninteresting decisions,
+what's left?
+I’ve told you what not to do.
+But what about what to do?
+Generally, when you're talking about
+interesting decisions,
+what we really mean
+is some kind of tradeoff
+where the player has several
+things they can do that
+are all at least somewhat good
+or somewhat bad.
+Resource trades
+are the most obvious, right?
+I’ll trade
+you two wood for your clay
+and your wheat.
+These tend to work best
+when the value of each resource
+is relative or varies over time.
+If wood is always worth
+two points
+and clay is one point
+and wheat is three points,
+and the only thing these are useful
+for is points,
+then you can just do the math
+and it's not very interesting to trade.
+But if sometimes you need wheat
+a lot and other times it's
+totally useless to you,
+and its value
+is different to each player,
+and its value changes over time,
+then this can get a lot more interesting.
+Risk reward tradeoffs can be a lot of fun
+and let a player opt into either
+safer or more risky behavior.
+Usually this is shown as a choice
+between one safe choice
+that guaranteed you some known payoff
+versus another choice
+that gives a potentially greater payoff,
+but also a higher risk of failure.
+You see this option
+a lot in professional sports
+where teams that are high end
+can make a high risk, high reward
+play that's unlikely to score,
+but can score a lot of points
+very quickly if they pull it off.
+Usually teams
+don't take the risky option,
+but if one of them is way behind,
+they might use it
+to try to catch up quickly.
+I've seen this in video games too.
+A special move in an RPG
+that has a 50/50 chance
+of missing entirely
+or scoring a critical hit.
+That's mathematically worse
+than just attacking normally,
+but sometimes it might be worth it
+if you need to do a large amount
+of damage quickly,
+like if a boss enemy is almost dead,
+but also preparing for
+a heavy damage attack.
+Push your luck mechanics
+also fit in this category.
+You can keep what you found
+so far and walk away,
+or you can keep going and risk it all
+to possibly get better rewards.
+Another common tradeoff in games
+is the choice between getting
+something useful right now
+or something much better
+if you wait.
+So that the player has to decide
+between immediate needs
+and long term goals.
+You see this a lot in
+deckbuilder roguelikes
+like Slay the Spire,
+where you might
+choose one ability in your deck
+that helps you a lot in the early game,
+but it'll be a liability much later on,
+or a different ability
+that will be great
+against the final boss,
+but not very helpful until then.
+You also see this in tech trees, in RPGs,
+where a player gets to choose
+an ability on level up
+and they might choose something
+at a dead end of a tech tree
+that gives a really useful ability now.
+Or they might choose something
+that's not that great
+of an ability on its own,
+but then unlocks the path
+to a very powerful ability much later.
+Lastly,
+you can have a choice between several
+good things where they're all good,
+but you have to choose
+which one is the best,
+or the opposite,
+where you have a choice
+between several bad things
+and you have to choose
+the least bad option.
+Ideally, in a case
+where the values of these things
+are relative, or shifting,
+or otherwise not perfectly clear,
+so that it isn't just an obvious decision
+to take the one with the biggest payoff.
+This is not a complete list
+of all types of tradeoffs,
+but you can see a common theme here.
+Basically, any decision
+where the player is judging
+the value of several things,
+where the values are relative,
+shifting or otherwise
+not certain or obvious.
+For games
+where you're primarily
+thinking and strategizing
+and not just playing an action game
+based on time pressure,
+these are the kinds of things
+you want to be thinking about.
+Designing mechanics
+that put players in situations
+where they'll be making
+these kinds of tradeoffs.
+I have one other thing to mention
+about making decisions,
+and that comes from the difficulty
+of making a decision.
+To a four year old,
+Tic Tac Toe
+is a fascinating game of strategy,
+but to most adults,
+it's way too simplistic.
+To some people,
+chess is a great strategy game.
+To others, it's way too
+complicated and mystifying.
+Both chess and Tic Tac Toe
+involve decisions.
+What makes those decisions compelling
+to a person or not?
+And part of that comes down
+to the skill of the player
+versus the challenge of the decision.
+Here's a diagram that most game
+designers would be familiar with.
+This is a graph that shows the player's
+skill on the horizontal axis
+and the level of challenge
+on the vertical axis.
+If you're in the bottom
+right part of this diagram,
+you have a high level of skill
+and the challenge is low,
+like an adult playing Tic Tac Toe,
+the game feels too simplistic
+and you're bored.
+If you've ever played a video game
+that just felt like it
+didn't present nearly enough challenge,
+you might have given up
+before getting to the end,
+even if it felt
+like you could do it
+just because it felt like
+it was dragging on for too long.
+Meanwhile, on the top left of the graph,
+you have a low skill
+and the challenge is very, very high,
+like a four year old playing chess
+against an international grandmaster,
+there is likely to be a high level
+of frustration for that little kid.
+If you've ever seen someone who doesn't
+have great reflexes or other action
+video game skills
+playing a really difficult game
+like Dark Souls,
+they're likely to rage quit
+before too long.
+The game is just too hard
+and you just don't even see a path
+to thinking about how to eventually win,
+so you just give up.
+However, if you are
+at the level of your skill,
+so there's difficult
+but not too difficult,
+if you feel like you can succeed,
+but only if you try very hard,
+then your brain actually likes that
+and it'll engage
+extra power to try and push itself
+so that you can succeed.
+We call this a flow state,
+sometimes being called in the flow
+or in the zone,
+and it can happen in many situations,
+not just games.
+Now, flow is not the same thing as fun.
+It’s not as simple as saying just challenge
+the player at their ability level
+and then your game is fun,
+problem solved.
+It's not like that.
+But being in a flow state is something
+that is generally pleasurable
+and something that game designers
+want to be aware of.
+And this explains
+why some children's games,
+even games like Candyland
+or Snakes and Ladders
+that have no decisions at all,
+are still fun for young children,
+but not for adults.
+Even though
+there are no interesting decisions
+for a young child,
+there are still challenges here.
+They are still building
+proto game playing
+skills like how to roll a die,
+how to count spaces,
+how to take turns,
+how to follow rules,
+how to recognize a goal,
+how to display good sportsmanship
+when you're winning or losing.
+These skills are not instinctive,
+they have to be taught
+and learned through repeated play.
+When a young child masters these skills,
+that's about the time
+when these decisionless games
+stop being fun for them.
+One last thing for today.
+We can go one step
+beyond just making interesting decisions
+to making ways for players
+to execute a plan
+which lets them feel really clever
+when they pull it off.
+Game designers
+refer to this as player agency.
+A player has agency
+when they understand
+enough about the game
+to be able to form a plan
+and receive enough feedback from the game
+to know that the plan is working.
+Feedback,
+in this case,
+when I say
+that is not related
+to the constant feedback loops
+that we discussed in the last module.
+It just means that the game
+is reacting to the player
+and the game state.
+Like if you're playing a platformer
+and you get hit and take damage,
+how do you know that
+you took a hit and took damage?
+Probably your avatar plays
+some kind of “I was hit” animation,
+might suffer knockback,
+the screen might flash red,
+your life meter decreases,
+there might be a sound effect,
+and all those things together
+are feedback to let the player know
+that something happened.
+If you have low levels
+of feedback in your game,
+then the player might not realize
+that something happened at all,
+which then means
+they might not understand
+how the game works,
+which then reduces their agency.
+So you can see here
+that if
+the game offers
+low levels of feedback,
+that limits player agency.
+With high levels of feedback
+that make it clear
+what is happening and why,
+the player may or may not still have agency,
+but the game's interface at least
+won't be getting in the way.
+Agency can also be limited
+by the embedded narrative.
+Again, that's the story
+that was put there
+by the game designers or game writers
+because the embedded story is fixed
+and takes away from player choice.
+If you've ever played an RPG
+where a key character
+dies permanently
+during a cutscene
+and you have no way to avoid this,
+even though you have resurrection
+spells and items that work
+just fine in combat.
+Final Fantasy VII was known for this.
+You've reduced the ability of the player
+to plan and respond to that event.
+We’ve come to the end of another module,
+some additional tools here.
+“Formal Abstract Design Tools”
+to my knowledge,
+is the first article written
+about player agency
+and shows what it is
+and where it comes from.
+And since this article is much older,
+it uses different terminology
+than we use today.
+Doug Church
+uses the word intention
+or intentionality
+to talk about what we call
+player agency today.
+It uses the term perceivable
+consequence to mean feedback,
+and it uses
+story to mean
+what we earlier called
+embedded narrative specifically.
+But this piece ties
+those concepts together
+in more detail than I've covered here
+when I talked about agency and feedback.
+So this is a more in-depth
+treatment of that.
+The GDC Talk,
+“Designing to Promote Intentional Play” by Clint Hocking
+takes that even one step further.
+Yeah, he said, okay, there's this thing
+that Doug Church called intention
+we now call player agency.
+How do you actually design games
+to do that?
+It's a classic GDC talks from 2006
+that's equal parts informative,
+useful and hilarious.
+Though I will warn you, Clint
+Hocking is also known
+for strong language.
+He drops F-bombs
+frequently whenever he talks,
+so be aware of that going in.
+What I've linked to
+here is a zip file
+from his website that contains slides
+and speaker notes
+and some supplemental videos
+that are referenced
+in the slides and notes.
+Because if you just
+look at the slides alone,
+they will probably not make much sense.
+You kind of have to look
+at the whole package together.
+And if you want to read more
+about flow and fun
+and learning in general,
+this time
+I don't have a specific online
+reading for that for you,
+but there is this wonderful book
+I can recommend
+that goes into more detail.
+This book has been out for a while,
+so you might be able to find a used
+copy cheap, and it's not one of mine.
+So I have no specific
+financial interest in this one.
+This is not a book on
+how to design games.
+It's more of a theoretical text
+on what game design is.
+What I like about it is that it's short
+and you can probably read it
+in a single day,
+and half of the pages are cartoons.
+So if you're really in a hurry,
+you can just read the cartoons,
+skip the text
+and it will still make sense
+and you'll get the general idea
+and read through it in like 15 minutes.
+But even if you can't find
+that book or choose not to,
+definitely go take your assessment
+so you can get your certification
+from HP Gaming Garage.
+Thanks for watching
+and I'll see you next time when we'll
+talk about kinds of players.

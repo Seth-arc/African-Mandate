@@ -1,0 +1,758 @@
+Welcome back,
+last time we talked about the MDA framework,
+and this time
+we're going to dive a bit deeper
+into the D part of that - Dynamics.
+Specifically,
+we're going to look
+at a few common dynamics
+that you're likely to encounter
+when designing or analyzing games
+and their implications
+on the player experience.
+And what to do about them in order
+to understand them at a mechanical level.
+First, I'd like to talk about
+how complex a game is.
+Some games are simple.
+Some games are very complicated,
+and we have lots of words
+to describe complexity.
+You might hear designers
+talking about depth
+or elegance, for example.
+So the first thing I want you to realize
+is how complicated the mechanics
+and ruleset are, does not necessarily translate
+to complex and varied play.
+These two things might be correlated
+or they might not.
+And we can talk about games
+that intersect at various places
+between the complexity
+of their mechanics and dynamics.
+Some games have simple rules
+and not a lot of strategic depth either,
+like our old friend tic tac toe.
+This game is very easy to learn,
+but it doesn't take
+very long to master either.
+With forward symmetry,
+there are only three distinct
+opening moves
+and only one or two ways to respond
+to each of those moves as second player
+that doesn't end in a loss.
+This game is fine for small children
+who are just learning
+the basics of things like strategy
+and taking turns and good sportsmanship,
+but it doesn't take long to outgrow.
+You don't often
+see full grown adults
+engaged in lengthy games of this.
+So there are games that have
+simple mechanics and dynamics,
+and we think of
+those as just simple games
+that lack depth.
+At the other end of the scale are games
+that have lots of complex rules
+and also a lot of strategic depth.
+The picture I put here
+is of a board game called
+Advanced Squad Leader,
+which has a rules booklet
+the size of a small dictionary.
+It's a war game where you control
+squads of soldiers
+and it has rules for territory,
+weather, positioning,
+vision, range, all kinds of things.
+And if you can imagine
+some action that a soldier might take
+in the middle of a real combat,
+this game probably has rules to cover
+how to do that thing.
+Games in this category
+tend to be things like high
+fidelity simulations.
+They give players
+a lot of control over their experience,
+but they also tend to have
+really high learning curves,
+so it takes a lot of time investment
+to get to the point
+where you feel like
+you can play competently.
+You can also have a game
+that's mechanically simple
+but has a lot of strategic depth anyway.
+Here, I put the board game Go
+which is probably the best
+example of a game like this.
+Go only has basically two rules
+and a third rule
+that's basically
+only there to prevent loops.
+But the combinatorics
+of how many different strategies
+you can play is ridiculously complex.
+You could spend an entire lifetime
+just studying this one game
+and still be learning a hundred years in.
+Games with a lot of depth,
+but simple rules
+we usually call elegant.
+You might wonder if it's possible
+to have a game with complicated mechanics
+but very shallow dynamics at play.
+You probably won't be able to see
+it in detail here,
+but this is a picture of a game
+called RPS 101.
+It's Rock, Paper, Scissors,
+but instead of there just being three
+different throws,
+there are 101 different things
+you could choose,
+and then there's a massive lookup table
+to figure out which of the two wins.
+There's not a lot of depth here.
+You can just stick with
+a small number of throws
+and still do fine,
+and there's too many options
+for your choice to really be meaningful.
+But the look up
+chart is quite complex and requires
+a set of instructions just to read it.
+This is just complexity
+for complexity sake.
+It doesn't really add much
+to the play experience
+other than novelty.
+So this is not usually something
+you try to do in your games.
+Put as much complexity
+as you need in your game and no more.
+So the thing I want you to realize here
+is that complexity
+isn't always good
+and more complex mechanics
+don't necessarily lead to deeper
+or more interesting gameplay.
+For your purposes,
+any games you're making right now,
+your best way to gauge
+how deep your game is, will be to play it
+and see for yourself.
+We'll go more into
+how to look at decision
+making in the next module after this.
+So now that we've got that
+out of the way,
+there's a special category
+of game dynamics
+that comes up a lot in design
+called Feedback Loops.
+These actually exist in the real world
+too, not just in game design.
+For example,
+if you've ever seen a microphone
+get a little too close to the speaker
+so that the noise of the speaker enters
+the microphone,
+which then comes out of the speaker,
+and you get the screech noise
+until it gets so loud that the person
+with the mic figures out to move away -
+that's a feedback loop.
+Feedback
+literally just means one of
+the inputs of the system
+is also the output of that same system,
+and loop just means it repeats
+so that the new output continues
+getting fed back in as input.
+That kind of microphone thing
+is called a positive feedback loop
+and you can see this in games too.
+Whenever you have a situation
+where things get easier
+as you're winning or harder
+if you're losing.
+One thing to be clear about
+is that this is called positive,
+but because it gets larger over time.
+It's a snowball effect.
+It does not necessarily mean positive
+in the sense
+of being good for the player.
+If you're losing
+and a mechanic causes you to lose
+even more,
+that's not very positive
+for your situation,
+but it is still a positive feedback loop.
+Positive feedback loops
+make the game end faster,
+because if the winner is winning
+even more,
+that brings them even closer to victory.
+In a game built around
+positive feedback loops,
+the decisions made early on
+are more important than those made later,
+because the early decisions
+grow over time.
+So by the time you get to the end,
+the things that happened
+early have been magnified.
+Let's take some examples.
+So in Modern Warfare 2,
+if you get a kill streak,
+you get special abilities
+improving your weapons or eventually even
+being able to call in things
+like a tactical airstrike,
+which then gets you more kills.
+So if you're winning,
+you're rewarded with extra abilities
+that make it more likely you'll continue winning.
+In Civilization
+and most other games in the 4X genre,
+the entire game is built around
+positive feedback loops.
+You build cities to exploit
+resources in the environment,
+which then let you build more cities
+which let you get even more resources.
+The bigger your civilization,
+the faster you can advance.
+As I mentioned before,
+this puts a lot of emphasis
+on the early games.
+So if you get a fast start in Civ,
+you'll be much more advanced
+by the time you meet your opponents.
+The board game Catan is like that,
+but on a smaller scale,
+where you start with two settlements
+that produce a few trade goods
+and then you use those
+to upgrade your settlements
+to place new ones,
+which give you even
+more resources,
+which then let you upgrade even more
+to get even more resources.
+Generally, it takes you a lot longer
+to earn your first victory point
+than to earn your last one.
+And you can also have positive
+feedback loops in professional
+sports, though it's not that common.
+Shown here is the sport of rugby
+where if a team scores,
+the play restarts with the scoring team
+being given the ball again.
+So when you score,
+you're actually in a good position
+to start scoring again.
+Of course,
+you still have to run it
+all the way across the field,
+so it's not a very strong feedback loop,
+but it is there.
+So while positive feedback loops
+can serve a useful purpose,
+they can also be
+frustrating in some cases,
+especially if you have a player
+who gets a little behind
+early in the game
+and then feels like
+they can never catch up.
+If the outcome
+of a game feels predetermined,
+but you still have to go
+through the motions of playing anyway,
+there's no uncertainty
+and that doesn't feel great during play.
+Now, as you might guess,
+the other type of feedback loop
+is a Negative Feedback Loop
+and it's basically
+the opposite of positive feedback.
+With negative feedback,
+players who are winning
+may face penalties,
+or the players who are trailing
+may get extra help.
+So this might show up
+as some kind of catch up device
+that lets players feel like
+they could still come back from behind.
+Probably the most infamous
+example of negative
+feedback is the blue
+shell from Mario Kart.
+If you're not familiar with it,
+this is an ability
+that seeks out the player
+in first place and explodes
+in a large blast radius
+that's virtually unstoppable,
+causing the first place player
+to lose a lot of time
+and probably allow several opponents
+to overtake them.
+Mario Kart also has another negative
+feedback loop in item blocks in general.
+If you're in first place,
+most of the items you find on
+the track will be relatively weak.
+The further back you are,
+the more likely you'll get items
+that are very powerful
+that'll let you catch up.
+Yet another negative feedback
+loop is common in most racing games
+where computer controlled
+cars will drive faster
+if the player's doing well, and slower
+if the player's doing poorly.
+This is informally referred
+to as rubber banding
+because it's as if
+all the cars have invisible rubber bands
+attached to them to keep them together.
+And this is done on purpose
+because in any kind of auto race,
+the most exciting moments happen
+when a player is in the middle
+of a pack of cars.
+Because then you have opponents
+you're trying to overtake
+while also trying
+to guard your own position
+from other people behind you
+trying to take over.
+Most physical sports
+that aren't rugby
+also have some light
+negative feedback loops in them.
+American football
+and basketball, for example,
+both give the ball to the opposing team
+after a team scores,
+making it more likely that the other team
+will score in return to catch up.
+And this is done
+intentionally to make for
+exciting, dynamic games
+with a lot of back and forth.
+Like positive feedback loops,
+negative feedback loops can be useful,
+but they can also be just as frustrating.
+It does allow players
+who are behind to catch up,
+but in some cases
+it can also be frustrating
+because you feel like
+you're being punished for doing well
+and rewarded for doing poorly.
+I also want to point out
+that sometimes feedback
+loops are intentionally designed,
+but sometimes you'll discover
+a feedback loop
+in your design
+that you didn't put there on purpose,
+that’s still very much there.
+Remember, feedback
+loops are a dynamic,
+so you only change the mechanics.
+So sometimes your mechanics
+when set in motion,
+cause a feedback loop
+that you didn't anticipate.
+And again,
+feedback loops aren't
+inherently good or bad.
+When you discover one
+you didn't put there,
+it isn't necessarily a red flag,
+but it is something that you usually want
+to identify
+and monitor carefully in play testing
+to see if it's causing problems.
+Because a lot of times player
+frustration does come from
+feedback loops
+that just don't work
+well within the game.
+So these are something
+you want to keep a close eye on.
+How do you identify that
+a feedback loop exists?
+The best way for you right
+now, again, is play testing
+and just paying attention
+to whether some mechanics
+seem to make it easier or harder
+for a player
+who's doing well or poorly
+to do better or worse.
+Sometimes you do want to add
+or alter or remove the feedback loop.
+So in order to do that,
+you have to understand
+what makes a feedback loop,
+a feedback loop.
+And all feedback loops,
+positive or negative,
+have three components.
+The first is a sensor
+of some kind that just monitors
+some elements of the game state.
+Something is being measured.
+Next is a comparator
+that compares the number from your sensor
+to some range and decides
+whether to take action,
+whether it's inside
+or outside that range.
+Last is an activator
+that has some effect on the game state
+when the comparator decides to.
+So from our Mario Kart example before,
+the blue shell
+sensor is the checks
+for the place value of each driver.
+Are you in first place,
+second place, third place or what?
+The comparator in this case is looking
+only for first place.
+The blue shell ignores everyone else
+and the activator is the effect.
+When it reaches the appropriate player,
+it explodes,
+slowing that player down a lot
+along with anyone else unfortunate
+enough to be close to them.
+Or if we were looking
+just at the rubber banding dynamic
+in racing games in general
+that causes computer
+controlled cars to go faster
+or slower in order
+to keep the player
+in the middle of the pack,
+the sensor would be
+how far ahead
+or behind the other cars you are.
+The comparator might check to see
+if you're ahead or behind
+by more than some threshold,
+and the activator causes
+the other cars to drive faster or slower.
+You might combine
+all of these into a single mechanic.
+For example,
+if a player is in first place
+by more than 300 meters,
+give all computer-controlled cars
+a speed boost.
+Sometimes a feedback loop
+is a result of a single mechanic
+like this.
+Other times
+there might be multiple mechanics
+that combine in a chain
+to form a feedback loop.
+But the important thing here
+is to be aware of what mechanics
+are causing the feedback loop,
+because if you can identify the sensor,
+the comparator, and the activator,
+those are the knobs that you can modify
+to change how the feedback loop works.
+So in this example,
+you could change this feedback loop
+by changing the sensor
+that you're looking at distance
+between first and second place.
+You could change that to measure
+absolute distance
+along a track
+or a numeric place like in Mario Kart.
+Or you could change the comparator
+of 300 meters to something else,
+making that number larger or smaller.
+Or you could change the activator,
+the effect to make cars
+speed up more or less.
+And by the way,
+these terms here,
+sensor, comparator, and activator
+are from the field of Cybernetics.
+That's not the kind that deals
+with humanoid robots and terminators,
+but it's
+an engineering field that deals
+with specifically
+with systems and feedback.
+So these terms are not in common
+use among game designers,
+but it is a concept that you should know.
+The terms positive and negative feedback loops
+are also from Cybernetics,
+but we do use those a lot in game design.
+If you want to change
+the effect of the feedback loop,
+the other thing
+you can do
+other than modifying
+that loops mechanics directly,
+is to create another feedback loop.
+So for example,
+if you like that there's a negative
+feedback loop in your racing game,
+but you feel like it's too strong,
+you could add a counterbalancing
+positive feedback loop.
+For example,
+if the opposing cars go faster
+when you're in the lead,
+maybe you also get better
+power ups in question
+mark block in Mario Kart,
+so that being in lead
+gives you an advantage.
+Or if you had a negative feedback loop
+but wanted it stronger,
+you can add a separate
+negative feedback loop,
+and the two would combine
+to make a stronger
+negative feedback system.
+Another dynamic
+you may see from time to time
+is called Emergent Gameplay,
+sometimes emergent complexity
+or just emergence.
+And if you remember us talking
+about the concept of emergent
+narrative in the previous module,
+yes, this is related.
+Emergence is complexity
+that wasn't part of the mechanics,
+but emerges
+spontaneously during play
+as part of the dynamics.
+Generally, this is used to describe games
+with more complex dynamics
+emerging from simple mechanics
+and specifically coming from
+simple, interconnected systems.
+One of my favorite examples
+of emergent gameplay
+is combos in fighting games.
+A combo is
+when you hit your opponent with a move
+and then if you do specific
+other moves immediately after,
+they are effectively unblockable,
+as long as you had a hit
+with that first move.
+In the earliest street
+fighting games combos did exist,
+but they weren't part of the rules.
+It was just a consequence of a player hit,
+an attack
+having a recovery time before
+they could do anything to respond.
+And if you have another attack
+that can hit faster than that
+recovery time,
+then it's going to be an automatic hit
+with no way to avoid.
+And stringing
+several of those moves together
+means that if you hit with the first move
+and you have good enough timing,
+you'll hit with all the other moves too.
+The designers of Street Fighter 2
+didn't say, “let's put combos in our game”.
+They didn't even know
+that they were there.
+They just gave each attack
+an attack time and recovery time
+if you're hit by it,
+and it just happened
+that some attacks had a faster
+attack time than recovery time.
+Another example
+I like is dribbling in basketball.
+If you've seen the sport,
+people are moving
+the ball across the field
+by bouncing it on the ground.
+This game was originally designed
+not with any rules
+that involved dribbling.
+It was designed to be
+like ultimate Frisbee,
+where players holding
+the ball aren't allowed to run
+while carrying it.
+They can only throw it at the basket
+to try to score or pass to a teammate.
+And if you pass to a teammate,
+it allows up to one bounce on the ground.
+It turned out
+there was just no rule
+against passing to yourself.
+So a bounce pass to yourself
+is what we call dribbling.
+The original designer of the sport
+did not say anything about dribbling.
+It just came about as a combination
+of existing rules.
+Now, in both of these cases,
+in Street Fighter 2 and you know, basketball,
+emergent gameplay wasn't anticipated,
+it wasn't intentionally
+put there by the designer,
+but that doesn't have to be the case.
+For example,
+many games use what we call today PCG,
+Procedurally Generated Content,
+such as this game Spelunky
+that kind of pioneered
+the thing in use outside of traditional roguelikes.
+This led to complex
+levels that are designed
+from a series of simple building blocks
+that are assembled together.
+And this is one reason
+why we care about emergence,
+because you can sometimes
+get deep, complex behavior
+from relatively simple rules,
+which then means
+less burden on programming.
+But it does come at a cost
+of higher design complexity.
+So there's more of a burden on designers
+and more of a burden on play testing
+because these systems
+can be kind of complicated.
+So looking at this may be appropriate
+if you have a team
+that's light on programmers
+and heavy on designers and testers.
+The other reason to pay attention
+to emergent gameplay
+is that sometimes it can lead
+to undesirable results.
+While dribbling in basketball
+and combos in street
+fighting games
+can both be positive things,
+this is an example of not.
+In Grand Theft Auto 3,
+there were three mechanics
+that were not designed together,
+but they ended up combining
+in an interesting way.
+First is if a player damages
+an innocent bystander,
+that person will retaliate
+and attack the player.
+This makes sense,
+there's nothing wrong with it.
+You know, people will defend themselves.
+Second mechanic,
+if the player is driving a vehicle,
+the vehicle is considered
+an extension of the player.
+So if a vehicle damages a bystander,
+that will trigger the first rule
+about them attacking the player.
+Again, this makes sense
+if you try to run someone over,
+they'll attack you, no problems.
+Third mechanic.
+If the player is driving a vehicle
+that takes too much damage,
+it will eventually explode,
+damaging everything nearby
+and nearly killing the driver,
+and this also make sense.
+In the real world, cars
+don't explode like that,
+but in movies they do
+and this is a game
+meant more for a movie-like feel,
+so that mechanic makes sense.
+But consider what happens
+when these three rules combine.
+A player's driving a car,
+the car gets damaged,
+the player accidentally crashes
+into the side of the building,
+the car explodes.
+The player is just now barely alive,
+crawling out of the wreckage
+and then any nearby pedestrians
+come toward the player
+and beat them up to finish them off
+because the bystanders were damaged
+by the car explosion,
+and they think of that
+as the player having attacked them.
+It's an amusing example,
+it can be hilarious,
+but it's not exactly creating
+a believable world here.
+So how do you create emergence?
+Well, generally,
+through having lots of small, simple,
+interconnected systems.
+If the systems are simple,
+then players can figure them out.
+If they're interconnected,
+that means players
+can then figure out
+how to use these systems to form
+complicated chains of events
+intentionally,
+which then gives the players
+lots of expressive power in the game,
+and we'll talk more about this
+in the next module.
+If you want more,
+try actually doing something.
+Take an existing board game,
+card game, or other tabletop
+game that you're familiar with
+and try changing the rules.
+Try to intentionally add, remove,
+or change the mechanics to create
+or remove
+or modify
+a positive or negative feedback loop.
+And then play it
+and see what it feels like.
+Practice with modifying a rule,
+then play testing to see
+what effect
+that rule has on the dynamics
+and the MDA aesthetics.
+But for now,
+take your assessment
+so you can get your certification
+from HP Gaming Garage.

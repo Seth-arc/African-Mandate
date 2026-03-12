@@ -6,9 +6,10 @@ import 'leaflet/dist/leaflet.css'
 import '../styles/map.css'
 import { useGameStore } from '../state/gameStore'
 import { useUiStore } from '../state/uiStore'
-import { resolveTerritoryName, resolveZoneName, threatLevelToStatus } from '../state/selectors'
+import { resolveIntelReport, resolveTerritoryName, resolveZoneName, threatLevelToStatus } from '../state/selectors'
 import { playUiSfx } from '../utils/uiSfx'
 import type {
+  IntelFeedItem,
   StrategicValue,
   TerritoryKey,
   TerritoryState,
@@ -215,6 +216,11 @@ function MapPaneSetup(): null {
     pane.style.zIndex = '625'
     pane.style.pointerEvents = 'none'
     pane.classList.add('map-top-labels-pane')
+
+    const intelPane = map.getPane('intelPane') ?? map.createPane('intelPane')
+    intelPane.style.zIndex = '640'
+    intelPane.style.pointerEvents = 'auto'
+    intelPane.classList.add('map-intel-pane')
   }, [map])
   return null
 }
@@ -342,6 +348,77 @@ function territoryFlagMarkup(
     )
   }
   return `<img class="map-tooltip-flag" src="${primary}" alt="${territoryName} flag" />`
+}
+
+type IntelScopeCount = {
+  total: number
+  unread: number
+  urgent: number
+}
+
+type IntelScopeSummary = {
+  unreadCount: number
+  urgentCount: number
+  scopedCount: number
+  zoneScopeCounts: Map<string, IntelScopeCount>
+}
+
+function formatIntelToken(value: string): string {
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function summarizeIntelScopes(
+  content: ReturnType<typeof useGameStore.getState>['state']['content'],
+  intelFeed: IntelFeedItem[] | undefined
+): IntelScopeSummary {
+  const zoneScopeCounts = new Map<string, IntelScopeCount>()
+  if (!content || !intelFeed || intelFeed.length === 0) {
+    return {
+      unreadCount: 0,
+      urgentCount: 0,
+      scopedCount: 0,
+      zoneScopeCounts,
+    }
+  }
+
+  let unreadCount = 0
+  let urgentCount = 0
+  let scopedCount = 0
+
+  for (const item of intelFeed) {
+    if (!item.is_read) unreadCount += 1
+    if (item.is_urgent) urgentCount += 1
+
+    const report = resolveIntelReport(content, item.report_key)
+    if (!report?.zone_scope) {
+      continue
+    }
+
+    scopedCount += 1
+    const current = zoneScopeCounts.get(report.zone_scope) ?? { total: 0, unread: 0, urgent: 0 }
+    current.total += 1
+    if (!item.is_read) current.unread += 1
+    if (item.is_urgent) current.urgent += 1
+    zoneScopeCounts.set(report.zone_scope, current)
+  }
+
+  return {
+    unreadCount,
+    urgentCount,
+    scopedCount,
+    zoneScopeCounts,
+  }
+}
+
+function regionalIntelPosition(index: number, total: number): [number, number] {
+  if (total <= 1) return [MAP_CENTER[0], MAP_CENTER[1]]
+  const angle = (index / total) * Math.PI * 2 - Math.PI / 2
+  const radiusLat = 1.45
+  const radiusLon = 2.15
+  return [
+    MAP_CENTER[0] + Math.sin(angle) * radiusLat,
+    MAP_CENTER[1] + Math.cos(angle) * radiusLon,
+  ]
 }
 
 /** Inject multiple SVG hatch/fill patterns into the map container */
@@ -814,6 +891,7 @@ function ZoneGeoJSONLayer(): null {
   const layerRef = useRef<L.GeoJSON | null>(null)
   const zoneState = useGameStore((s) => s.state.zone_state)
   const content = useGameStore((s) => s.state.content)
+  const intelFeed = useGameStore((s) => s.state.intel_feed)
   const mapLayers = useUiStore((s) => s.mapLayers)
   const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
@@ -824,12 +902,18 @@ function ZoneGeoJSONLayer(): null {
     () => new Map((content?.zones?.zones ?? []).map((zone) => [zone.zone_id, zone])),
     [content]
   )
+  const intelScopeSummary = useMemo(
+    () => summarizeIntelScopes(content, intelFeed),
+    [content, intelFeed]
+  )
 
   useEffect(() => {
     let cancelled = false
     const controller = new AbortController()
+    const hasIntelScopedZones = intelScopeSummary.zoneScopeCounts.size > 0
+    const renderIntelScopeOverlayOnly = !mapLayers.zones && hasIntelScopedZones
 
-    if (!mapLayers.zones) {
+    if (!mapLayers.zones && !renderIntelScopeOverlayOnly) {
       if (layerRef.current && map.hasLayer(layerRef.current)) {
         map.removeLayer(layerRef.current)
         layerRef.current = null
@@ -855,9 +939,12 @@ function ZoneGeoJSONLayer(): null {
         /* Filter to zone features only */
         const zoneFeatures: FeatureCollection = {
           type: 'FeatureCollection',
-          features: geojson.features.filter(
-            (f) => featureTypeFromFeature(f) === FEATURE_TYPE.ZONE
-          ),
+          features: geojson.features.filter((feature) => {
+            if (featureTypeFromFeature(feature) !== FEATURE_TYPE.ZONE) return false
+            if (!renderIntelScopeOverlayOnly) return true
+            const zoneId = zoneIdFromFeature(feature)
+            return zoneId !== null && intelScopeSummary.zoneScopeCounts.has(zoneId)
+          }),
         }
 
         if (zoneFeatures.features.length === 0) return
@@ -878,9 +965,36 @@ function ZoneGeoJSONLayer(): null {
             const threatLevel = zoneRuntime?.threat_level ?? 0
             const threatStatus = threatLevelToStatus(threatLevel)
             const isSelected = zoneId !== null && zoneId === selectedZoneId
+            const intelScope = zoneId !== null ? intelScopeSummary.zoneScopeCounts.get(zoneId) : undefined
+            const hasIntelScope = intelScope !== undefined
+            const hasUnreadIntel = (intelScope?.unread ?? 0) > 0
+
+            if (renderIntelScopeOverlayOnly) {
+              if (!hasIntelScope) {
+                return {
+                  color: 'transparent',
+                  fillColor: 'transparent',
+                  fillOpacity: 0,
+                  weight: 0,
+                  interactive: false,
+                }
+              }
+
+              let className = 'map-zone--intel-overlay map-zone--intel-active'
+              if (hasUnreadIntel) className += ' map-zone--intel-unread'
+              const baseOpacity = hasUnreadIntel ? 0.18 : 0.13
+              return {
+                color: hasUnreadIntel ? '#d4af37' : 'rgba(212, 175, 55, 0.74)',
+                weight: isSelected ? 3.2 : hasUnreadIntel ? 2.9 : 2.4,
+                fillColor: '#d4af37',
+                fillOpacity: isSelected ? Math.min(baseOpacity + 0.08, 0.3) : baseOpacity,
+                dashArray: hasUnreadIntel ? '2 2' : '6 4',
+                className,
+              }
+            }
 
             /* Critical-only filter */
-            if (mapLayers.criticalOnly && threatLevel < threatThreshold) {
+            if (mapLayers.criticalOnly && threatLevel < threatThreshold && !hasIntelScope) {
               return {
                 color: 'transparent',
                 fillColor: 'transparent',
@@ -891,7 +1005,11 @@ function ZoneGeoJSONLayer(): null {
             }
 
             /* Blend zone-type base color with threat status color */
-            const borderColor = zoneRuntime ? STATUS_COLORS[threatStatus] : typeConfig.color
+            const borderColor = hasUnreadIntel
+              ? '#d4af37'
+              : zoneRuntime
+                ? STATUS_COLORS[threatStatus]
+                : typeConfig.color
             const fillColor = zoneRuntime ? STATUS_COLORS[threatStatus] : typeConfig.color
 
             /* Determine CSS class for hatch pattern */
@@ -899,15 +1017,17 @@ function ZoneGeoJSONLayer(): null {
             if (zoneType === 'conflict_hotspot') className += ' map-hatch-conflict'
             else if (zoneType === 'humanitarian_crisis') className += ' map-hatch-crisis'
             else if (zoneType === 'remote_contested') className += ' map-hatch-contested'
+            if (hasIntelScope) className += ' map-zone--intel-active'
+            if (hasUnreadIntel) className += ' map-zone--intel-unread'
 
             return {
               color: borderColor,
-              weight: isSelected ? stratWeight.weight + 1 : typeConfig.weight,
+              weight: isSelected ? stratWeight.weight + 1 : typeConfig.weight + (hasUnreadIntel ? 0.6 : 0),
               fillColor: fillColor,
               fillOpacity: isSelected
                 ? Math.min((typeConfig.fillOpacity + stratWeight.fillBoost) * 0.55 + 0.12, 0.32)
-                : Math.max((typeConfig.fillOpacity + stratWeight.fillBoost) * 0.55, 0.045),
-              dashArray: typeConfig.dashArray,
+                : Math.max((typeConfig.fillOpacity + stratWeight.fillBoost) * 0.55 + (hasIntelScope ? 0.02 : 0), 0.045),
+              dashArray: hasUnreadIntel ? '2 2' : typeConfig.dashArray,
               className: className,
             }
           },
@@ -933,6 +1053,7 @@ function ZoneGeoJSONLayer(): null {
             const insurgency = zoneRuntime?.insurgency ?? '—'
             const displaced = zoneRuntime?.displaced ?? 0
             const threatStatus = threatLevelToStatus(threatLevel)
+            const intelScope = intelScopeSummary.zoneScopeCounts.get(zoneId)
 
             const zoneName = resolveZoneName(content, zoneId)
             const territoryName = territoryKey ? resolveTerritoryName(content, territoryKey) : 'Unknown territory'
@@ -958,6 +1079,9 @@ function ZoneGeoJSONLayer(): null {
               (ethnicLabel ? `<div class="map-tooltip-row map-tooltip-dim">${multiEthnic ? 'Multi-ethnic' : 'Ethnic'}: ${ethnicLabel}</div>` : '') +
               `<div class="map-tooltip-row map-tooltip-dim">Strategic: ${strategicValue} &middot; Adjacent: ${adjacentZones.length}</div>` +
               (displaced > 0 ? `<div class="map-tooltip-row map-tooltip-displaced">Displaced: ${displaced.toLocaleString()}</div>` : '') +
+              (intelScope
+                ? `<div class="map-tooltip-row map-tooltip-intel">Intel updates: ${intelScope.unread > 0 ? `${intelScope.unread} unread / ` : ''}${intelScope.total} filed</div>`
+                : '') +
               `</div>`,
               { direction: 'top', opacity: 0.95, className: 'map-enhanced-tooltip' }
             )
@@ -992,7 +1116,7 @@ function ZoneGeoJSONLayer(): null {
     }
   }, [
     content, map, mapLayers.zones, mapLayers.criticalOnly, openModal, selectedZoneId,
-    setSelectedTerritory, setSelectedZone, threatThreshold, zoneState, zonesById,
+    setSelectedTerritory, setSelectedZone, threatThreshold, zoneState, zonesById, intelScopeSummary,
   ])
 
   return null
@@ -1562,6 +1686,191 @@ function IncidentMarkers(): ReactNode {
    ADJACENCY LINES (zone-to-zone network topology)
    ═══════════════════════════════════════════════ */
 
+type IntelMapMarkerEntry = {
+  reportKey: string
+  headline: string
+  urgency: string
+  confidence: string
+  zoneScope: string | null
+  occurredAt: number
+  isRead: boolean
+  isUrgent: boolean
+  territoryKey: string | null
+  position: [number, number]
+}
+
+function IntelFeedMarkers(): null {
+  const map = useMap()
+  const markersRef = useRef<L.Marker[]>([])
+  const intelFeed = useGameStore((s) => s.state.intel_feed)
+  const content = useGameStore((s) => s.state.content)
+  const currentTurn = useGameStore((s) => s.state.session.turn)
+  const setSelectedTerritory = useUiStore((s) => s.setSelectedTerritory)
+  const setSelectedZone = useUiStore((s) => s.setSelectedZone)
+  const setSelectedReportKey = useUiStore((s) => s.setSelectedReportKey)
+  const openModal = useUiStore((s) => s.openModal)
+
+  useEffect(() => {
+    markersRef.current.forEach((marker) => {
+      if (map.hasLayer(marker)) map.removeLayer(marker)
+    })
+    markersRef.current = []
+
+    if (!content || !intelFeed || intelFeed.length === 0) return
+
+    const zonesById = new Map(content.zones.zones.map((zone) => [zone.zone_id, zone]))
+    const recentCutoffTurn = Math.max(1, currentTurn - 1)
+    const scopedEntries: IntelMapMarkerEntry[] = []
+    const regionalEntries: Omit<IntelMapMarkerEntry, 'position'>[] = []
+    const scopeStackCount = new Map<string, number>()
+
+    for (const item of intelFeed) {
+      const report = resolveIntelReport(content, item.report_key)
+      if (!report) continue
+
+      const shouldRender = !item.is_read || item.is_urgent || item.occurred_at >= recentCutoffTurn
+      if (!shouldRender) continue
+
+      if (report.zone_scope) {
+        const scopedZone = zonesById.get(report.zone_scope)
+        if (scopedZone?.coords) {
+          const stackIndex = scopeStackCount.get(scopedZone.zone_id) ?? 0
+          scopeStackCount.set(scopedZone.zone_id, stackIndex + 1)
+          const angle = (stackIndex % 6) * (Math.PI / 3)
+          const ring = Math.floor(stackIndex / 6)
+          const offsetRadius = stackIndex === 0 ? 0 : 0.28 + ring * 0.16
+          const position: [number, number] = [
+            scopedZone.coords.lat + Math.sin(angle) * offsetRadius,
+            scopedZone.coords.lon + Math.cos(angle) * offsetRadius,
+          ]
+
+          scopedEntries.push({
+            reportKey: item.report_key,
+            headline: report.headline_text,
+            urgency: report.urgency,
+            confidence: report.confidence_level,
+            zoneScope: scopedZone.zone_id,
+            occurredAt: item.occurred_at,
+            isRead: item.is_read,
+            isUrgent: item.is_urgent,
+            territoryKey: scopedZone.territory_key,
+            position,
+          })
+          continue
+        }
+      }
+
+      regionalEntries.push({
+        reportKey: item.report_key,
+        headline: report.headline_text,
+        urgency: report.urgency,
+        confidence: report.confidence_level,
+        zoneScope: null,
+        occurredAt: item.occurred_at,
+        isRead: item.is_read,
+        isUrgent: item.is_urgent,
+        territoryKey: null,
+      })
+    }
+
+    const sortByPriority = (
+      a: { isRead: boolean; isUrgent: boolean; occurredAt: number },
+      b: { isRead: boolean; isUrgent: boolean; occurredAt: number }
+    ): number => {
+      if (a.isRead !== b.isRead) return Number(a.isRead) - Number(b.isRead)
+      if (a.isUrgent !== b.isUrgent) return Number(b.isUrgent) - Number(a.isUrgent)
+      return b.occurredAt - a.occurredAt
+    }
+    scopedEntries.sort(sortByPriority)
+    regionalEntries.sort(sortByPriority)
+
+    const entries: IntelMapMarkerEntry[] = [...scopedEntries]
+    for (let index = 0; index < regionalEntries.length; index += 1) {
+      const regional = regionalEntries[index]
+      if (!regional) continue
+      entries.push({
+        ...regional,
+        position: regionalIntelPosition(index, regionalEntries.length),
+      })
+    }
+
+    entries.forEach((entry) => {
+      const icon = L.divIcon({
+        className: 'map-intel-pin-wrap',
+        html:
+          `<div class="map-intel-pin${entry.zoneScope ? ' is-scoped' : ' is-regional'}${entry.isUrgent ? ' is-urgent' : ''}${!entry.isRead ? ' is-unread' : ''}">` +
+          '<span class="map-intel-pin-core"></span>' +
+          '</div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      })
+
+      const marker = L.marker(entry.position, {
+        icon,
+        pane: 'intelPane',
+        interactive: true,
+        keyboard: false,
+      })
+
+      const scopeLabel = entry.zoneScope ? resolveZoneName(content, entry.zoneScope) : 'Regional scope'
+      const territoryLabel = entry.territoryKey
+        ? resolveTerritoryName(content, entry.territoryKey)
+        : 'Regional command'
+      const flagHtml = territoryFlagMarkup(content, entry.territoryKey, territoryLabel)
+      const urgencyLabel = formatIntelToken(entry.urgency)
+      const confidenceLabel = formatIntelToken(entry.confidence)
+
+      marker.bindTooltip(
+        `<div class="map-zone-tooltip map-intel-tooltip">` +
+        `<div class="map-tooltip-title">${entry.headline}</div>` +
+        `<div class="map-tooltip-territory">${flagHtml}<span>${territoryLabel}</span></div>` +
+        `<div class="map-tooltip-row map-tooltip-intel">Scope: ${scopeLabel}</div>` +
+        `<div class="map-tooltip-row">${urgencyLabel} urgency &middot; ${confidenceLabel} confidence</div>` +
+        `<div class="map-tooltip-row map-tooltip-dim">Filed turn ${entry.occurredAt}${entry.isRead ? '' : ' &middot; Unread'}</div>` +
+        `</div>`,
+        { direction: 'top', opacity: 0.95, className: 'map-enhanced-tooltip' }
+      )
+
+      marker.on('mouseover', () => {
+        playZoneTerritoryHoverSound()
+      })
+      marker.on('click', () => {
+        playZoneTerritoryClickSound()
+        if (entry.zoneScope) {
+          const scopedZone = zonesById.get(entry.zoneScope)
+          setSelectedTerritory(scopedZone?.territory_key ?? null)
+          setSelectedZone(entry.zoneScope)
+        } else {
+          setSelectedZone(null)
+        }
+        setSelectedReportKey(entry.reportKey)
+        openModal('intel_report')
+      })
+
+      marker.addTo(map)
+      markersRef.current.push(marker)
+    })
+
+    return () => {
+      markersRef.current.forEach((marker) => {
+        if (map.hasLayer(marker)) map.removeLayer(marker)
+      })
+      markersRef.current = []
+    }
+  }, [
+    map,
+    content,
+    intelFeed,
+    currentTurn,
+    openModal,
+    setSelectedReportKey,
+    setSelectedTerritory,
+    setSelectedZone,
+  ])
+
+  return null
+}
+
 function AdjacencyLines(): ReactNode {
   const zoneState = useGameStore((s) => s.state.zone_state)
   const content = useGameStore((s) => s.state.content)
@@ -1715,6 +2024,7 @@ function MapLegendControls(): ReactNode {
   const threatThreshold = useUiStore((s) => s.mapThreatThreshold)
   const setMapThreatThreshold = useUiStore((s) => s.setMapThreatThreshold)
   const content = useGameStore((s) => s.state.content)
+  const intelFeed = useGameStore((s) => s.state.intel_feed)
   const territoryState = useGameStore((s) => s.state.territory_state)
   const zoneState = useGameStore((s) => s.state.zone_state)
   const [legendCollapsed, setLegendCollapsed] = useState(false)
@@ -1736,6 +2046,11 @@ function MapLegendControls(): ReactNode {
 
     return { totalTerritories, totalZones, criticalZones, totalIncidents, totalDisplaced, statusCounts }
   }, [territoryState, zoneState])
+
+  const intelSummary = useMemo(
+    () => summarizeIntelScopes(content, intelFeed),
+    [content, intelFeed]
+  )
 
   /* ── Zone type counts ── */
   const zoneTypeCounts = useMemo(() => {
@@ -1819,9 +2134,25 @@ function MapLegendControls(): ReactNode {
                 </span>
                 <span className="map-legend-stat-desc">Incidents</span>
               </div>
+              <div className={`map-legend-stat-card${intelSummary.unreadCount > 0 ? ' is-alert' : ''}`}>
+                <span className={`map-legend-stat-number${intelSummary.unreadCount > 0 ? ' is-critical' : ''}`}>
+                  {intelSummary.unreadCount}
+                </span>
+                <span className="map-legend-stat-desc">Intel Unread</span>
+              </div>
+              <div className={`map-legend-stat-card${intelSummary.urgentCount > 0 ? ' is-alert' : ''}`}>
+                <span className={`map-legend-stat-number${intelSummary.urgentCount > 0 ? ' is-critical' : ''}`}>
+                  {intelSummary.urgentCount}
+                </span>
+                <span className="map-legend-stat-desc">Intel Urgent</span>
+              </div>
               <div className="map-legend-stat-card full-width">
                 <span className="map-legend-stat-desc">Displaced</span>
                 <span className="map-legend-stat-number">{stats.totalDisplaced.toLocaleString()}</span>
+              </div>
+              <div className="map-legend-stat-card full-width">
+                <span className="map-legend-stat-desc">Zone-scoped Intel</span>
+                <span className="map-legend-stat-number">{intelSummary.scopedCount}</span>
               </div>
             </div>
           </LegendSection>
@@ -1958,6 +2289,7 @@ export function MapView(): ReactNode {
         <ZoneMarkers />
         <ZoneTypeLabelMarkers />
         <IncidentMarkers />
+        <IntelFeedMarkers />
         <TileLayer
           attribution={DARK_TILE_ATTR}
           url={DARK_TILE_LABELS_URL}

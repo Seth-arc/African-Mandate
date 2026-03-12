@@ -17,6 +17,7 @@ import type {
 } from '../state/types'
 import { GameError } from '../state/types'
 import { reconcileTerritoryStateFromZones } from '../state/territoryStateRuntime'
+import { upsertIntelFeedByGenerator } from './intelResolver'
 
 const METRIC_KEYS = [
   'stability',
@@ -371,6 +372,21 @@ export function applyEffects(
     nextState = {
       ...nextState,
       actor_sentiments: { ...(nextState.actor_sentiments ?? {}), [target.actor_key]: updated },
+    }
+  }
+
+  const intelUpdate = upsertIntelFeedByGenerator(nextState, action.action_id, state.session.turn)
+  nextState = intelUpdate.state
+  if (intelUpdate.generated || intelUpdate.upgraded) {
+    const narrativeFlags = { ...(nextState.narrative_flags ?? {}), intel_report_generated: true }
+    const narrativeFlagTurns = { ...(nextState.narrative_flag_turns ?? {}) }
+    if (narrativeFlagTurns.intel_report_generated === undefined) {
+      narrativeFlagTurns.intel_report_generated = state.session.turn
+    }
+    nextState = {
+      ...nextState,
+      narrative_flags: narrativeFlags,
+      narrative_flag_turns: narrativeFlagTurns,
     }
   }
 

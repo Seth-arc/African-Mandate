@@ -75,4 +75,38 @@ describe('uiStore map and modal state', () => {
     expect(useUiStore.getState().modal).toBe('none')
     expect(useUiStore.getState().dialogueChoiceId).toBeNull()
   })
+
+  it('keeps Fast Reveal locked until unlocked and tracks reveal mode + turn loop timing', () => {
+    expect(useUiStore.getState().fastRevealUnlocked).toBe(false)
+    expect(useUiStore.getState().revealMode).toBe('full')
+
+    useUiStore.getState().setRevealMode('fast')
+    expect(useUiStore.getState().revealMode).toBe('full')
+
+    useUiStore.getState().unlockFastReveal()
+    useUiStore.getState().setRevealMode('fast')
+    expect(useUiStore.getState().fastRevealUnlocked).toBe(true)
+    expect(useUiStore.getState().revealMode).toBe('fast')
+
+    useUiStore.getState().startTurnLoop(1234)
+    expect(useUiStore.getState().turnLoopStartedAtMs).toBe(1234)
+    useUiStore.getState().clearTurnLoop()
+    expect(useUiStore.getState().turnLoopStartedAtMs).toBeNull()
+  })
+
+  it('preserves take-action selection on close and clears it explicitly at turn transition', () => {
+    useUiStore.getState().setTakeActionSelectionTurn(3)
+    useUiStore.getState().setSelectedAction('deploy_mobile_clinics', { territory_key: 'mali' })
+    useUiStore.getState().openModal('action_config')
+    useUiStore.getState().closeModal()
+
+    expect(useUiStore.getState().selectedActionId).toBe('deploy_mobile_clinics')
+    expect(useUiStore.getState().selectedTarget).toEqual({ territory_key: 'mali' })
+    expect(useUiStore.getState().takeActionSelectionTurn).toBe(3)
+
+    useUiStore.getState().clearTakeActionSelection()
+    expect(useUiStore.getState().selectedActionId).toBeNull()
+    expect(useUiStore.getState().selectedTarget).toBeNull()
+    expect(useUiStore.getState().takeActionSelectionTurn).toBeNull()
+  })
 })

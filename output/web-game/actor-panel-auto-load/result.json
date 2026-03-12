@@ -1,0 +1,45 @@
+{
+  "actorPanelData": {
+    "cardCount": 6,
+    "cards": [
+      {
+        "actorKey": "civil_society_konate",
+        "name": "Aïssata Konaté",
+        "interaction": "Ready via Civil Society Partnership.",
+        "buttonText": "Plan action"
+      },
+      {
+        "actorKey": "regional_ecowas",
+        "name": "Economic Community of West African States (ECOWAS) Leadership",
+        "interaction": "Ready via Diplomacy Ecowas Coordination.",
+        "buttonText": "Plan action"
+      },
+      {
+        "actorKey": "junta_burkina_traore",
+        "name": "General Ibrahim Traoré",
+        "interaction": "Ready via Diplomacy Junta Engagement.",
+        "buttonText": "Plan action"
+      },
+      {
+        "actorKey": "external_donors",
+        "name": "International Donor Community (Composite)",
+        "interaction": "Ready via Diplomacy International Outreach.",
+        "buttonText": "Plan action"
+      },
+      {
+        "actorKey": "junta_mali",
+        "name": "Mali Transitional Government",
+        "interaction": "Ready via Diplomacy Junta Engagement.",
+        "buttonText": "Plan action"
+      },
+      {
+        "actorKey": "junta_niger",
+        "name": "Niger Transitional Government",
+        "interaction": "Ready via Diplomacy Junta Engagement.",
+        "buttonText": "Plan action"
+      }
+    ]
+  },
+  "actionModalOpened": true,
+  "selectSnapshot": []
+}

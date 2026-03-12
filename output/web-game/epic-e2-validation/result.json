@@ -1,0 +1,79 @@
+{
+  "baseUrl": "http://127.0.0.1:5182",
+  "primaryCountBefore": 1,
+  "modalOpenedCount": 2,
+  "modalClosedCount": 1,
+  "modalPrimaryCtaClickedCount": 1,
+  "modalEscapeUsedCount": 0,
+  "telemetryTailAfterEnter": [
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773255183146,
+      "payload": {
+        "modal": "session_manager",
+        "previous_modal": "none"
+      }
+    },
+    {
+      "name": "modal_primary_cta_clicked",
+      "occurredAtMs": 1773255195637,
+      "payload": {
+        "modal": "session_manager",
+        "cta_label": "Continue as Guest",
+        "activation": "enter"
+      }
+    },
+    {
+      "name": "modal_closed",
+      "occurredAtMs": 1773255195738,
+      "payload": {
+        "modal": "session_manager",
+        "next_modal": "onboarding_loading"
+      }
+    },
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773255195738,
+      "payload": {
+        "modal": "onboarding_loading",
+        "previous_modal": "session_manager"
+      }
+    }
+  ],
+  "telemetryTail": [
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773255183146,
+      "payload": {
+        "modal": "session_manager",
+        "previous_modal": "none"
+      }
+    },
+    {
+      "name": "modal_primary_cta_clicked",
+      "occurredAtMs": 1773255195637,
+      "payload": {
+        "modal": "session_manager",
+        "cta_label": "Continue as Guest",
+        "activation": "enter"
+      }
+    },
+    {
+      "name": "modal_closed",
+      "occurredAtMs": 1773255195738,
+      "payload": {
+        "modal": "session_manager",
+        "next_modal": "onboarding_loading"
+      }
+    },
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773255195738,
+      "payload": {
+        "modal": "onboarding_loading",
+        "previous_modal": "session_manager"
+      }
+    }
+  ],
+  "consoleErrors": []
+}

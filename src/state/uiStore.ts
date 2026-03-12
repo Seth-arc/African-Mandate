@@ -4,12 +4,15 @@
  */
 
 import { create } from 'zustand'
-import type { ActionLogEntry, Resources } from './types'
+import type { ActionLogEntry, GameState, Resources } from './types'
 import { playUiSfx } from '../utils/uiSfx'
 
 export type ModalKind =
   | 'none'
   | 'onboarding_loading'
+  | 'turn_loading'
+  | 'action_transition'
+  | 'cutscene_player'
   | 'session_manager'
   | 'dossier'
   | 'dossier_article'
@@ -53,6 +56,17 @@ function playModalTransitionSfx(previousModal: ModalKind, nextModal: ModalKind):
 
 export type ActionFlowStep = 'configure' | 'review' | 'outcome'
 export type DialogueFlowStep = 'choices' | 'outcome'
+export type RevealMode = 'full' | 'fast'
+
+export interface ActionTransitionState {
+  beforeState: GameState
+  afterState: GameState
+  logEntry: ActionLogEntry
+}
+
+export interface TurnTransitionState {
+  nextState: GameState
+}
 
 export interface MapLayerState {
   territories: boolean
@@ -73,6 +87,14 @@ export interface UiState {
   actionAllocation: Partial<Resources> | null
   /** Last confirmed action outcome shown in modal step 3. */
   actionOutcome: ActionLogEntry | null
+  /** Pending post-action cinematic payload before committing runtime state. */
+  pendingActionTransition: ActionTransitionState | null
+  /** Pending end-turn cinematic payload before committing runtime state. */
+  pendingTurnTransition: TurnTransitionState | null
+  /** Pending cutscene to play before opening a follow-up modal. */
+  pendingCutsceneId: string | null
+  /** Follow-up modal after cutscene completes. */
+  pendingCutsceneFollowup: ModalKind | null
   /** Selected intel report_key (for intel_report modal). */
   selectedReportKey: string | null
   /** Selected dossier article id (for dossier article modal). */
@@ -97,6 +119,14 @@ export interface UiState {
   mapLayers: MapLayerState
   /** Threat threshold used by critical-only map filtering. */
   mapThreatThreshold: number
+  /** Preferred reveal mode for action outcomes. */
+  revealMode: RevealMode
+  /** True after the player has completed at least one full reveal. */
+  fastRevealUnlocked: boolean
+  /** Start timestamp for current choose -> reveal interaction loop. */
+  turnLoopStartedAtMs: number | null
+  /** Turn for which Take Action selection memory is valid. */
+  takeActionSelectionTurn: number | null
 }
 
 const initialState: UiState = {
@@ -106,6 +136,10 @@ const initialState: UiState = {
   actionFlowStep: 'configure',
   actionAllocation: null,
   actionOutcome: null,
+  pendingActionTransition: null,
+  pendingTurnTransition: null,
+  pendingCutsceneId: null,
+  pendingCutsceneFollowup: null,
   selectedReportKey: null,
   selectedDossierArticleId: null,
   selectedActorKey: null,
@@ -122,6 +156,10 @@ const initialState: UiState = {
     criticalOnly: false,
   },
   mapThreatThreshold: 75,
+  revealMode: 'full',
+  fastRevealUnlocked: false,
+  turnLoopStartedAtMs: null,
+  takeActionSelectionTurn: null,
 }
 
 interface UiStore extends UiState {
@@ -132,6 +170,9 @@ interface UiStore extends UiState {
   setActionAllocation: (allocation: Partial<Resources> | null) => void
   setActionAllocationValue: (key: keyof Resources, value: number) => void
   setActionOutcome: (outcome: ActionLogEntry | null) => void
+  setPendingActionTransition: (transition: ActionTransitionState | null) => void
+  setPendingTurnTransition: (transition: TurnTransitionState | null) => void
+  setPendingCutscene: (cutsceneId: string | null, followupModal: ModalKind | null) => void
   resetActionFlow: () => void
   setSelectedReportKey: (key: string | null) => void
   setSelectedDossierArticle: (id: string | null) => void
@@ -147,6 +188,12 @@ interface UiStore extends UiState {
   setMapLayer: (layer: keyof MapLayerState, enabled: boolean) => void
   toggleMapLayer: (layer: keyof MapLayerState) => void
   setMapThreatThreshold: (threshold: number) => void
+  setRevealMode: (mode: RevealMode) => void
+  unlockFastReveal: () => void
+  startTurnLoop: (startedAtMs?: number) => void
+  clearTurnLoop: () => void
+  setTakeActionSelectionTurn: (turn: number | null) => void
+  clearTakeActionSelection: () => void
   reset: () => void
 }
 
@@ -171,6 +218,8 @@ export const useUiStore = create<UiStore>((set) => ({
         actionFlowStep: 'configure',
         actionAllocation: s.actionAllocation ?? null,
         actionOutcome: null,
+        pendingActionTransition: null,
+        pendingTurnTransition: null,
       }
     }),
   closeModal: () =>
@@ -178,11 +227,15 @@ export const useUiStore = create<UiStore>((set) => ({
       playModalTransitionSfx(s.modal, 'none')
       return {
         modal: 'none',
-        selectedActionId: null,
-        selectedTarget: null,
+        selectedActionId: s.selectedActionId,
+        selectedTarget: s.selectedTarget,
         actionFlowStep: 'configure',
         actionAllocation: null,
         actionOutcome: null,
+        pendingActionTransition: null,
+        pendingTurnTransition: null,
+        pendingCutsceneId: null,
+        pendingCutsceneFollowup: null,
         selectedReportKey: null,
         selectedDossierArticleId: null,
         selectedActorKey: null,
@@ -209,11 +262,22 @@ export const useUiStore = create<UiStore>((set) => ({
       },
     })),
   setActionOutcome: (outcome) => set({ actionOutcome: outcome }),
+  setPendingActionTransition: (transition) => set({ pendingActionTransition: transition }),
+  setPendingTurnTransition: (transition) => set({ pendingTurnTransition: transition }),
+  setPendingCutscene: (cutsceneId, followupModal) =>
+    set({
+      pendingCutsceneId: cutsceneId,
+      pendingCutsceneFollowup: followupModal,
+    }),
   resetActionFlow: () =>
     set({
       actionFlowStep: 'configure',
       actionAllocation: null,
       actionOutcome: null,
+      pendingActionTransition: null,
+      pendingTurnTransition: null,
+      pendingCutsceneId: null,
+      pendingCutsceneFollowup: null,
     }),
   setSelectedReportKey: (key) => set({ selectedReportKey: key }),
   setSelectedDossierArticle: (id) => set({ selectedDossierArticleId: id }),
@@ -266,6 +330,34 @@ export const useUiStore = create<UiStore>((set) => ({
   setMapThreatThreshold: (threshold) =>
     set({
       mapThreatThreshold: Math.max(0, Math.min(100, Math.round(threshold))),
+    }),
+  setRevealMode: (mode) =>
+    set((s) => ({
+      revealMode: mode === 'fast' && !s.fastRevealUnlocked ? 'full' : mode,
+    })),
+  unlockFastReveal: () =>
+    set((s) => {
+      if (s.fastRevealUnlocked) return {}
+      return { fastRevealUnlocked: true }
+    }),
+  startTurnLoop: (startedAtMs) =>
+    set({
+      turnLoopStartedAtMs: startedAtMs ?? Date.now(),
+    }),
+  clearTurnLoop: () =>
+    set({
+      turnLoopStartedAtMs: null,
+    }),
+  setTakeActionSelectionTurn: (turn) =>
+    set({
+      takeActionSelectionTurn: turn,
+    }),
+  clearTakeActionSelection: () =>
+    set({
+      selectedActionId: null,
+      selectedTarget: null,
+      actionAllocation: null,
+      takeActionSelectionTurn: null,
     }),
   reset: () => set(initialState),
 }))

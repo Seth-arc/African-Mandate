@@ -147,7 +147,8 @@ pm run typecheck passed.
 pm run typecheck passed; 
 pm test -- --run passed (49/49).\n- Verified no remaining references to MinimapControl, map-minimap-container, or map-minimap-viewport in source.
 - Live browser verification after minimap removal: .map-minimap-container count = 0 and exact class combo .map-minimap-container.leaflet-container.leaflet-touch.leaflet-fade-anim count = 0.
-- User reported zone modal Situation Report copy mispositioned.\n- Root cause: landing-page global p rule in index.html (max-width: 550px, transform/opacity animation defaults) was leaking into game modal paragraphs and constraining modal-text layout in zone detail.\n- Fix in src/styles/layout.css: strengthened .modal-text to neutralize landing-page paragraph defaults (max-width: none, width: 100%, opacity: 1, 	ransform: none, justify-self: stretch).\n- Browser validation: output/web-game/zone-modal-position-check/zone-detail-modal-after-fix.png now shows full-width Situation Report copy; metrics confirm text width tracks section width (eportWidth: 870, 	extWidth: 841.78, maxWidth: none).\n- Validation: 
+- User reported zone modal Situation Report copy mispositioned.\n- Root cause: landing-page global p rule in index.html (max-width: 550px, transform/opacity animation defaults) was leaking into game modal paragraphs and constraining modal-text layout in zone detail.\n- Fix in src/styles/layout.css: strengthened .modal-text to neutralize landing-page paragraph defaults (max-width: none, width: 100%, opacity: 1, 	ransform: none, justify-self: stretch).\n- Browser validation: output/web-game/zone-modal-position-check/zone-detail-modal-after-fix.png now shows full-width Situation Report copy; metrics confirm text width tracks section width (
+eportWidth: 870, 	extWidth: 841.78, maxWidth: none).\n- Validation: 
 pm run typecheck passed; 
 pm test -- --run passed (49/49).
 - New request: make modal buttons use the same visual style as navbar buttons.
@@ -399,7 +400,8 @@ pm test -- --run passed (49/49).
 - Actor panel tightened per UX request: now only shows actors that are currently interactable (active + dialogue available now). Removed canonical/all filter fallback from panel view. Card click and CTA both open dialogue directly. Empty state now instructs user to trigger engagement actions or advance turn.
 - Actor modal content parity update: added explicit actor Description generated from actor metadata and surfaced actor Notes inside both Actor Profile and Dialogue modals. Added 'Default sentiment' row in actor profile and spacing rule for multi-paragraph actor brief text. Validation: npm run typecheck passed.
 - Expanded actor modal data parity per request: surfaced actor_key, portrait_url, relationship tracking mode, and baseline relationship score in Actor Profile and Dialogue modals; added portrait rendering with image fallback initials; retained notes + description in both modal flows. Validation: npm run typecheck passed.
-- Patched stale territory overview pipeline: added econcileTerritoryStateFromZones utility (src/state/territoryStateRuntime.ts) to recompute territory stability/insurgency/status from live zone_state (population-weighted). Wired into action effects (ctionResolver.applyEffects), turn advancement (	urnEngine.advanceTurn), and cloud session load (sessionStore.loadState) so territory Current Situation and status data stay synchronized. Validation: npm run typecheck passed.
+- Patched stale territory overview pipeline: added 
+econcileTerritoryStateFromZones utility (src/state/territoryStateRuntime.ts) to recompute territory stability/insurgency/status from live zone_state (population-weighted). Wired into action effects (ctionResolver.applyEffects), turn advancement (	urnEngine.advanceTurn), and cloud session load (sessionStore.loadState) so territory Current Situation and status data stay synchronized. Validation: npm run typecheck passed.
 - Reworked Territory Overview 'Current Situation' copy to be visibly data-driven: added status chip + hotspot/incidents/displacement pills and three explicit runtime narrative lines (status snapshot, stability-vs-insurgency pressure delta, and threat-band ops summary). Added corresponding territory status chip styles. Validation: npm run typecheck passed.
 - Restyled Territory Overview Current Situation states to align with modal visual system: replaced inline pills with structured mini-state cards (Status/Hotspot/Incidents/Displacement), unified card borders/background/radius/typography with territory stats/sections, and kept status color accents only on the Status state card. Added mobile single-column behavior for the state grid. Validation: npm run typecheck passed.
 - Styled action-config meta section for modal parity: converted .action-config-meta from loose chip row into a bordered panel block with modal-consistent background/radius/padding and responsive grid layout; updated .action-config-meta .action-config-chip to card-style chips (full-width, neutral text, bg-card) to match surrounding modal UI. Validation: 
@@ -424,7 +426,8 @@ pm test -- --run passed (49/49).
 - Startup map-layer default adjusted per UX request: src/state/uiStore.ts initial mapLayers now starts as { territories: true, zones: false, criticalOnly: false } so only territories are visible when interface loads. Updated unit expectation in 	ests/unit/uiStore.test.ts to reflect new default and validate enabling zones from that state. Validation: 
 pm run typecheck passed; 
 pm test -- --run passed (49/49).
-- Added Mission Brief -> Relationship Matrix flow for tracked actors. New ModalKind elationship_matrix in src/state/uiStore.ts; wired modal title/routing in src/ui/modals/ModalRoot.tsx. Mission brief footer now includes Relationship Matrix button. Implemented RelationshipMatrixBody using runtime state.actor_sentiments joined with ctors.json metadata (name/title/faction/baseline/current/delta/dialogue_state), with profile drill-down (openModal('actor_profile')). Added dedicated matrix UI styles and responsive behavior in src/styles/layout.css plus wider modal sizing class modal-content-relationship-matrix. Validation: 
+- Added Mission Brief -> Relationship Matrix flow for tracked actors. New ModalKind 
+elationship_matrix in src/state/uiStore.ts; wired modal title/routing in src/ui/modals/ModalRoot.tsx. Mission brief footer now includes Relationship Matrix button. Implemented RelationshipMatrixBody using runtime state.actor_sentiments joined with ctors.json metadata (name/title/faction/baseline/current/delta/dialogue_state), with profile drill-down (openModal('actor_profile')). Added dedicated matrix UI styles and responsive behavior in src/styles/layout.css plus wider modal sizing class modal-content-relationship-matrix. Validation: 
 pm run typecheck passed; 
 pm test -- --run passed (49/49).
 - New request: add actor location indicators in the Relationship Matrix modal.
@@ -906,7 +909,6 @@ pm test -- --run passed (49/49).
 - Updated src/tour/TourContext.tsx tour copy/order to a gameplay-native sequence (Command Rail -> Campaign Vital Signs -> Sahel Theater Map -> Intel and Actor Feed -> Decision Surface -> Action Cycle Control) with tightened African Mandate wording.
 - Updated src/ui/onboarding/DemoTour.tsx branding and metadata line: replaced LMS pathways with African Mandate Orientation and removed raw router path from UI in favor of gameplay-focused Interface focus text.
 - Validation: 
-pm run build passed.
 - New request: improve styling and quality of the onboarding tour overlay.
 - Updated src/tour/TourContext.tsx: added prev() callback to tour context so users can move backward between onboarding steps.
 - Updated src/ui/onboarding/DemoTour.tsx:
@@ -922,7 +924,6 @@ pm run build passed.
   - responsive mobile adjustments for new action layout/hint.
 - Validation:
   - 
-pm run build passed.
   - 
 pm run typecheck passed.
   - Playwright web-game client screenshot artifacts: output/web-game/tour-style-quality-check-guest/shot-0.png.
@@ -935,7 +936,6 @@ pm run typecheck passed.
   - added .demo-tour-backdrop-fragment with blur so only non-focused regions are blurred/dimmed.
 - Validation: 
 pm run typecheck passed; 
-pm run build passed.
 - New request: update first tour slide to be a video.
 - Updated src/tour/TourContext.tsx with optional tour media fields (ideoSrc, ideoPoster, ideoCaption) and wired step 1 (Command Rail) to /assets/vid/African_Mandate_opening_scene.mp4.
 - Updated src/ui/onboarding/DemoTour.tsx to render an inline <video> block (autoplay + muted + loop + playsInline) only when the current step has ideoSrc.
@@ -944,24 +944,23 @@ pm run build passed.
   - 
 pm run typecheck passed.
   - 
-pm run build passed.
-  - Browser verification artifacts: output/web-game/tour-first-slide-video-check/step-1-video.png, step-2-no-video.png, esult.json showing step1.hasVideo: true, step2.hasVideo: false.
+  - Browser verification artifacts: output/web-game/tour-first-slide-video-check/step-1-video.png, step-2-no-video.png, 
+esult.json showing step1.hasVideo: true, step2.hasVideo: false.
 - Tour adjustment: moved onboarding video into its own dedicated first slide (Opening Brief) instead of embedding it inside Command Rail.
 - Updated src/tour/TourContext.tsx: inserted /?tour=opening-brief step with video, removed video fields from the Command Rail step.
 - Validation: 
 pm run typecheck passed; 
-pm run build passed.
 - New request: make tour styling match other interface modals and ensure Inter font usage.
 - Updated src/styles/layout.css tour styles to modal-parity tokens:
   - dialog now uses ar(--bg-card), ar(--border), 8px radius, and ar(--shadow-lg).
-  - backdrop normalized to modal-style gba(0,0,0,0.7).
+  - backdrop normalized to modal-style 
+gba(0,0,0,0.7).
   - button styling aligned to existing modal button system (g-card, subtle border, same sizing/weight/hover behavior).
   - media container/caption aligned to panel + subtle borders.
   - removed custom pulse/glow treatment on focus frame and reduced decorative gradient accents.
 - Explicit Inter enforcement added for tour root/title/buttons/body/meta labels (ont-family: var(--font-sans)).
 - Validation:
   - 
-pm run build passed.
   - Browser parity check artifact: output/web-game/tour-modal-parity-check/tour-modal-parity.png.
   - Computed-style verification (output/web-game/tour-modal-parity-check/result.json) confirms modal-like surface and font family (Inter, sans-serif).
 - Tour layout adjustment per request:
@@ -974,12 +973,10 @@ pm run build passed.
   - removed mobile override for .demo-tour-media-caption.
 - Validation: 
 pm run typecheck passed; 
-pm run build passed.
 - Tour body readability fix: removed narrow text column behavior in src/styles/layout.css.
 - Updated .demo-tour-dialog-wrap width from min(760px, 92vw) to min(920px, 94vw).
 - Updated .demo-tour-body to max-width: none, width: 100%, white-space: normal, and 	ext-wrap: pretty for natural sentence flow.
 - Validation: 
-pm run build passed.
 - New request: after the video slide, the tour modal should move around with the focused interface region.
 - Updated src/ui/onboarding/DemoTour.tsx:
   - added floating-dialog positioning state/ref (loatingPosition, dialogWrapRef) and shouldFloatDialog gate (step > 0 && focusBox).
@@ -994,7 +991,6 @@ pm run build passed.
   - 
 pm run typecheck passed.
   - 
-pm run build passed.
   - browser verification artifacts: output/web-game/tour-follow-focus-check/step0-video.png, step1-command.png, step2-metrics.png.
   - output/web-game/tour-follow-focus-check/result.json confirms movedAfterVideo: true and movedWithNextFocus: true.
 - Tour cleanup: removed duplicate progress tracker by deleting demo-tour-progress from src/ui/onboarding/DemoTour.tsx.
@@ -1002,7 +998,6 @@ pm run build passed.
 - Removed .demo-tour-progress and .demo-tour-progress-fill styles from src/styles/layout.css.
 - Validation: 
 pm run typecheck passed; 
-pm run build passed.
 - New request: replace tour opening video slide with AU Commissioner avatar + audio message panel (MP3 to be provided later).
 - Updated src/tour/TourContext.tsx:
   - replaced video fields with vatarSrc, vatarAlt, udioSrc, udioLabel, udioPendingText.
@@ -1018,7 +1013,6 @@ pm run build passed.
   - 
 pm run typecheck passed.
   - 
-pm run build passed.
   - Browser artifact: output/web-game/tour-commissioner-slide-check/commissioner-slide.png.
   - Runtime check (output/web-game/tour-commissioner-slide-check/result.json): hasAvatar: true, hasAudioPlayer: false, pending-text present.
 - New request: commissioner onboarding slide should show circular avatar + side-by-side audio panel with waveform and use uploaded MP3.
@@ -1367,3 +1361,198 @@ pm run build passed.
 - Validation:
   - `npm run typecheck` passed.
   - `npm run build` passed.
+- New request implemented: post-action cinematic transition pipeline now replaces immediate in-modal outcome summary.
+- Added new modal type `action_transition` in `uiStore` plus `pendingActionTransition` payload to carry `beforeState`/`afterState` and log entry.
+- Action confirm flow change (`ActionConfigBody`): action is executed into a pending transition payload, but runtime state is not committed immediately.
+- Added `ActionTransitionBody` in `ModalRoot` with two phases:
+  - loading interstitial (timed suspense stage),
+  - reveal stage showing relationship deltas, territory status changes, newly unlocked engageable actors, and queued intel feed updates.
+- Runtime commit now occurs only when reveal completes and user confirms `Resume Operations`; this is when autosave runs and intel feed updates become visible.
+- Modal behavior update: `action_transition` is blocking (no backdrop dismissal), uses dedicated cinematic styling, and suppresses default modal header chrome.
+- Added full styling block for transition sequence in `src/styles/layout.css` (`modal-content-action-transition`, loading animation, reveal panels, responsive fallback).
+- Validation:
+  - `npm run build` passed (Vite bundle warning + unresolved runtime asset warning only).
+  - `npm test -- --run` still fails due pre-existing intel feed expectation tests (`initState.test.ts`, `intelResolver.test.ts`) unrelated to this change set.
+- Cinematic quality pass (user feedback: "not cinematic enough") implemented.
+- Action transition now uses multi-beat pacing:
+  - video-backed interstitial,
+  - flash handoff,
+  - staged reveal progression (4-step meter) with delayed panel unlocks.
+- Added suspense diagnostics ticker text and command-strip telemetry summary.
+- Added staged panel visibility so relationship/territory/actor/intel sections reveal sequentially rather than all at once.
+- Added richer cinematic visual treatment:
+  - noise/scanline overlay,
+  - flash effect,
+  - video drift,
+  - reveal-in motion,
+  - panel and intel reveal transitions.
+- Validation: `npm run build` passed after cinematic pass.
+- Added action-transition loading SFX playback: `scenario_loading.mp3` now plays during post-action loading phase and stops/reset when reveal starts or modal closes.
+- Implementation in `ActionTransitionBody` uses a managed `HTMLAudioElement` ref and phase-based effect gating (`phase === "loading"`).
+- Validation: `npm run build` passed.
+
+- Updated Relationship Matrix (results table) visual treatment to align with game UI: sticky header, richer row hover state, denser chips, stronger avatar framing, and compact score progress bars.
+- Added per-row streamlined action button (Open) in Relationship Matrix that jumps directly to the selected actor profile.
+- Build validation: `npm run build` passed.
+- Lint validation: `npm run lint` failed due repo-level ESLint v9 flat-config migration (missing `eslint.config.js`), not related to this change.
+
+
+- Added dedicated end-turn cinematic transition flow: clicking End turn now opens a blocking `turn_loading` modal instead of immediately committing state.
+- `turn_loading` plays `/assets/vid/pre-interface loading_video.mp4` and loops `/assets/audio/effects/slow-cinematic-clock-ticking-357979.mp3` during resolution.
+- Turn state commit and `end_turn` autosave now occur after the loading sequence exits, preventing pre-reveal UI jumps.
+- Build validation: `npm run build` passed.
+
+- New request: style intelligence feed briefings to match modal language and read as a formal D'Marche.
+- Updated src/ui/panels/IntelFeed.tsx to remove inline styling and render dedicated briefing cards (intel-feed-item* classes) with formal kicker, urgency/new chips, and structured metadata.
+- Reworked IntelReportBody in src/ui/modals/ModalRoot.tsx into a custom demarche document layout (formal header, classification badge, diplomatic metadata grid, directive section, source attribution, and action footer).
+- Updated modal shell routing in ModalRoot so intel_report uses a dedicated custom modal class and hides the generic modal titlebar for visual parity with dossier/article modals.
+- Added comprehensive styling in src/styles/layout.css for feed cards and new demarche modal (modal-content-intel-report, intel-demarche-*) with responsive rules for tablet/mobile.
+- Validation: 
+pm run build passed (required elevated run due sandbox EPERM on C:\Users\ssnguna); existing chunk-size/runtime asset warnings unchanged from prior runs.
+
+- Implemented dedicated cutscene pipeline surface (credit-text overlay on video) via new modal kind cutscene_player in src/state/uiStore.ts and src/ui/modals/ModalRoot.tsx.
+- Added queued cutscene state to UI store (pendingCutsceneId, pendingCutsceneFollowup) with setPendingCutscene action so cutscenes can route to follow-up modals (Act Briefing or Campaign Outcome).
+- Added CutscenePlayerBody in ModalRoot with:
+  - video-first playback + fallback still image support (media_url / allback_image_url),
+  - overlay credit-style narration lines from localization text key,
+  - skip on Esc when skippable,
+  - metadata-driven auto-advance using duration_seconds when uto_advance is true,
+  - deterministic follow-up routing and queue clearing.
+- Modal chrome integration updates:
+  - new modal title handling for cutscene_player,
+  - custom modal sizing/class (modal-content-cutscene-player),
+  - treated cutscene modal as blocking (no backdrop-dismiss/header close).
+- Game trigger wiring in src/ui/layout/GameLayout.tsx:
+  - on act transition, queue matching act-opening cutscene and open cutscene player, fallback to existing ct_briefing if not found,
+  - on ending, queue ending cutscene and open cutscene player, fallback to existing campaign_outcome if not found.
+- Styling added in src/styles/layout.css for cinematic cutscene presentation:
+  - video/image backdrop, overlays, formal kicker/reference row, credits panel, action bar, responsive behavior, and animation.
+- Validation: 
+pm run build passed (elevated due sandbox EPERM); existing non-blocking chunk-size/runtime asset warnings unchanged.
+- New request: game lacked tension/urgency because interactions felt instant.
+- Implemented persistent operational-pressure layer and pacing updates:
+  - Added shared pressure model in `src/ui/operationalPressure.ts` (`deriveOperationalPressure`, `formatDeadlineSignal`) based on runtime signals: critical zones, opposition pressure, insurgency, turn/time progression, and nearest active deadline.
+  - Updated `src/ui/layout/ActionBar.tsx`:
+    - integrated pressure ribbon (level pill, progress meter, dynamic summary),
+    - added deadline signal line,
+    - added short command buffer delays (`Take action` 340ms, `End turn` 520ms) with status text (`Routing command channel...`, `Compiling turn orders...`) so actions feel deliberate rather than instant,
+    - added urgency-reactive end-turn button classing (`is-elevated` / `is-urgent`).
+  - Updated `src/ui/panels/TurnProgressPanel.tsx`:
+    - added new `Operational pressure` block with score, meter, key signals, and dynamic summary/deadline messaging.
+  - Updated `src/styles/layout.css`:
+    - added full action-bar pressure styling (pressure classes, pill/meter, command-status chips, elevated/critical border cues, pulse animations),
+    - added turn-progress pressure-card styling with level variants,
+    - added responsive rules for pressure layout on <=1100 and <=860 breakpoints.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed (existing non-blocking warnings unchanged: `/assets/actors/player_about.png` unresolved at build-time and large chunk warning).
+  - Playwright browser check passed using `.codex-temp/verify-urgency-layer.mjs` with artifacts:
+    - `output/web-game/urgency-layer-check/urgency-layer.png`
+    - `output/web-game/urgency-layer-check/result.json`
+    - result snapshot: `{ actionBarClass: "game-action-bar pressure-steady", pressureWidth: "23%", commandStatus: "Routing command channel...", turnPressureText: "Steady · 23/100" }`.
+- Follow-up polish: replaced non-ASCII separator glyphs in new pressure labels with ASCII `|` to avoid encoding artifacts.
+- Re-validation after separator cleanup:
+  - `npm run typecheck` passed.
+  - `npm run build` passed (same existing non-blocking warnings unchanged).
+  - Re-ran Playwright verification (`.codex-temp/verify-urgency-layer.mjs`):
+    - `turnPressureText` now renders as `Steady | 23/100` (expected).
+- New request: project intel_feed updates directly onto the map using report.zone_scope.
+- Verified existing integration path already present in `src/map/MapView.tsx` (`summarizeIntelScopes`, `ZoneGeoJSONLayer` intel scope usage, `IntelFeedMarkers` layer).
+- Applied follow-up fix so intel-scoped zones remain visible even when `Critical` filtering is enabled:
+  - in `ZoneGeoJSONLayer` style guard, critical-only hiding now skips zones with intel scope (`&& !hasIntelScope`).
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed (existing non-blocking warnings unchanged: unresolved `/assets/actors/player_about.png`, large chunk warning).
+- Runtime smoke verification (Playwright, local script): after confirming an intelligence action, intel marker count increased from 0 -> 1 and feed showed the new unread item; this confirms map now reacts to intel feed updates.
+- Residual runtime observation during smoke automation: onboarding overlays can reappear and interfere with certain click paths in headless checks; no production code changes were made for that in this task.
+- New request: keep intel zone highlighting visible even when Zones layer is toggled off.
+- Updated `ZoneGeoJSONLayer` in `src/map/MapView.tsx` to support an intel-overlay-only render mode:
+  - when zones are off but there are zone-scoped intel items, the layer now stays mounted,
+  - it filters to intel-scoped zone polygons only,
+  - applies dedicated intel-overlay styling so scope remains visible regardless of zone toggle.
+- Added `.map-zone--intel-overlay` style in `src/styles/map.css` for stronger intel-only glow treatment.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm run build` passed (existing non-blocking warnings unchanged).
+
+- Implemented Epic E1 core flow: added uiStore reveal mode state ('full' | 'fast'), Fast Reveal unlock gating, and turn loop timestamp tracking.
+- Added telemetry utility (src/utils/telemetry.ts) and wired events: turn_loop_started, turn_loop_completed, turn_loop_duration_ms, reveal_mode_selected, fast_reveal_used.
+- Updated ActionTransition modal to support Full/Fast reveal mode selection with lock-until-first-full-reveal behavior; Fast Reveal now surfaces deltas quickly then auto-returns control.
+
+- Epic E1 validation pass: 
+pm run typecheck passed after Fast Reveal + telemetry implementation.
+- Full 
+pm test -- --run currently reports pre-existing intel feed failures (	ests/unit/initState.test.ts, 	ests/unit/intelResolver.test.ts) unrelated to Epic E1 changes.
+- Playwright skill-client run completed with artifacts under output/web-game/epic-e1-client/ (shot-0..2).
+- Additional end-to-end verification script for full onboarding -> action loop was attempted but remained flaky due overlapping onboarding/tour overlays intercepting input in headless flow; first-reveal artifact captured at output/web-game/epic-e1-validation/first-reveal.png.
+
+- Implemented Epic E2 modal friction changes: modal telemetry events (modal_opened, modal_closed, modal_primary_cta_clicked, modal_escape_used, 	ake_action_state_restored) and keyboard handling in ModalRoot.
+- Added modal primary CTA normalization using dynamic DOM selection + data-primary-cta styling so one dominant CTA is emphasized per actionable modal.
+- Added safe keyboard rules: Enter triggers primary CTA when valid (non-text-entry contexts), Escape steps back for action review/dialogue outcome and closes where safe.
+- Added same-turn Take Action selection memory in uiStore (	akeActionSelectionTurn) with explicit clear on turn transition in TurnLoadingBody; reopening ction_config in same turn now emits 	ake_action_state_restored.
+- Implemented Epic E3 pre-confirm forecast in `ActionConfigBody` (`src/ui/modals/ModalRoot.tsx`): review-step forecast card now renders for every action with expected gains, likely risks, confidence tier, and affected zones/actors/metrics.
+- Added forecast derivation helpers (`deriveActionForecast`, confidence scoring, zone-effect formatting) and injected forecast card directly in review flow so confirm CTA remains immediately available.
+- Added E3 telemetry events to `TelemetryEventName` in `src/utils/telemetry.ts`: `forecast_card_viewed`, `forecast_confidence_rendered`, `forecast_risk_rendered`, `action_confirmed_from_review`, `action_cancelled_from_review`.
+- Wired E3 telemetry emissions:
+  - review render emits `forecast_card_viewed` / `forecast_confidence_rendered` / `forecast_risk_rendered` once per unique review context,
+  - confirm emits `action_confirmed_from_review`,
+  - cancel emits `action_cancelled_from_review` from Back, Escape step-back, and review close.
+- Added dedicated forecast styling in `src/styles/layout.css` (`.action-forecast-*`) with responsive behavior.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run tests/unit/uiStore.test.ts` passed (6/6).
+  - Added and ran `tmp/verify_epic_e3_forecast.mjs` (Playwright) with artifacts in `output/web-game/epic-e3-validation/`:
+    - `forecast-review.png` (forecast card visible on review step),
+    - `after-confirm.png` (confirm path reaches action transition),
+    - `result.json` (telemetry counts include all E3 events; no console errors).
+- Follow-up E3 validation stabilization:
+  - hardened `tmp/verify_epic_e3_forecast.mjs` to avoid tour-overlay click interception by driving review/confirm via keyboard (Enter/Escape) and using full-page screenshots,
+  - reran script successfully; latest `output/web-game/epic-e3-validation/result.json` confirms:
+    - `forecastVisible: true`, `confirmEnabled: true`,
+    - telemetry includes `forecast_card_viewed`, `forecast_confidence_rendered`, `forecast_risk_rendered`, `action_confirmed_from_review`, `action_cancelled_from_review`,
+    - no console errors.
+- Adjusted configure-step UX for E3 clarity: `Review action` button no longer disables on validation errors, so forecast can still be viewed before confirm; confirm remains gated in review step via existing validation disable.
+- Re-ran `npm run typecheck` after this change: passed.
+- Telemetry payload polish: action-cancel events emitted from ModalRoot (`close`/`escape`) now include fallback action id when no explicit selection exists, preventing null `action_id` in review-cancel telemetry.
+- Re-ran `tmp/verify_epic_e3_forecast.mjs` after payload fix:
+  - `output/web-game/epic-e3-validation/result.json` now shows `action_cancelled_from_review.payload.action_id = "security_patrol_deployment"`.
+- Investigated user-reported intel modal issue: `Executive Assessment` copy rendered in DOM but invisible.
+- Root cause identified via Playwright inspector (`tmp/verify_intel_executive_assessment.mjs`): computed style on `.intel-demarche-section-text` had `opacity: 0` due leaking global landing rule from `index.html` (`p { opacity: 0; transform: translateY(20px); ... }`).
+- Fix applied in `index.html`: scoped landing intro typography animation selectors from global `p`/`strong` to `.section p` / `.section p strong`, and scoped the mobile override from `p` to `.section p`.
+- Re-validated with Playwright inspector:
+  - `output/web-game/intel-executive-check/result.json` now reports `.intel-demarche-section-text.opacity = "1"` and no matching opacity override rules.
+- `npm run typecheck` passed after fix.
+- Follow-up intel modal hardening for user report "Operational Directive copy not visible":
+  - Added defensive style guard in `src/styles/layout.css` for `.intel-demarche-section-text`:
+    - `opacity: 1 !important;`
+    - `transform: none !important;`
+  - This prevents any leaked global paragraph animation styles from hiding intel section copy (including Operational Directive).
+- Revalidated with Playwright inspector script (`tmp/verify_intel_executive_assessment.mjs`):
+  - `output/web-game/intel-executive-check/result.json` confirms Operational Directive section text has `opacity: "1"`, nonzero text length, and visible state.
+- `npm run typecheck` passed.
+- New request: operational pressure did not react to intel-feed updates.
+- Updated `src/ui/operationalPressure.ts` so pressure now derives additional signals from active intel reports (urgent feed items + scoped hotspots), including provisional critical-zone additions from zone-scoped urgent intel.
+- Added new pressure snapshot fields used by UI: `runtimeCriticalZoneCount`, `intelCriticalZoneAdditions`, `activeUrgentIntelCount`.
+- Updated UI surfaces:
+  - `src/ui/layout/ActionBar.tsx` now shows intel-driven critical zone additions in pressure meta.
+  - `src/ui/panels/TurnProgressPanel.tsx` now shows intel alert count and intel-driven critical zone additions.
+- Added unit coverage in `tests/unit/operationalPressure.test.ts`:
+  - scoped urgent intel increases pressure even without runtime critical zones,
+  - expired intel does not affect pressure.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run` shows new pressure tests passing; existing unrelated intel seeding failures remain in `tests/unit/initState.test.ts` and `tests/unit/intelResolver.test.ts`.
+  - Playwright smoke (`node tmp/verify_intel_pressure_sync.mjs`, run outside sandbox) confirmed runtime pressure update after intel action: score `23 -> 34`, critical-zone meta `1 -> 2 (+1 intel)`, and intel alert signal `0 -> 1`.
+- New request: actors the player can engage were not auto-loading in the actor panel.
+- Root cause in `src/ui/panels/ActorPanel.tsx`: panel only considered `active && dialogueAvailable` actors, so actor-targeted action opportunities (valid immediately in many turns) were excluded.
+- Updated actor panel logic to include both engagement channels:
+  - dialogue-ready actors (existing behavior), and
+  - actors with at least one currently valid actor-targeted action (validated via `validateAction` + minimum allocation cost).
+- Added action-planning routing from actor cards:
+  - action-mode cards now show `Plan action` and open `action_config` preseeded with actor target/action id.
+  - dialogue-mode cards keep `Open dialogue` behavior.
+- Updated interaction copy to distinguish `Engage now` (dialogue) vs `Action ready` (action path).
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- --run tests/unit/uiStore.test.ts` passed.
+  - Playwright smoke confirmed actor panel now auto-populates at campaign start with 6 engageable actors and action-mode cards (`output/web-game/actor-panel-auto-load/result.json`, `output/web-game/actor-panel-auto-load/actor-panel.png`).

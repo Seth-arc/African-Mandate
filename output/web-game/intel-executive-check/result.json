@@ -1,0 +1,56 @@
+{
+  "openedFrom": "feed",
+  "inspection": {
+    "modalClassName": "modal-content modal-content-intel-report",
+    "modalStyle": {
+      "opacity": "1",
+      "visibility": "visible",
+      "display": "block"
+    },
+    "hasExecutiveTitle": true,
+    "hasTextNode": true,
+    "textLength": 169,
+    "textPreview": "Signals and local reports indicate insurgent activity intensifying around Mopti, with likely attacks on transport routes and local authoriti",
+    "color": "rgb(184, 184, 184)",
+    "opacity": "1",
+    "animationName": "none",
+    "visibility": "visible",
+    "display": "block",
+    "width": 865,
+    "height": 39,
+    "parentOpacity": "1",
+    "parentAnimationName": "none",
+    "opacityRules": [
+      {
+        "selector": ".intel-demarche-section-text",
+        "opacity": "1",
+        "animation": null
+      }
+    ],
+    "sections": [
+      {
+        "title": "Executive Assessment",
+        "textLength": 169,
+        "textPreview": "Signals and local reports indicate insurgent activity intensifying around Mopti, with likely attacks on transport routes",
+        "opacity": "1",
+        "color": "rgb(184, 184, 184)",
+        "visibility": "visible"
+      },
+      {
+        "title": "Operational Directive",
+        "textLength": 75,
+        "textPreview": "Treat as priority input for the next confirmed action and actor engagement.",
+        "opacity": "1",
+        "color": "rgb(184, 184, 184)",
+        "visibility": "visible"
+      },
+      {
+        "title": "Source Attribution",
+        "textLength": 0,
+        "opacity": null,
+        "color": null
+      }
+    ]
+  },
+  "consoleErrors": []
+}

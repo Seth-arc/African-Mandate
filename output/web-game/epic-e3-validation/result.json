@@ -1,0 +1,208 @@
+{
+  "baseUrl": "http://127.0.0.1:5182",
+  "forecastVisible": true,
+  "confidenceText": "CONFIDENCE MEDIUM",
+  "confirmVisible": true,
+  "confirmEnabled": true,
+  "confirmVisibleAfterReopen": true,
+  "confirmEnabledAfterReopen": true,
+  "telemetryCounts": {
+    "modal_opened": 4,
+    "modal_primary_cta_clicked": 4,
+    "modal_closed": 3,
+    "turn_loop_started": 1,
+    "forecast_card_viewed": 2,
+    "forecast_confidence_rendered": 2,
+    "forecast_risk_rendered": 2,
+    "action_cancelled_from_review": 1,
+    "modal_escape_used": 1,
+    "action_confirmed_from_review": 1,
+    "reveal_mode_selected": 2
+  },
+  "telemetryTail": [
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773260480142,
+      "payload": {
+        "modal": "onboarding_loading",
+        "previous_modal": "session_manager"
+      }
+    },
+    {
+      "name": "modal_closed",
+      "occurredAtMs": 1773260490621,
+      "payload": {
+        "modal": "onboarding_loading",
+        "next_modal": "none"
+      }
+    },
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773260491265,
+      "payload": {
+        "modal": "action_config",
+        "previous_modal": "none"
+      }
+    },
+    {
+      "name": "turn_loop_started",
+      "occurredAtMs": 1773260491265,
+      "payload": {
+        "turn": 1,
+        "actions_remaining": 3,
+        "started_at_ms": 1773260491265
+      }
+    },
+    {
+      "name": "modal_primary_cta_clicked",
+      "occurredAtMs": 1773260491698,
+      "payload": {
+        "modal": "action_config",
+        "cta_label": "Review action",
+        "activation": "enter"
+      }
+    },
+    {
+      "name": "forecast_card_viewed",
+      "occurredAtMs": 1773260491705,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "target_scope": "zone"
+      }
+    },
+    {
+      "name": "forecast_confidence_rendered",
+      "occurredAtMs": 1773260491705,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "confidence_tier": "medium",
+        "confidence_score": 1
+      }
+    },
+    {
+      "name": "forecast_risk_rendered",
+      "occurredAtMs": 1773260491705,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "risk_count": 2,
+        "has_modeled_risk": false
+      }
+    },
+    {
+      "name": "action_cancelled_from_review",
+      "occurredAtMs": 1773260516697,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "source": "escape"
+      }
+    },
+    {
+      "name": "modal_escape_used",
+      "occurredAtMs": 1773260516697,
+      "payload": {
+        "modal": "action_config",
+        "behavior": "step_back"
+      }
+    },
+    {
+      "name": "modal_primary_cta_clicked",
+      "occurredAtMs": 1773260516994,
+      "payload": {
+        "modal": "action_config",
+        "cta_label": "Review action",
+        "activation": "enter"
+      }
+    },
+    {
+      "name": "forecast_card_viewed",
+      "occurredAtMs": 1773260517001,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "target_scope": "zone"
+      }
+    },
+    {
+      "name": "forecast_confidence_rendered",
+      "occurredAtMs": 1773260517001,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "confidence_tier": "medium",
+        "confidence_score": 1
+      }
+    },
+    {
+      "name": "forecast_risk_rendered",
+      "occurredAtMs": 1773260517001,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "risk_count": 2,
+        "has_modeled_risk": false
+      }
+    },
+    {
+      "name": "modal_primary_cta_clicked",
+      "occurredAtMs": 1773260517026,
+      "payload": {
+        "modal": "action_config",
+        "cta_label": "Confirm action",
+        "activation": "enter"
+      }
+    },
+    {
+      "name": "action_confirmed_from_review",
+      "occurredAtMs": 1773260517026,
+      "payload": {
+        "turn": 1,
+        "action_id": "security_patrol_deployment",
+        "target_scope": "zone",
+        "target_zone": "mopti",
+        "target_territory": null,
+        "target_actor": null,
+        "confidence_tier": "medium",
+        "risk_count": 2
+      }
+    },
+    {
+      "name": "reveal_mode_selected",
+      "occurredAtMs": 1773260517074,
+      "payload": {
+        "mode": "full",
+        "fast_reveal_unlocked": false,
+        "turn": 1
+      }
+    },
+    {
+      "name": "modal_closed",
+      "occurredAtMs": 1773260517141,
+      "payload": {
+        "modal": "action_config",
+        "next_modal": "action_transition"
+      }
+    },
+    {
+      "name": "modal_opened",
+      "occurredAtMs": 1773260517141,
+      "payload": {
+        "modal": "action_transition",
+        "previous_modal": "action_config"
+      }
+    },
+    {
+      "name": "reveal_mode_selected",
+      "occurredAtMs": 1773260517141,
+      "payload": {
+        "mode": "full",
+        "fast_reveal_unlocked": false,
+        "turn": 1
+      }
+    }
+  ],
+  "consoleErrors": []
+}

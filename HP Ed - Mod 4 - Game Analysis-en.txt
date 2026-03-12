@@ -1,0 +1,831 @@
+Welcome back.
+In this
+module, we're going to talk about
+how game designers play games.
+Because when a game designer plays
+a game for research,
+it's a bit different
+than how most people play games.
+We don't just play games for fun.
+We play to analyze and to understand.
+For some people,
+becoming a game designer
+kind of ruins games as a hobby
+because there's no magic left.
+You can't just play for fun.
+You always have to think about
+how a game is put together.
+For other people,
+being a game
+designer lets
+you appreciate games
+even more deeply than you could before,
+because you can see the brilliance
+of how all the pieces fit together.
+At any rate, let's start.
+So before we get into different ways
+to understand
+and analyze games,
+I'd like to start with one way that's
+probably the most familiar
+to many of you, and that is game reviews.
+I've taught full university
+level classes
+just on this one topic of game analysis,
+where the students do
+different kinds of analysis
+and critique of different games
+every week.
+And the one hardest thing
+I always have to address throughout
+that course
+is just breaking students
+of the habit
+of writing in the style of game reviews.
+If you've ever read any reviews,
+you know how these go.
+Person opens with something
+about the background of the game,
+maybe something about their experience
+with other games like this,
+and then going into a breakdown
+of whether it's fun or not and why,
+and then closing it out
+with a review score, usually out of ten.
+So I just want to say
+this is not the only way
+to analyze games.
+In fact, it's
+one of the most useless ways
+for game designers to
+approach playing and designing games,
+because reviews
+are not written
+for an audience of game designers.
+They're written
+for an audience of gamers.
+The entire point of a game review
+is to tell the reader
+how they should engage with the game.
+Should they buy it immediately?
+Is it worth playing?
+But they should wait
+until a price drop to save money
+because it's not that critical
+to play right now?
+Should they not bother buying it,
+but if they can rent it
+or play it on a streaming service
+like game pass, then it's worth
+the ten bucks to subscribe for a month
+just to play this?
+If you have the
+game rental places in your area,
+is it worth the cost of a rental?
+Is it not worth any money,
+but hey,
+if you can get it for free,
+then at least it's worth your time?
+Or do you avoid it altogether?
+That is the single question
+that reviews are supposed to answer.
+A well-written review will give you
+this answer in detail,
+and the answer is usually more
+than just a single
+yes or no,
+because different games
+appeal to different people.
+Lots of people
+love the Call of Duty franchise,
+but if you don't like military
+shooters, you probably wouldn't
+want to buy it or even play most of them.
+So a good review wouldn't
+just say - yes buy this game.
+It would say enough about the game
+to let you know what the appeal is,
+what kinds of people will love it,
+what kinds of people
+might not like it so much,
+so that you can make an informed decision
+as a consumer about where
+to spend your money.
+Now, as I said,
+a good review will do this.
+There are a lot of poorly written reviews
+that do not enlighten the reader
+because the writers are human,
+and they're not always great at writing.
+But my point is that reviews have one job
+and this is it.
+As game designers,
+it is generally
+not the most important thing
+we want to know about a game.
+So reviews are
+not completely useless to us,
+but they are mostly useless to us.
+Well, okay.
+There is one exception,
+which is if you know
+you're creating a game
+in a specific genre,
+it is worth
+not just playing other major games
+in that genre,
+but also probably looking up
+a variety of different reviews
+for each of those games,
+making note of
+especially the common patterns,
+the things that reviewers
+consistently call out as positive
+or negative
+about each game.
+Because that will give you
+a general sense
+of the kinds of things that reviewers,
+and therefore players, are looking for
+in a game like this.
+And that can help you
+to make sure
+that if there is some mechanic
+or a gameplay element
+that the audience finds
+absolutely critical to the experience,
+then you can be aware of that.
+So you don't leave it out.
+And if there's some common missteps,
+the developers make
+that people just don't like,
+you can think about how to address
+those things in your game
+to make it better.
+So that is one case where I'd say that
+reading reviews
+and being aware of them can be helpful
+if you're a professional game designer.
+I actually worked on a game once
+where we hired
+an actual marketing intern who spent
+half the summer
+just doing that full time,
+just reading tons
+and tons of reviews of games in the genre
+we were working in,
+and writing up one pager
+summaries of each game
+with the positive and negative things
+mentioned in the reviews,
+and how many reviews mentioned
+that thing. Took a lot of time
+to put that together,
+but we found it
+very helpful on the design side
+when thinking about the kind of game
+we were going to build.
+But again, generally,
+when you're playing a game
+for a game design research,
+you don't want to be thinking
+in terms of reviewers
+or thinking about what kind of review
+you would write for this game.
+So, okay,
+if we're not playing games
+to write like game reviewers,
+how do we play games?
+Now, up until this point,
+you probably haven't
+thought much about different ways
+to really think about
+what makes a game work or not work.
+Most people,
+when they play a game,
+they might say that was fun or not fun,
+but they kind of stop there.
+We’ll be going into more detail
+on the concept of fun in a later module.
+For now, I'll give a minor spoiler
+that fun is a complicated
+and overloaded term,
+and that games don't even
+necessarily have to be fun
+as long as they provide
+some kind of meaningful experience.
+The same way that movies
+or books can be fun,
+but they can also
+be very serious and not fun,
+but still important.
+At any rate,
+it turns out
+there are a lot of different ways
+to look at games beyond just, is it fun?
+Or as with a review,
+whether it's worth buying.
+And I'll talk about these nine
+different ways of thinking about and
+playing and analyzing games.
+Keep in mind,
+these nine things
+are not an exhaustive list
+or even an official list.
+These are just some different ways
+that I’ve used
+just to get you started
+thinking about games and game design
+as you play.
+I also want to keep you to keep in mind
+this is not an either or thing.
+When you're playing a game,
+you're only choosing
+one of these ways to analyze.
+You can look at a game
+through multiple lenses.
+And so just because you
+look at a game's mechanics
+doesn't mean
+you can't also analyze the strategy
+or the story.
+So think of these as just different tools
+in your analysis toolbox,
+so you can learn from playing games.
+And if you just kind of got excited
+because I'm talking about
+learning game design
+by playing games,
+yes, this is actually
+one of the really cool things
+about being a game designer.
+That you can improve your craft
+by playing games.
+However, like I’ve said,
+game designers do play games
+differently than most people.
+So playing a game as a designer
+isn't just turning your brain off
+and enjoying the experience.
+It's about understanding
+what the game is doing,
+what's working, what isn't working.
+Why do you think it was designed
+the way it was? How was it designed?
+And taking those parts
+and adding them to your personal toolbox
+so that when you're
+making your own games,
+you can draw on what you've seen
+other  games do. And be able
+to understand
+what worked or what didn't work and why.
+So one way to analyze games
+is probably the most obvious.
+Look at the mechanics of the game.
+What are the rules?
+What are the verbs or actions
+that players can do?
+What happens when they do them?
+What happens if the player
+does nothing at all?
+For some games, learning this
+is as simple as just reading the rules
+booklet for board games,
+or an instruction manual,
+or playing through a tutorial
+for a video game.
+For video games, though,
+you'll often want to dig deeper,
+because a lot of the mechanics
+that are
+actually not documented
+anywhere in the game or on the box.
+Like if you pick up the latest
+Pokémon game, you'll probably learn
+generally how combat works,
+but you probably will not learn
+the exact formula
+for how damage is calculated in combat,
+or which stats increase
+and by how much when you level up.
+So for things like that,
+I mean, it's obviously in the game,
+but it's not documented anywhere.
+So you'll have to actually
+look that up through
+strategy guides or walkthroughs
+or wikis that you find online.
+In the past,
+many big releases
+also had official strategy guides
+that had all this information
+that were printed
+that you could actually buy
+when you bought the game.
+A lot of players
+didn't like those guides
+or didn't use them,
+but those were gold for game designers,
+because they actually laid out
+the entire design of the game,
+and were often written using data
+that came directly
+from the development team.
+Sometimes they were actually written
+by someone
+who was on the development team.
+These days
+you might be able to find
+some strategy guides for old games
+that no one plays anymore.
+And if you happen to spot one somewhere
+and can buy it for cheap,
+it's probably worth the money
+just to have some physical references.
+But you can get by pretty well
+with online
+walkthroughs made by fans
+who have just deconstructed
+the mechanics.
+The purpose of looking at
+mechanics is to see
+what the component parts are
+and how they fit together.
+The second way of analyzing games
+at the systems
+level, is to look at the other elements
+of the game outside
+of just the mechanics.
+These should look familiar.
+I talked about this
+all the way back in module two.
+But you can basically
+look at all
+the other elemental building blocks
+that make up the game.
+How many players is the game for
+and what is the relationship
+between them? Is it co-op or PvP?
+Are there shifting alliances
+or are the relationships fixed?
+What's the goal?
+What are the players trying to achieve?
+What resources do players have to manage?
+How do players generate those resources?
+How do they manipulate them?
+How are they spent?
+What does the flow of resources
+look like?
+What kind of information
+exists in the game?
+And how much information
+is known to all players,
+or private to a single player,
+or hidden from all players?
+Is the game played in
+turns or in real-time?
+Or some hybrid of the two?
+How does a game flow
+from one player action to the next?
+What's the theme of the game?
+What's it about narratively?
+And how do these other elements
+combine and overlap
+to form one or more systems?
+And if there are multiple systems,
+what's the relationship
+between the different systems?
+Looking at the elements
+or component parts of the game
+is like taking some unknown substance
+and figuring out
+its chemical composition.
+It won't tell you how to make that thing,
+but,
+you can figure out
+its general chemical properties
+and the kinds of things
+it's likely to react with.
+You can also analyze
+the strategy of the game,
+and in this case I use the term strategy
+very loosely to just mean
+if players have choices
+between different actions they can take,
+how do they choose?
+So well, I use the word strategy.
+I'm technically
+also talking
+including strategy,
+grand strategy, tactics,
+fast reactions,
+really any kind of decision making.
+So in this case,
+you might ask questions
+like what kinds of decisions
+are really being made here?
+Are there
+general strategies
+for choosing one action over another?
+In a fast reaction
+game like,
+say, a music game like
+Dance Dance Revolution or Rock Band,
+there's not really
+a whole lot of strategy there.
+You're just trying
+to hit the right button
+with the right timing,
+and the only variation might be choosing
+how to position
+your hands or your body
+to make the flow between moves easier.
+Compare that to something
+like a real-time strategy game,
+where there are entirely different
+strategies and playstyles.
+In Starcraft, a protoss zealot
+strategy or terran ghost plays
+very different from zrugaling rush.
+In many trading card games like
+Magic the Gathering,
+you have aggro strategies
+that try to win quickly,
+combo strategies
+that try to put together
+an unbreakable game winning situation,
+and control strategies
+that try to shut down the opponents
+so they can't progress at all.
+Different strategies appeal
+to different kinds of players,
+and in some games, players
+can even switch strategy
+in the middle of play in response
+to what they see their opponent doing.
+So looking at strategies
+takes us away
+from the individual components,
+but helps us think more about what
+it's like from the players perspective.
+What can they actually do in a game?
+Now, play reports
+aren’t very common with video games,
+but you can see a lot of them
+with board games on sites
+like Board Game Geek.
+Google Session Report
+and the name of a board game,
+and you'll probably find a bunch of these.
+At it’s heart,
+a session report is just a transcript
+of what actually happened
+during a single play of a game.
+A session report
+for Monopoly
+might describe
+who chose what playing pieces,
+what properties were landed
+on, and if anyone was able to purchase
+any complete
+colored groups groups on their own,
+or if not,
+who was able to trade to get one,
+and ultimately who won and by how much.
+Session reports are like highlights
+of professional sports matches.
+They don't give a list
+of every single move that was made,
+but they describe the overall flow
+of the game, specific
+high points where big moves happened,
+what overall strategies
+each player was running,
+and what happened
+when everything came together.
+So an individual session
+report is like a case study
+that gives a description
+of what
+the overall flow of the game is like,
+at least in one specific case,
+one specific playthrough.
+Looking at multiple session reports
+for the same game
+can give a sense of the variation
+between games,
+and the similarities
+between multiple plays.
+For video games the equivalent of this
+might be YouTube streamers
+recording the play of a single match,
+and that has similar value.
+Now, so
+far we've only
+focused on mechanics and systems,
+but for some games
+the narrative is just as important,
+if not more important
+to the player experience.
+In particular,
+I draw a distinction
+between what I call embedded narrative
+and emergent narrative.
+Embedded narrative is the story
+that's written into the game,
+things that characters
+do during cutscenes, for example.
+And that's one thing
+you could pay attention to and analyze it.
+What is the story
+as written
+by the game writers
+who worked on the game?
+Who are the characters?
+What's their motivation? What's the plot?
+What happens to the characters
+over the course of the game?
+Meanwhile, emergent narrative
+is what we call the story
+that players
+tell about their personal experience
+in the game.
+Even in games
+with no embedded story at all,
+like say, The Sims,
+ still things happen during a game.
+And if you know
+anyone who plays a lot of The Sims,
+you probably have at least one time
+where they told you
+about this crazy thing
+that happened to their Sims while playing.
+And that story they tell you,
+that's not something that was authored
+by the Sims development team.
+It was something that happened to them
+during play,
+which makes it feel
+more personal to them.
+You might also experience
+emergent narrative
+when someone is relating a play session
+to you, like explaining
+what happened during a tense PvP match.
+What happened
+during the last play session
+to their DND character.
+Or even some cool thing that happened
+during a big sports game last night.
+Some games are designed
+in such a way
+that emergent narratives happen often,
+giving players their own stories to tell.
+Is this game that you're
+analyzing like that?
+And if so, what kinds of stories
+seem to be common
+or seem to be memorable?
+Game designer
+Sid Meier is
+credited with saying
+that a game is a series
+of interesting choices.
+It's a very famous quote.
+Now, this was never meant
+to be a definition of the word ‘game’.
+Even though he says a game
+is a series of interesting choices,
+that wasn't meant to be a definition.
+What he meant
+was that at least
+for some types of games,
+such as the Civilization series
+that he is famous for,
+the choices that players make
+are the most meaningful
+and interesting part of the game.
+So as a game designer,
+you always want to be looking
+through the lens of player choice.
+What kinds of choices are players
+given in the game?
+And what makes those choices interesting?
+We'll be talking about
+the different kinds of choices
+in detail in later modules.
+But for now,
+just keep in mind that looking at
+what players can do
+is one way
+to look at the effects of game design
+on those players.
+Now, a couple of modules ago
+I talked about core mechanics,
+meaning the mechanics that players engage
+with repeatedly
+on a moment to moment basis
+at the innermost loop of the game.
+Another type of core
+we discuss as designers
+is the core experience,
+and that's related to core mechanics,
+but is basically
+what does it feel like to play the game
+on this moment to moment basis?
+What's the lowest level
+baseline of the feeling of playing?
+What's it feel like to play this game,
+in general,
+not counting individual standout moments?
+Is the gameplay tense?
+Is it action packed?
+Is it peaceful and meditative?
+Is it grindy?
+Does it involve a lot of
+thinking and strategizing?
+So for example, in the
+original Doom,
+the core mechanics are moving
+and aiming and shooting.
+And John Romero has actually said
+in interviews
+that what he was going for
+was a theme of fight or flight.
+So the player is constantly
+in these situations
+where they have to choose
+whether to shoot or run away,
+considering things
+like their state of health,
+how much ammo
+they have, their positioning, and so on.
+And as a result, the game is really tense
+and the player
+is constantly expecting
+some threat around every corner.
+By contrast,
+there is another game
+showing here called Flow,
+which was designed
+to actually put the player
+in a flow state.
+Basically having them be challenged
+at just the level of their ability,
+so that their brain enters
+this kind of meditative state.
+So that while the game can
+certainly have tense moments,
+it feels very different to play than Doom,
+because the player is opting in
+to a greater or lesser
+challenge in real time,
+and can take the time
+to just hang around on easier levels
+and grow themselves
+to get bigger and more powerful.
+So it's a very different experience.
+So think about what
+the game feels like,
+and that can lead to all kinds
+of other questions.
+Like what kinds of players
+will this appeal to or not appeal to?
+What other elements like
+the mechanics, the choices,
+the narrative
+end up creating this core experience?
+And the flip side
+to the core experience is,
+which is more of like an ongoing low
+key thing,
+is what are the standout moments
+that happened in the game
+that are super memorable?
+You might have a game that you played
+5 or 10 or 20 years ago
+that you still remember fondly,
+even though you haven't played it
+since then.
+And you might not be able to remember
+many details about the game at all,
+but there was
+this one really cool thing that happened
+the just so completely
+blew your mind at the time.
+Something so powerful
+that you remember it years later,
+even when the rest of the game
+is completely forgotten.
+Those moments are important.
+While you don't want to design a game
+that's mediocre
+except for one big moment,
+you might design a game around
+a small number of key moments
+that the rest of the game supports.
+And just to make those moments
+super powerful,
+and just like
+looking at the core experience,
+we can
+then ask questions
+about what made this moment so memorable.
+How did the game build up to it?
+How much of the game actually supported
+this moment as was necessary
+just to deliver
+that one big memorable thing?
+And one last lens I want to talk about
+today is the design goals of the game.
+That is, what was the game trying to do?
+What kind of experience
+was the game designer trying to create?
+And as we'll see later
+when I talk about fun,
+most game designers
+don't like to use the word fun
+for various reasons,
+but one reason is that games don't
+necessarily have to be fun.
+When you think about it,
+there's no other artistic medium
+where fun is considered a requirement.
+No one would watch
+a Shakespearean tragedy
+and say at the end, well, everyone died.
+It was a sad ending.
+That wasn't fun 0 out to 10.
+That sounds ridiculous.
+That would make no sense.
+And there are plenty of games
+that aren't necessarily meant to be fun
+either, but are still meaningful.
+That Dragon Cancer
+is literally about a child
+dying of cancer.
+It is emotionally gut wrenching.
+It is deeply meaningful. It is not fun.
+This War Of Mine is a game
+about the devastation of war
+as seen through the eyes of civilians
+who are just trying to survive
+in the wake of destruction,
+and the terrible choices
+that you might have to make
+where your survival might mean
+someone else's tragic death.
+That is not a fun game,
+but it is very important,
+and it is masterfully well done.
+So when I talk about games
+and whether they're successful,
+I don't like to ask if the game is fun.
+Instead, I ask,
+did the game meet its design goals?
+What did the games set out to do?
+And did it do that thing
+and did it do it well?
+Now, this can be tricky
+because most games
+don't come with an artistic
+vision statement
+telling you
+what the designer was trying to do.
+You have to kind of infer
+that based on the experience.
+Very occasionally you'll see a designer
+talking about their design goals
+for a particular
+game in an interview
+or a conference talk or something,
+and they'll put that out there.
+But most of the time,
+the best you can do is guess,
+and say a statement like,
+‘Well, if the design goal of this game
+was to make the player feels helplessness
+of a war refugee
+so that they have greater
+empathy towards real world
+people in that situation,
+then the game succeeded
+or failed because of this thing.’
+And sure,
+sometimes the designer
+is trying to make a fun game.
+That is a common design goal.
+And then you can analyze the game
+according to that.
+But even then, as we'll see next time,
+there are different kinds of fun
+and they may be going
+for a certain type of fun, experience
+and they may or may not have hit that.
+What is required as your next step
+is that you take your assessment
+so you can get your certification
+from HP Gaming Garage.
+Thanks for watching
+and I'll see you in the next module.

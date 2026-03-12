@@ -1,0 +1,6 @@
+{
+  "actionBarClass": "game-action-bar pressure-steady",
+  "pressureWidth": "23%",
+  "commandStatus": "Routing command channel...",
+  "turnPressureText": "Steady | 23/100"
+}

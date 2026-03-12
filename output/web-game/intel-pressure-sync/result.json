@@ -1,0 +1,30 @@
+{
+  "before": {
+    "actionPressureScore": "23",
+    "actionPressurePill": "Steady pressure",
+    "actionPressureMeta": "Turns left 20 | Clock 48m | Critical zones 1",
+    "turnPressureValue": "Steady | 23/100",
+    "turnSignals": [
+      "Critical zones 1",
+      "Intel alerts 0",
+      "Opposition 0",
+      "Mandate clock 48 months",
+      "No active hard deadlines"
+    ]
+  },
+  "after": {
+    "actionPressureScore": "34",
+    "actionPressurePill": "Steady pressure",
+    "actionPressureMeta": "Turns left 20 | Clock 48m | Critical zones 2 (+1 intel)",
+    "turnPressureValue": "Steady | 34/100",
+    "turnSignals": [
+      "Critical zones 2 (+1 intel)",
+      "Intel alerts 1",
+      "Opposition 0",
+      "Mandate clock 48 months",
+      "No active hard deadlines"
+    ]
+  },
+  "scoreDelta": 11,
+  "changed": true
+}

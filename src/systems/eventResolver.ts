@@ -20,6 +20,7 @@ import type {
   ZoneData,
   ZoneState,
 } from '../state/types'
+import { upsertIntelFeedByGenerator } from './intelResolver'
 
 const METRIC_KEYS: (keyof Metrics)[] = [
   'stability',
@@ -1102,50 +1103,7 @@ function addOrRefreshIntelFeedForEvent(
   event: EventData,
   turn: number
 ): { state: GameState; generated: boolean; upgraded: boolean } {
-  const report = state.content?.intel_reports.intel_reports.find((item) => item.generated_by === event.event_id)
-  if (!report) {
-    return { state, generated: false, upgraded: false }
-  }
-
-  const feed = [...(state.intel_feed ?? [])]
-  const index = feed.findIndex((item) => item.report_key === report.report_key)
-  const urgent = report.urgency === 'high' || report.urgency === 'critical'
-  if (index >= 0) {
-    const existing = feed[index]
-    if (!existing) {
-      return { state, generated: false, upgraded: false }
-    }
-    const upgraded = existing.occurred_at !== turn
-    feed[index] = {
-      ...existing,
-      occurred_at: turn,
-      is_read: false,
-      is_urgent: urgent,
-    }
-    return {
-      state: {
-        ...state,
-        intel_feed: feed,
-      },
-      generated: false,
-      upgraded,
-    }
-  }
-
-  feed.push({
-    report_key: report.report_key,
-    occurred_at: turn,
-    is_read: false,
-    is_urgent: urgent,
-  })
-  return {
-    state: {
-      ...state,
-      intel_feed: feed,
-    },
-    generated: true,
-    upgraded: false,
-  }
+  return upsertIntelFeedByGenerator(state, event.event_id, turn)
 }
 
 function deadlineFromEvent(event: EventData, turn: number): number | null {

@@ -1,0 +1,1005 @@
+Today we're going to talk UI/UX.
+UI is short for user interface.
+Basically means
+all the different ways
+that a player and a game
+communicate with each other.
+A video game communicates with the player
+through information
+displayed on the screen,
+as well as audio
+and occasionally touch
+with things
+like controller rumble
+or haptic feedback controls.
+The player communicates with the game
+through some kind of input system
+such as a mouse and keyboard
+or a gamepad.
+Even tabletop games have a UI though.
+They still have to communicate
+the game state to the player
+through things
+like information on cards
+or a game board.
+If you look at a board game in progress
+and you can tell who's winning
+or whose turn it is, how do you know?
+The answer is that the game
+bits are arranged in such a way
+to communicate information to you.
+That's also the user interface.
+UX is short for user experience.
+The difference between UI and UX
+is kind of like the difference
+between mechanics and dynamics
+or aesthetics.
+The UX is how it feels
+when the player interacts with the UI.
+There are all kinds of internet
+memes and comics to explain this.
+So you might wonder
+what makes one UI design choice
+better than another.
+For example,
+in a board game,
+if you want to generate
+a random number from 0 to 5,
+you could do this with a six
+sided die where you treat the six as a zero,
+or a spinner,
+or six cards
+with the numbers 0 through 5 printed
+that you shuffle
+and draw one
+and then put the card
+back in shuffle again.
+Or you could have six players
+that each choose a random number
+from 0 to 5 simultaneously
+and add them all together
+and keep subtracting six from the total
+until you get into the range of 0 to 5.
+Mathematically speaking,
+all of these are identical and produce
+the same result of a uniform
+random integer variable
+with the range of 0 to 5.
+So why would you choose one of these
+instead of another?
+Well, in the case of a board game,
+ cost might be an issue.
+Sspinner is a custom component
+that might be expensive,
+while dice and cards
+are relatively cheap,
+and players
+throwing a fist
+with some number of fingers
+extended requires
+no material components at all.
+But beyond cost,
+these have very different experiences.
+Rolling a die is fast,
+easy to read the result
+and then unambiguously
+and something most people are used to,
+although dice are prone
+to getting accidentally
+rolled off the table,
+or rolled into a game board
+in a way
+that disrupts the positions of pieces there.
+Spinners might stick,
+and they require several attempts
+if they're cheaply made,
+and the well-made ones
+can keep spinning for a while,
+which can lead to a suspenseful moment,
+but can also make the game take longer.
+And if the spinner happens to spin
+between two things,
+you have to either look at it
+very carefully or just spin again.
+Cards take longer to shuffle,
+and it can be obnoxious
+to have to keep
+shuffling a deck of only six cards,
+every single time you draw
+any number.
+Using your hands does require six people,
+although to give a
+truly random value, and
+it takes time to add and subtract
+and is prone toto math errors.
+So you can see that
+each of these has a different
+UI and a different UX.
+And while most game designers
+would just go for
+the six sided die by default
+because it's
+usually the most efficient way
+to do this,
+there may be times
+when some other method’s superior
+for a specific application.
+So it's worth considering these things.
+In general, though,
+the biggest considerations
+that you'll have with UI
+are these two things.
+When I say ease of use, what I mean is
+if you know the game well
+and you know
+you want to accomplish some task,
+how quickly and easily can you do it?
+Ease of learning means
+if you're new to the game
+and you don't know everything
+there is to know about the controls
+or screen layout or anything,
+how easy is it to figure out
+what you need to know
+and what you need to do
+using only the information
+available to you in the game?
+Now, in practice,
+there's usually a trade off
+between these two at some point.
+For example,
+many games
+and other software
+applications on a computer
+have what we call hotkeys.
+That's a single key or a key
+combination
+that will perform a specific function
+when you press it.
+Maybe you've got a bunch of spells
+in a vvideo game, and slots
+one  through nine,
+and you can hit the number key
+to use the spell in that slot.
+That makes it super easy and fast to cast
+spell compared
+to going to a menu,
+selecting a spell from the menu,
+clicking the cast spell button,
+or even just moving the mouse to click
+a spells icon on the screen.
+But if you try giving a new player
+a screen layout with a few dozen spells,
+and nine of them are slotted
+to number keys,
+and the only way to change
+which spells are hotkeyed is to first
+find the menu system,
+and then go to customization,
+and then choose which spell goes in
+each slot manually.
+As a new player, that can
+be pretty overwhelming
+if you’ve just logged in
+with a level one character
+for the first time.
+But on the other hand,
+if you make casting spells
+relatively simple for a new player,
+maybe just by limiting the player
+to only have three spells
+that they can use for the entire game,
+that makes the system easier to learn,
+but it also limits
+the expressiveness of the mechanics
+for more advanced players.
+The way World of Warcraft does
+this for example,
+is by starting the player out
+with a relatively small number of options,
+and then gradually adding
+more as the player levels up,
+so that a first time
+player won't feel overwhelmed.
+But by the time you reach the level cap,
+your UI looks like an airplane cockpit.
+But you've added
+things in
+small increments
+over a long period of time.
+So by the time you are that advanced,
+you know what all the buttons do,
+and it's not overwhelming to you at all.
+Like if you've played WOW for a while,
+you could probably look
+at a screen like this
+and have a pretty good understanding
+of what's going on.
+You can probably tell the character class
+this person is playing
+and exactly where they are in the game
+and what they're doing.
+And if you're not familiar
+with World of Warcraft,
+then the screen probably looks like
+I'm just trolling you.
+It doesn't even look like a screenshot.
+It looks like screenshots
+and text from ten different games
+all collaged together.
+So this is the difference
+between ease of use and ease of learning.
+This screen shows a UI
+that is optimized for a player
+to be able to take in and understand
+large amounts of data
+in a challenging boss fight in real time.
+But it is not something that would
+be trivial to learn at all.
+Another way of looking at the UI
+is how it's conceptualized,
+and there's two different places
+where this happens:
+inside the game itself
+and inside your player's brain.
+That is,
+every player has a mental model
+of how your game works
+that is inside their head.
+They have certain ideas about your game
+and how to play it,
+what the controls are,
+what the rules and mechanics are,
+and generally how things work.
+And then there's actually how things
+really work inside the game.
+Now, most of the time,
+if the UI is done well,
+these two things will match.
+The player
+thinks that pushing up
+on the right thumbstick
+of a game
+pad causes their avatar
+to move up in an overhead view map,
+and when they do it,
+that's exactly what happens.
+In these cases there's no problem.
+The player has internalized the UI.
+They know how things work
+and they can focus on actually
+playing the game.
+Here's the thing
+if these two things do not match,
+if these two things do not match,
+the player has one idea
+about how they think the game works,
+but the game actually works
+in a different way.
+Well, in video games,
+the game is always right,
+which means the player
+will expect one thing to happen
+when they do something,
+but then the game software
+will do something else,
+and then the player will get confused
+or frustrated.
+In serious cases,
+the player
+still won't understand
+why something happened after it happens.
+And they might think
+that this is a
+ software bug, when actually it's just that
+the game is working fine,
+but they just don't
+understand how it works.
+Now, in board
+games and other tabletop
+games, this might be reversed.
+If there's no referee
+and players are just moving
+pieces around on a tabletop,
+then players who don't understand
+the rules may simply play the game wrong,
+they won’t play it by the printed rules.
+They might do this for years
+until they try to play the game
+with someone else who played it before
+and learned how to play it properly.
+But if the player's idea
+of how the game works
+isn't corrected by the game,
+then the players will play the way
+they think it works until something
+or someone corrects them.
+So the thing to know about
+the player mental model
+is that it doesn't
+just come from nowhere.
+It generally comes from the player's
+life experience,
+playing other games,
+doing other activities.
+For example,
+if you're playing a computer game
+that has a mouse pointer,
+most people would expect that
+if you pushed the mouse away from you,
+the arrow will go up on the screen
+because you've used a computer before.
+And that's
+how most point mouse pointers work
+just about everywhere.
+Now, imagine for some reason
+you wanted to make a game where pushing
+the mouse forward
+caused the mouse cursor
+to go down on the screen instead of up.
+What do you think's going to happen?
+Well,
+you'll have a lot of confused players
+is what will happen.
+Okay, so suppose you want to do that.
+How do you change
+the player's mental model
+so that they know
+how things
+are going to work in your game?
+Well,
+you can explain it
+very carefully in the tutorial.
+You can train them,
+but at the end of the day, player
+mental models
+tend to be very sticky
+very persistent, and under stress, players will
+still probably forget
+and revert back to what they knew
+before they encountered your game.
+One of my favorite stories about
+this was one case
+where a new military fighter jet
+in the real world
+was having this problem.
+And the problem was that
+there were a much higher number
+of accidental ejections than normal,
+where a pilot would eject themselves
+from the jet without intending to.
+Now, given the cost of fighter jets,
+this was a very expensive problem.
+And so all these engineers
+were repeatedly
+looking for mechanical
+and electrical failures,
+like why did this ejection seat eject
+when the pilot
+didn't mean for it to happen?
+And the reason was a mystery.
+They were finding nothing.
+There was no mechanical problem.
+There was no electrical failures.
+There was nothing.
+There's no reason.
+Until someone wondered if it was possible
+that this wasn't
+actually an engineering error,
+but a design error.
+So they looked at all of the pilots
+who accidentally ejected,
+and they found that
+every single one of them
+had initially trained
+on the same model of aircraft.
+And in that model,
+the location of the throttle and ejection
+seat control
+were reversed
+from where they were in this jet.
+So what actually happened was
+they would do fine
+under normal conditions,
+but under combat stress,
+they would revert
+to their original training,
+grab where they expected
+the throttle to be,
+pull and eject themselves accidentally.
+And that's how powerful
+the mental model is.
+So when a player
+plays your game, of course  it’s not
+even if they play it wrong, it's
+not going to destroy an aircraft
+that costs more money than most
+people will ever see in their lives.
+But the lesson here
+is that just changing
+the player's mental model
+in order to match
+your game is an uphill battle.
+It's probably not going to happen
+and you're better off instead
+redesigning your
+UI to either match player expectations,
+either by trying to make it
+match the player mental model,
+or by making it different enough
+from where it is now
+to trigger a different mental model.
+ Now you might wonder,
+okay,
+how do you know what the player's
+mental model is?
+The good news is that figuring out
+what's in their brain in
+this case is usually pretty easy.
+If your game is similar to other games,
+you can find those games
+and look at their UI.
+Anything that's identical
+between those games
+is probably going
+to be an expectation with yours.
+Another way to find out
+is just to ask people.
+Show them your game or a screenshot
+and ask what they think
+a particular thing means,
+or tell them that if they, you know
+from this screen,
+if they were going to perform
+a certain task,
+what control would they try first?
+Something like that.
+After you ask
+about 3 to 5 people,
+you'll usually see
+a pretty strong consensus
+if there's an existing mental model
+that people will draw from.
+And lastly,
+if your game is at the point
+where it can be tested,
+you'll see this
+come out very clearly in playtest.
+So it’ll be obvious when a player tries
+to do a thing and fails.
+Like maybe they're trying to double jump
+or wall jump or shoot
+in a different direction
+while moving or whatever.
+And they clearly know
+what they're trying to do,
+but they end up pressing the wrong button,
+or they forget the right controls,
+and then they have to pause
+a moment to remember,
+and then they'll curse at themselves
+or the game.
+Because it's frustrating to know
+exactly what you want to do
+and then be unable to do it
+because the UI gets in your way.
+Or if players can just do a complex
+series of motions
+at the speed of thought
+without even needing
+to consciously process it,
+then you know
+they've internalized those commands
+and they do have a solid grasp of the UI.
+Now, another thing to keep in mind
+is that if a player tries to do a thing
+and can't do it,
+that isn't a player failure.
+It's a UI failure.
+And this is true outside of games
+too. Ever go to a building
+with a door where you're go to push
+and it doesn't work
+because you're supposed to pull,
+or then you pull, when you need to push?
+And every time you go to that door,
+you seem to get it wrong?
+And usually when this happens,
+you kind of feel like an idiot, right?
+Like here,
+I'm supposed to be this smart person,
+a talented game designer,
+and I can’t even open a stupid door?
+And if you get it wrong repeatedly, like,
+you know what?
+I can't even learn and remember what
+the right way to open a door is
+when I encounter this door
+every single day. What's wrong with me?
+Turns out what's really wrong here
+is that the door looks like
+it should open one way.
+And so intuitively,
+you try that way first
+from a lifetime of experience with doors.
+But something about this one
+door is the opposite of what you expect.
+Like, for example,
+usually a horizontal bar
+is something easy to grab and push,
+and a vertical bar is oriented
+to be easy to grab and pull.
+So if you see a horizontal bar
+that actually opens
+by pulling,
+that'll work against your expectations
+and you'll probably get it wrong.
+So next time you push a
+door when you're supposed to pull,
+remember that it's not the
+that it is the door's fault, not yours.
+And the next time you design a
+UI of a game
+and a player pushes something around
+when they're supposed to pull,
+that's your fault, not theirs.
+Okay, so let's talk practical.
+You want to design a UI for a video game.
+Where do you start?
+As with everything, this is a huge topic.
+It's its own entire field of study.
+So I'm not going to say
+this is everything you need to know,
+but I hope it's enough to at least
+get you started.
+So first, in general,
+a good UI does two things.
+It does what
+the player expects,
+and it gives immediate
+and clear feedback to the player,
+so that they know what it did
+and they can confirm what happened.
+The feedback step is important.
+If a game does not do
+what a player expects,
+that much will at least be clear
+right away.
+And ideally the player will also know
+why the game didn't do what they thought,
+and they'll know
+what the game actually did.
+And if it does do
+what the player expected,
+then the controls tend to feel
+a bit more satisfying.
+Next time you play a video game, any game,
+or really use any software application,
+even something
+as simple as like email
+or a website
+or word processor,
+really pay attention
+to every action you take
+and all the different ways
+that the app responds to your action.
+When you click the mouse, does
+your computer make a clicking noise?
+When you click
+a button, does
+the button seem like it's pressed down
+and then released?
+If you open a menu, what happens?
+Does the menu scroll under the screen
+or just pop up from nowhere?
+Is there an animation?
+Is there any sound?
+If you pay close
+attention,
+I think you'll notice that for games
+or apps that feel natural to use,
+you often
+get multiple channels
+of feedback at once.
+If you're in an action game
+and your character takes a hit,
+you might see the screen flash red,
+a little screen shake,
+character knocked back and playing
+some kind of "I'm hit" animation,
+a visible chunk of your displayed life
+meter might animate and fall off,
+and you've got a sound that plays.
+So even if you missed one
+or two of these cues,
+you'll pick up on the rest.
+So that it’s very, very obvious
+what happened when you get injured.
+Now, here's another way
+of looking at UI design.
+You want to make it easy for the player
+to use their controls
+to do the things they want,
+and hard
+or unintuitive to do
+the things they aren't supposed to do.
+So for example,
+let's consider a board game
+that has two different decks of cards,
+and the two decks
+serve totally different functions
+and should never be mixed.
+So from a UI perspective,
+you'd probably want to design
+those card decks
+to be as different as possible.
+You can make the cards different sizes,
+give one deck a very light card
+back, and the other one very dark.
+You could put one in portrait orientation
+and the other in landscape.
+If there are spots on the board
+for the decks,
+make sure that each spot
+is the same size and shape of the deck
+that's supposed to go there.
+And then you could label those spots
+so that it's not only clear
+which deck goes where, but also
+now you have a label on the board
+right next to it
+that clearly tells you
+the name of each deck.
+And then if the rules tell you
+to draw from say, the artifact
+deck, it'll be very hard for you to draw
+from the monster deck
+instead, or whatever they are.
+As you might have guessed,
+using multiple ways to convey information
+all at the same time
+makes that information stand out more.
+So this is really useful,
+especially for very important things
+that you really want
+the player to understand.
+So for example,
+if you have
+several different symbols,
+maybe you have
+one icon for health
+and one for magic power
+and one for stamina,
+you can make them different colors,
+different symbols, different shapes.
+And like,
+you know, like if you have two areas
+for symbols already,
+making those symbols
+distinct in shape and color
+takes no additional space on the screen.
+So you may as well.
+Colors are also a great way
+to make visual elements distinct
+and to convey information.
+For example,
+imagine you're playing a game
+and there's a bar across the bottom
+of the screen colored red
+with no other information.
+What do you think that bar is for?
+You might guess it's a health bar,
+and in most games you'd probably be right.
+Now, suppose that
+after playing a bit,
+you get hit by an enemy and the bar
+turns green.
+What you think just happened?
+Just happened. Probably got poisoned.
+How do you know?
+Because those visual colors
+are just used so often in games
+that we've come to expect it,
+especially within certain genres.
+There's a few other things
+that you should know about color too.
+Humans have cones in our eyes
+that specifically detect
+red, green and blue light.
+So those three colors stand out the most,
+especially red and green.
+That can be good for drawing attention.
+But if you also make them
+maximum brightness and saturation,
+it could also be very
+harsh on the player's eyes.
+Also, keep in mind that some
+portion of your audience
+will have some form of color blindness,
+so don't rely on color alone.
+It's not hard to make the game
+colorblind safe
+just by
+varying the intensity of the colors
+in addition to the actual hue.
+So, for example,
+if you use both red and green
+for different concepts
+and you use a bright red,
+then use a darker green.
+You can test this out in many apps
+just by taking your colors
+and passing it through
+a black and white filter
+and seeing if the colors look the same.
+And again,
+if you use distinct shapes and colors,
+then even if the colors do look
+the same,
+they can still be told apart by a shape.
+Lastly, be consistent
+with your use of colors
+so that if two things
+have the same color,
+they should be related.
+As an example of how not to do this,
+I've seen plenty of tabletop games
+that have say,
+five different resources in the game
+that each have a distinct color,
+but each player also has their own color,
+and some of the player colors
+are the same as the resource colors.
+But those players
+aren't actually related
+to that resource at all.
+But it's easy
+to think that
+there might be some connection
+just because it's the same color,
+even when there isn't.
+And that can lead to player confusion.
+If there
+isn't an interesting
+decision associated with it,
+try making it automatic.
+So for example,
+if the player can heal for free
+when they return to town,
+instead of having a heal button
+or a location
+that the player  has to go
+to, just have them
+automatically heal
+when they reach the town border.
+Otherwise, it's
+something the player can forget,
+has to learn,
+and it doesn't really involve anything
+meaningful.
+So unless you've got a game
+where that automatic healing
+is super satisfying to do
+and you really want it under player
+control, just automate.
+And lastly, this may be obvious,
+but if you do use icons
+or other shapes
+to represent a concept,
+use something that looks like
+the thing it represents.
+And if you do
+use an icon to represent a thing
+and there are other things
+that are separate but related,
+then think about making their icons
+share some similarities
+while still being distinct.
+Also,
+if you know of any other similar games
+to yours,
+see what icons they use
+to represent the same concepts
+and look for similarities and differences
+between them  between those other games,
+ to give yourself an idea
+of the general range of what players
+will expect to see in their iconography.
+So that just about covers
+easy to use interfaces,
+but there is a difference
+between making something intuitive
+and easy to understand
+and use, versus making something
+that's actively joyful to use.
+Think of why jumping in platformers,
+the really well done ones, is
+just so satisfying.
+Like in Dead Cells,
+jumping,
+attacking, doing a downward ground pound.
+All of it feels good.
+Just think about the difference
+between the characters
+who's small and live, like
+Ori and the Blind Forest,
+versus one
+who's big and powerful
+and heavy, like in Dead Cells.
+When the heavy one lands
+after a big jump,
+you kind of expect the ground
+to shake a bit.
+You expect dust to come up.
+Character bends at the knees, deep
+crunching
+sound to really give a sense of heaviness,
+while a light, agile character
+like Ori might feel more
+like they're floating
+and landing lightly.
+We have two terms
+to describe
+that UI
+that actually feels actively good to use
+that mean more or less the same thing.
+And the first is calling it juicy
+or saying that it has juice.
+There have been several GDC
+and other talks that use this term.
+The other term that you'll
+sometimes see is game feel,
+which we use
+after a textbook on the subject
+by that name written by Steve Swink.
+The idea here
+is taking that earlier concept
+of communicating to the player
+with multiple channels of information
+and really just amping it up.
+Like when the player does
+something cool, highlight it.
+Particles, screen shake, explosions,
+fire, big sounds.
+Like even in a hyper casual game
+like Candy Crush Saga,
+you can still see this, right?
+Player gets a big combo
+and you've got sound effects
+that increase in pitch and intensity
+with every additional match in sequence.
+Big explosions of candies,
+tons of special effects,
+and in the end
+it'll say something like Divine.
+None of that is gameplay,
+none of it is strictly required
+to communicate to the player,
+but it makes it feel awesome, right?
+And even if as a player,
+you just got lucky,
+this game makes it feel like
+you just made some great choices
+and you're a good player
+whenever that happens.
+Game feel is a
+consideration,
+even with physical tabletop games.
+Think back to our example
+of rolling a six sided
+die compared to a spinner, cards
+or holding out a number with your hands.
+Those feel different.
+There are many other games
+where some components
+just feel good to play around with.
+Like Catan is a great example
+of what I mean.
+In this game,
+every player gets an assortment
+of these little cities
+settlements,
+and especially these little rods,
+these little broads, these sticks.
+And I don't know a single person
+who hasn't encountered this game
+who on their first time playing
+just started playing around
+with these things.
+They start stacking their roads
+or making them into little statues
+or shapes or something,
+and then they miss half of the rules
+explanation as they're being explained
+because these are just so fun
+to fiddle with.
+It's great to have this extra fidget toy
+to keep you occupied
+when it's not your turn
+and you can't do anything.
+The follow up
+game to this
+Starfarers of Catan
+took that even further.
+In that game,
+every player has a toy rocket
+with a bunch of snap on parts
+that you can buy over time.
+And on your turn,
+you actually take your rocket
+and shake it back and forth
+in order to get 2 out of 4
+little colored balls
+to appear in a hopper,
+which is way more entertaining
+than rolling dice.
+There are
+so many
+resources out there about UI and UX.
+The first link here is fun to explore
+since it's actually a free
+downloadable game
+based loosely
+on the classic game Space Invaders.
+Each level breaks some basic
+rule of accessibility
+and shows you what a game looks like
+if the UI is designed
+in such a way
+that it doesn't
+take disabilities and accessibility
+for all into account.
+It's equal parts
+frustrating and entertaining,
+and it shows very clearly
+how it isn't hard
+to build accessibility into your design,
+and also what happens if you don't.
+The second link from the top
+here is cooperation and engagement.
+It's a talk given
+by the designer
+of the first Ford game
+that really popularized pure co-op.
+It was called Pandemic,
+and the designer is actually a
+UI/UX Designer by day.
+So this comes through a lot
+in the design
+of the board game’s components.
+He actually covers
+a lot of different design
+concepts in the talk,
+ including playtesting,
+which we will get to around here
+next time.
+Also, design, accessibility, and
+UI all grounded in this one
+specific game as a case study.
+The whole video is about 50 minutes
+because it includes a question
+and answer period at the end.
+But the meat of the talk
+is just the first 30 minutes,
+so you can safely stop there
+if you're in a hurry.
+The last two links are specifically
+about juiciness or game feel
+and some practical tips
+for how to use it
+in the design of your game.
+As with many game developer talks,
+there can be some strong language
+in their audio,
+but these are the kinds
+of foundational talks
+that I usually share
+to my college students.
+And that covers
+what I wanted to show you on UI and UX.
+Now take the assessment
+so you can earn your certification
+from HP Gaming Garage.
+Thanks for watching,
+and I'll see you next time
+when we talk about playtesting.

@@ -1,0 +1,899 @@
+Welcome back.
+So far, we've just laid a foundation,
+but today
+we're going to talk a bit about what
+game designers actually do.
+At its heart, our goal is to take a game
+and make it fun
+or at least help it meet
+its design goals.
+But how do we actually do that?
+To talk about that,
+we'll start
+with an important paper
+called the MDA Framework.
+What is the MDA framework?
+It's one of the few academic papers
+that's been widely read in the industry.
+Most professional game designers
+have encountered this at some point.
+It's actually very rare
+for an academic paper,
+but in this case,
+the authors were already experienced
+game designers when it was read.
+So the paper is short
+so it's a pretty easy read,
+and it's written
+to be of practical use
+for an audience of game designers,
+not academics.
+You can read it for yourself at the links
+shown here.
+I’ll also give the link again at the end.
+It's called a framework
+because it's a set of conceptual tools
+to think about games, game design,
+and the relationship
+between the designer of the game
+and the player.
+As for
+why it's called MDA, well,
+I'll get to that in a moment.
+So the paper itself
+is divided into two parts
+the MDA framework itself,
+and then the discussion
+about kinds of fun.
+So first a bit about what games are
+and what game designers do,
+and then a bit about how to make games fun.
+So we'll start with MDA.
+This stands for Mechanics,
+Dynamics, Aesthetics,
+and is about different ways
+that a game is designed and experienced.
+The M stands for Mechanics.
+We've talked about
+what mechanics are in past modules.
+I defined it more or less as the ways
+that a game state can change.
+Sometimes it's used as a synonym
+for the rules of the game.
+Sometimes designers insist
+that rules and mechanics are related,
+but separate.
+Slightly different concepts,
+but at least at a basic level,
+we can think of the M in MDA
+as the mechanics
+as we've been thinking about them so far.
+So nothing new here yet.
+The D stands for Dynamics.
+We haven't mentioned this here,
+but you might have heard the term before.
+It was in common use in the field,
+even before this paper.
+But here we get a better definition
+of what game dynamics are
+and how they're different from mechanics.
+Dynamics are what happen
+when the mechanics
+are set in motion.
+Dynamics are what actually happen
+to the mechanics
+during the play of the game.
+So you can think of the dynamics
+basically as play.
+What actually happens in the game
+while it's being played - that's dynamics.
+When game designers use this term,
+we usually talk about
+the overall patterns of play
+rather than a single case.
+So if you play a game
+and specific things happen,
+as you might write in a session report,
+those might not be dynamics,
+but things like overall strategies
+that can be repeated
+across multiple plays
+or overall patterns
+like a shift from the opening game
+to mid-game to end game in chess
+or certain things
+that tend to happen like the game
+starting slow but finishing with a bang.
+Those are dynamics.
+The A in MDA stands for aesthetics,
+which even the authors of the paper
+admit today is a terrible
+and unfortunate term
+because it was not in common use before
+and makes it sound like we're talking
+about the visual beauty
+or artistic composition of a game.
+And that is not what aesthetics
+means in the MDA paper.
+So from here on
+for the rest of your life, unfortunately
+whenever you use the word aesthetics,
+you'll have to specify
+whether you mean in the visual sense
+or in the MDA framework sense,
+and any way they define aesthetics
+as what happens to the dynamics
+when experienced by the player.
+So this is how it feels to engage
+with the dynamics.
+So, for example,
+this is where you'd say that
+a game is
+or isn't fun or engaging
+or boring or whatever
+it feels like to play,
+and we'll get better terms
+to describe more
+clearly how a game feels
+in the second half of the MDA paper.
+So the player is here on this side,
+mostly engaging with the aesthetics.
+When you play a game moment to moment
+as a player,
+when you're engaged,
+you're not thinking much about,
+“move, avoid, shoot”.
+You're thinking,
+“Wow, this is fun,” or
+“Woah, that scared me”,
+or something like that.
+But the game designer is over here.
+As designers,
+we don't create the dynamics
+or the aesthetics or the player,
+at least not directly.
+The only thing we have direct
+control over is the mechanics.
+So this is the flow of design.
+The designer creates the mechanics.
+The mechanics become dynamics
+when the game is set in motion and played,
+and those dynamics become aesthetics
+that are experienced by the player.
+And this is one reason
+designing good games is hard
+because the designer is
+multiple steps
+removed from the player experience
+and we can only change the experience
+by changing the mechanics
+and then seeing what effects
+those have indirectly.
+It's like having a remote control
+to remove a robot
+that's trying to fly a plane.
+You want the plane to go up,
+but you can't just command it
+to do that,
+you have to tell the robot
+to move its arms,
+and sometimes they move in ways
+you didn't expect
+and it hits the self-destruct button
+and the whole thing blows up,
+and you have to figure out
+what you did wrong and try again.
+But there's something else
+to keep in mind here.
+While the designer is designing the game
+from the inside out,
+the player is experiencing
+from the outside in.
+If you see most people
+playing a game
+and having a good time
+and then you ask why,
+their first immediate
+thought will just be, well,
+the game is fun, that's why.
+Over time, if they think about it,
+they might have a better understanding
+of the dynamics
+that are enjoyable to engage with,
+and eventually,
+as they become very familiar
+with the game,
+they might see the connection
+between their experience
+and the game's mechanics.
+Obviously,
+they'll know the mechanics right away
+because they need to
+know that to play at all.
+But they don't really experience
+or appreciate the mechanics
+until much later.
+And asking a player
+why the designer
+created a certain mechanic
+at all, or in a certain
+way would require a pretty deep
+understanding of the game
+from the player.
+Not something they'll have
+until they are very familiar
+with the game.
+But remember,
+a game designer
+has to be thinking about the player
+and the player experience.
+So as you design games,
+you need to be thinking
+in both of these directions.
+How do I create the mechanics
+that will give rise to the dynamics
+that will get felt by the aesthetics
+that I want the player to feel?
+But also,
+how is the player
+going to experience the aesthetics
+and then the dynamics
+and then the mechanics
+as they engage more deeply with the game?
+So this is another reason
+why game design is hard.
+Not only is there a big disconnect
+between the player and designer,
+but we have to be thinking
+in two directions.
+Let's take a practical example here
+so you can see how MDA would be applied
+on a real game.
+So let's talk about multiplayer
+Deathmatch modes of any
+first-person shooter: Doom, Quake,
+Call of Duty, whatever you prefer.
+So what common mechanic,
+especially in older
+games, is to have fixed
+spawn points on the map.
+There are specific locations
+on the map that players can appear
+and when they die
+they reappear at another spawn point.
+So that's a mechanic in the game.
+When you first come in the game
+and when you respawn after dying,
+you come into play at one of several
+fixed locations on the map.
+So if players know
+there are fixed spawn points on a map
+and they know where those points are,
+that means one possible
+strategy is just to hang out
+near a spawn point.
+And when someone appears
+there, shoot them in the back
+before they have time to respond.
+This is called spawn camping
+and this is a dynamic
+that emerges
+from the mechanic of fixed spawn points.
+And if you've ever been in a game
+where you die,
+then reappear only to die
+immediately after, you'll recognize
+this is about the time
+you want to throw your controller
+through the screen.
+Getting spawn count for most
+people is not particularly fun.
+Why isn't it fun?
+Well, losing
+usually isn't fun to begin with.
+But you also have no agency here,
+no control over the situation.
+As soon as you appear, you die
+and there's not a lot you can do.
+So your choices don't matter.
+We'll go deeper
+into the importance
+of player choice and agency later on.
+But for now,
+just realize that the aesthetics are
+just how the game is experienced,
+and these aren't always positive.
+In this case,
+the mechanic of fixed
+spawn points
+leads to a frustrating aesthetic
+that makes players want to rage quit.
+So if you were designing a game like this
+and realizing
+there's a strategy
+that's just not much fun to play with
+because it's boring to just sit there
+and pick people off
+and definitely not fun to play against
+because no one likes to die twice.
+You'd probably want to fix that.
+So the game is less
+frustrating and more fun.
+How would you do that?
+You first have to notice
+this is a problem in the first place.
+You'd see that
+players are getting frustrated,
+that's the aesthetic,
+and then work backwards to notice,
+they're specifically getting frustrated
+when they respawn and die immediately,
+that's the dynamic.
+And that the only reason
+that dynamic is possible
+is because it's a strategy
+that takes advantage of knowing
+where the opponents spawn, the mechanic.
+Once you understand that
+that you're only power
+as the game designer
+is to change the mechanic,
+there are a lot of ways
+you could approach this.
+For example,
+you might have
+many fixed spawn points in the map
+so that more than the number of players,
+so they can't all be covered,
+and always
+spawn a player
+as far away from the nearest
+other player as possible
+so spawn camping isn’t possible.
+Or you might make a player
+temporarily invincible when they spawn.
+Maybe give them 3 seconds
+of being totally invulnerable,
+which would then make standing around
+a spawn point very dangerous
+for other players.
+Or you might have players spawn
+into a special protected area
+with multiple exits and good vision
+so they can see if anyone's camping.
+And if so, they could just
+leave by a different exit
+if they don't want to engage
+and no one outside
+can enter their spawn zone.
+Or maybe
+have the player parachute in from above
+and have them choose where they drop
+so that they have more control
+over where they land or do away
+with fixed spawn points altogether
+and have them
+appear literally anywhere,
+as long as it's not right
+in front of someone else.
+There are many possible solutions,
+if you see this as a problem
+that needs fixing,
+and you can also just say,
+“Oh, this is the aesthetic I want,
+so I don't need to fix it.”
+But it all comes down
+to finding a problem
+in the aesthetic layer
+and then working backwards
+to find out the root mechanical cause
+and then changing that mechanic
+and seeing what effects it has.
+And you would find out your solution
+if your solution worked by play testing,
+which might
+then show
+that you've got a different aesthetic
+that's equally undesirable
+for different reasons,
+and then you have to go back
+and fix something else.
+The second half of the MDA
+Framework paper talks
+about different types of aesthetics,
+specifically that
+there are eight kinds of fun.
+Now, the first big takeaway here
+is that there's more than one
+kind of fun.
+I hinted at that in the last module,
+that fun was a word
+designers don't use often.
+This is why:
+because fun is an overloaded term
+that means lots of different things.
+So it's more useful to talk
+about specific types of fun
+rather than just fun
+as a general concept.
+Here are the eight types of fun
+that they list in the MDA paper.
+The first type they talk about is sensation.
+They describe it as sense pleasure.
+In common use,
+we might call this eye candy.
+Anything that engages the senses:
+cool graphics, awesome
+explosions, colorful particles,
+or just the fun of flying
+through the air.
+This doesn't have to be visual either.
+This would also include great music,
+fun sound effects,
+anything that you can feel
+like a well-timed controller rumble
+or games that have haptic feedback
+where the controller pushes back.
+We don't usually have games
+that involve taste or smell,
+but you get the idea.
+There's a fun just in moving around
+a space and experiencing cool stuff
+while you're there.
+Sometimes in games
+we call this juiciness
+in the user interface,
+and we'll cover that
+specifically in a later module.
+But for now, keep in mind
+that you can do this in any game.
+It doesn't have to have fancy graphics.
+Think about a game
+like Bejeweled or Candy Crush,
+where you can make multiple matches
+in this big combo cascade
+and what actually happens on screen,
+each additional match has a musical
+risk that get’s higher and higher and higher
+or higher pitch
+building up while bigger numbers
+show up on the screen and things
+explode in these big goo drops
+so that the whole thing is lighting up
+like fireworks.
+And at the end
+you have this voice
+coming in saying something like,
+Juicy! or Delicious!
+And even if the whole thing
+was an accident
+that you weren't trying for,
+you were just trying
+to make a single match
+and you got ridiculously lucky.
+It still feels pretty satisfying
+to watch that sensation.
+Next type
+they list is fantasy,
+the fun of make believe.
+We do this all the time as kids.
+If you've ever played
+Floor is Lava or pretended
+you were a hero or astronaut
+or pirate or something,
+there's just something inherently
+fun in playing pretend.
+They talk about narrative,
+the fun of engaging
+with an embedded story.
+Some games are very story heavy,
+and you might have encountered
+the occasional game
+where you didn't
+particularly love the mechanics,
+but you played through the game anyway
+because the story resonated with you
+when you want to see what happened next.
+The fourth type of fun
+mentioned in the paper is challenge.
+If you've ever played a game
+that was really hard,
+but you kept playing anyway
+because you really wanted to beat it,
+and then you did and it felt awesome.
+There's a name for that emotion,
+by the way, it's called “Fiero”
+like the joy of overcoming
+a really difficult challenge,
+but sometimes there's even just a joy
+in taking on the challenge.
+Like even if you feel blocked,
+that feeling of
+“let me try just one more time,
+maybe this will be the time I get it.”
+The entire
+souls like genre named after
+Dark Souls is like this.
+And in fact,
+you could say that historically,
+this is where
+a lot of video games started
+because of how early arcade games
+had to be designed to get the player
+to lose in 3 minutes or less on average,
+as we discussed in the module on history.
+So there's definitely something
+that can be satisfying about
+just attempting something difficult.
+Next up is fellowship,
+the fun of playing with others.
+This is a focus on player
+player interactions.
+Generally, we're talking
+positive ones, so collaboration,
+negotiation, cooperation,
+players working together
+towards a common goal.
+If you've played any co-op games
+or team games
+where your entire team
+just felt like connection to each other,
+whether that social connection
+was part of the fun,
+that's fellowship.
+Discovery,
+they call these games
+as uncharted territory.
+Here we're talking about exploring,
+uncovering hidden parts of a map,
+finding secrets,
+satisfying your curiosity
+by bringing the unknown into the known.
+Lots of games
+have you exploring on a map
+or exploring a space or a level.
+But exploration can also be things
+like exploring
+the crafting mechanics in Minecraft
+or exploring a tech tree
+where uncovering some tech
+makes other tech visible.
+So it can be conceptual discovery
+in addition to exploring physical spaces.
+Expression, being able
+to express yourself in a game.
+So in games,
+this is generally talking
+about either games
+where you can mod them
+to create something
+new or games
+where you can set things up
+to create your own fun situation.
+Think of setting up
+a big dramatic moment in The Sims
+or creating a custom
+level in Super Mario Maker
+using a level design tool
+to create a level
+that looks like a work of art
+if you look at it from above.
+This would also involve things
+like role
+playing a character in order
+to create your own custom story.
+And last on this list is submission,
+by which they mean a game
+that becomes
+part of your daily or weekly routine
+and is now something of a hobby for you,
+something you can take pleasure
+in, partly
+for the ritual of returning to it
+again and again.
+Think of tabletop role playing
+games where you meet with the same group
+every single week to continue a campaign.
+Lots of free to play games,
+try to do this with things
+like daily log in bonuses
+in order to convince players
+to make the game part
+of their daily lives.
+When you incorporate the game
+into your routine, that's submission.
+Now, I should point out
+not to get too attached to these,
+because even the authors say
+this is not an authoritative
+or a complete list.
+In fact,
+there is nothing
+scientific about this list
+or how it was developed.
+The authors basically
+just pulled this from the air
+and you can easily critique
+some of these, fantasy
+and narrative are both
+so closely related,
+you could probably combine them
+to a single type.
+Submission feels more like
+the ongoing,
+effect of having fun with the game
+rather than a kind of fun itself.
+And if you think hard,
+you can probably think
+of some activities that are fun
+but aren't represented on this list,
+so the list isn't even complete.
+So the big takeaway
+I want you to have from
+this isn't that there are
+these specific 8 kinds of fun,
+but rather that fun is an overloaded term
+and there are many different kinds,
+and if you look online,
+you'll find all kinds of lists.
+There's one
+from Nicole Lazzaro on Four Keys to Fun,
+article on Game Developer
+14 kinds of fun,
+and several academic papers
+with their own lists
+of different fun types.
+So don't take the list in the MDA
+Framework paper
+as a complete or perfect list
+because it isn't.
+But do remember that the idea
+that there are different kinds of fun
+and so when you're
+talking about your design goals,
+don't use the word fun itself
+because it's too broad,
+talk about specific kinds.
+Two other things to keep in mind,
+one is that games don't
+necessarily have to have
+just a single type of fun
+they can offer multiple types.
+So while games
+are very pure
+representations, like chess
+is pretty much just about challenge
+and nothing else.
+Some games can be like that,
+but something like World of Warcraft
+or other MMOs have some elements
+of most of these kinds of fun in them
+somewhere.
+The other thing to keep in mind
+is that what we call these kinds of fun,
+that does not mean
+that everyone actually finds them fun.
+Challenge is a good example.
+Some people absolutely love games
+that are ridiculously difficult.
+Other people
+just find that rage inducing.
+Whenever I ask a group of people,
+“Who here finds chess fun?”,
+it's usually split about 50/50.
+Some people find it really fun.
+Some people find it not fun at all.
+So what's going on?
+Is chess fun or not?
+Well, some people really like
+the kind of strategic
+thinking that chess offers,
+and others don't.
+And this is important:
+it means that for any kind of fun
+that you include in a game,
+some players will love it
+and others will actually actively
+hate it and be repulsed by it.
+So if you were thinking
+before, like,
+“Aha! If all I have to do
+is make a game for everybody
+by just including all the kinds of fun
+in a single game”,
+unfortunately, it doesn't work that way,
+it's more a series of tradeoffs.
+This also means if someone asks you,
+“Who is your game for?
+Who's your target audience?”
+And you say, “I'm making a game
+that will appeal to everyone!”
+That's not the right answer,
+it means you haven't
+thought hard about this
+because that is just not possible.
+Any type of fun
+you include is going to
+attract some players and repel others.
+We can also ask,
+“Well, why is a particular thing
+that kind of fun in the first place?”
+And I do have a theory here.
+Other designers
+like Noah Falstein and Raph Koster
+have also said similar things,
+though I don't know
+if it's been scientifically validated
+or even if scientific
+study would even be possible for this.
+But my theory is something like this.
+Consider evolution,
+you know, ancient humans
+that had better
+survival skills
+and a greater chance of surviving,
+reproducing and passing on their genes.
+So having traits
+that are favorable to surviving
+and reproducing
+would tend to proliferate, and traits
+that were likely to get killed
+are less likely to stick around
+in the gene pool.
+So consider, three cavemen
+each having to go out and hunt food.
+The first caveman realizes that hunting
+is a dangerous activity
+that might end up with him being dinner.
+So he only hunts
+when it's absolutely necessary
+and stays in the safety of his cave
+for the rest of the time.
+He's safe in his cave,
+but when he does have to hunt,
+he doesn't have a lot of experience,
+so he's very likely to die.
+The second caveman takes
+the opposite strategy.
+He realizes
+the first strategy doesn't work,
+so instead
+he wants to get tons of experience.
+So he goes out hunting very frequently
+and gets very, very good at it.
+Unfortunately, he's
+also putting himself at risk
+a lot,
+and eventually
+he's going to get unlucky
+from one bad hunt
+and also going to die.
+Third caveman, though,
+realizes that it's important
+to build hunting skills,
+but then it's best
+to improve these skills
+while you're in a safe place.
+So instead he practices,
+he throws spears at targets
+instead of at predators.
+He practices sprinting between two trees
+to build his running skill.
+He lifts heavy rocks to build muscle.
+And now when he hunts,
+he has a good chance of survival.
+But he can also hunt less often
+so that he's not always at risk.
+This third strategy is optimal
+and leads to the greatest chance
+of survival.
+Okay, so what gives the third caveman
+the incentive to build those skills?
+Well, how about
+he actually finds
+those activities fun to do
+just inherently on their own?
+What we're describing here
+fundamentally is play.
+And this is actually far older
+than humans.
+Many animals will play
+when they're young as well.
+It's instinctive,
+and most animal play activities,
+when you look at it, are exactly this.
+They're practicing adult skills
+like hunting, running, and fighting,
+and they practice this
+because they find it fun.
+But the reason we find it fun
+is because our brains
+make those activities enjoyable.
+If our brain makes those activities
+enjoyable,
+we'll do them a lot, voluntarily.
+And that means that we will get
+really good at them,
+which maximizes our
+chance for survival.
+Now, of course, evolution
+like this works very, very slowly,
+and the skills needed to survive in
+today's modern
+world are very different from back
+when we were living in caves.
+But the caveman part of our brain
+is still where we are,
+evolutionarily speaking.
+And if you look at the kinds of things
+we tend to find fun,
+you'll see most of these seem like
+prehistoric humans survival skills
+that help directly
+with survival or reproduction.
+In that context,
+a lot of these
+8 kinds of fun
+are actually just
+in the MDA
+framework paper are actually justifiable
+as things that our brain thinks
+will maximize our chance
+for surviving and reproducing.
+Sensation, that's body movement,
+building physical skills.
+Narrative, the ability
+to tell stories
+to warn others about danger
+so they can avoid it
+or tell others about food
+so they can seek it out.
+Fellowship,
+that's the ability to pool resources,
+work together to take down larger animals
+when hunting, get rescued
+when needing help.
+Also, the reproduction
+part of survival and reproduction
+kind of helps with other people.
+Discovery, is expanding the territory
+that you know
+where control for the greater ability
+to find food, shelter, and protection.
+And you can think of other ancient
+survival skills
+that might suggest other kinds of fun
+that you could then base a game on.
+So that brings us
+to the end of another module.
+Here I'm including the link
+to the original MDA framework paper,
+which again,
+you don't have to read for this class,
+but I would recommend reading through it
+at some point.
+Pretty much every game
+designer in the field has at some point.
+If you want to see more
+of one of the authors of the paper,
+Mark LeBlanc, has been designing games
+for a few decades now,
+and he's run multiple
+workshops at places like the Game
+Developers Conference and other places.
+So he's got a bunch of writing, slides,
+and other presentations
+that are based on the MDA
+framework and other game
+design principles.
+And you can spend a few hours
+just poking around there if you want.
+But for now,
+take your assessment
+so you can get your certification
+from HP Gaming Garage.
+Thanks for watching
+and I look forward to seeing you
+in the next modules
+where we'll dive deeper into
+dynamics and aesthetics.

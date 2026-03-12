@@ -33,6 +33,7 @@ export function GameLayout(): ReactNode {
   const endingType = useGameStore((s) => s.state.ending_type)
   const failReason = useGameStore((s) => s.state.fail_reason)
   const openModal = useUiStore((s) => s.openModal)
+  const setPendingCutscene = useUiStore((s) => s.setPendingCutscene)
   const setSelectedZone = useUiStore((s) => s.setSelectedZone)
   const selectedTerritoryKey = useUiStore((s) => s.selectedTerritoryKey)
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
@@ -67,22 +68,38 @@ export function GameLayout(): ReactNode {
     }
     if (session.turn !== previousTurn) {
       if (isActTransition(previousTurn, session.turn) && !state.ending_type) {
-        openModal('act_briefing')
+        const openingCutscene = content?.cutscenes.cutscenes.find(
+          (scene) => scene.trigger_turn === session.turn && scene.cutscene_id.startsWith('cutscene_act') && scene.cutscene_id.includes('opening')
+        )
+        if (openingCutscene) {
+          setPendingCutscene(openingCutscene.cutscene_id, 'act_briefing')
+          openModal('cutscene_player')
+        } else {
+          openModal('act_briefing')
+        }
       }
       lastObservedTurnRef.current = session.turn
     }
-  }, [session.turn, state.ending_type, openModal])
+  }, [content, openModal, session.turn, setPendingCutscene, state.ending_type])
 
   useEffect(() => {
     if (endingType && !shownOutcomeRef.current) {
-      openModal('campaign_outcome')
+      const endingCutscene = content?.cutscenes.cutscenes.find(
+        (scene) => scene.cutscene_id === `cutscene_ending_${endingType}`
+      )
+      if (endingCutscene) {
+        setPendingCutscene(endingCutscene.cutscene_id, 'campaign_outcome')
+        openModal('cutscene_player')
+      } else {
+        openModal('campaign_outcome')
+      }
       shownOutcomeRef.current = true
       return
     }
     if (!endingType) {
       shownOutcomeRef.current = false
     }
-  }, [endingType, openModal])
+  }, [content, endingType, openModal, setPendingCutscene])
 
   useEffect(() => {
     if (!menuOpen || typeof window === 'undefined') return
