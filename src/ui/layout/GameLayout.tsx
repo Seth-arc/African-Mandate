@@ -25,6 +25,55 @@ function territoryFromState(
   return territoryState[territoryKey as TerritoryKey]
 }
 
+function SaveStatusBanner(): ReactNode {
+  const state = useGameStore((s) => s.state)
+  const saveState = useSessionStore((s) => s.saveState)
+  const clearSaveError = useSessionStore((s) => s.clearSaveError)
+  const saving = useSessionStore((s) => s.saving)
+  const saveStatus = useSessionStore((s) => s.save_status)
+  const saveError = useSessionStore((s) => s.save_error)
+  const failedSaveReason = useSessionStore((s) => s.failed_save_reason)
+  const failedSaveMode = useSessionStore((s) => s.failed_save_mode)
+  const [retrying, setRetrying] = useState(false)
+
+  if (saveStatus === 'saving' || saving) {
+    return (
+      <div className="save-status-banner is-saving" role="status" aria-live="polite">
+        Saving mandate state...
+      </div>
+    )
+  }
+
+  if (saveStatus !== 'not_saved' || !saveError) return null
+
+  const handleRetry = async (): Promise<void> => {
+    setRetrying(true)
+    try {
+      await saveState(state, failedSaveMode ?? 'auto', failedSaveReason ?? 'manual')
+    } catch {
+      // saveState updates visible save_error state; keep the banner open for another retry.
+    } finally {
+      setRetrying(false)
+    }
+  }
+
+  return (
+    <div className="save-status-banner is-error" role="alert">
+      <div>
+        <strong>Not saved.</strong> {saveError}
+      </div>
+      <div className="save-status-actions">
+        <button type="button" className="save-status-btn" onClick={() => void handleRetry()} disabled={retrying}>
+          {retrying ? 'Retrying...' : 'Retry save'}
+        </button>
+        <button type="button" className="save-status-btn subtle" onClick={clearSaveError}>
+          Dismiss
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function GameLayout(): ReactNode {
   const state = useGameStore((s) => s.state)
   const session = useGameStore((s) => s.state.session)
@@ -244,6 +293,8 @@ export function GameLayout(): ReactNode {
           </div>
         </nav>
       </header>
+
+      <SaveStatusBanner />
 
       <main className="game-main">
         <aside className="sidebar-left">

@@ -26,7 +26,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/bensouda_portrait.png",
+      "portrait_url": "assets/actors/AU%20Commissioner.png",
       "notes": "Act 2 coalition framing voice."
     },
     {
@@ -39,7 +39,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/konte_portrait.png",
+      "portrait_url": "assets/actors/AU%20Commissioner.png",
       "notes": "Act 3 security operations voice."
     },
     {
@@ -52,7 +52,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/mensah_portrait.png",
+      "portrait_url": "assets/actors/AU%20Commissioner.png",
       "notes": "Act 4 governance advisor voice."
     },
     {
@@ -143,7 +143,7 @@
       "default_sentiment": "hostile",
       "default_relationship_score": 15,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/insurgent_icon.png",
+      "portrait_url": "assets/actors/JNIM.png",
       "notes": "AI-driven adversary. No direct negotiation."
     },
     {
@@ -156,7 +156,7 @@
       "default_sentiment": "cautious",
       "default_relationship_score": 25,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/splinter_icon.png",
+      "portrait_url": "assets/actors/Tuareg Coalition.png",
       "notes": "Conditional actor. Only active when splinter arc triggers.",
       "activation_condition": "splinter_dialogue_open == true"
     },
@@ -209,7 +209,7 @@
       "default_sentiment": "watchful",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/media_icon.png",
+      "portrait_url": "assets/actors/globe_icon.svg",
       "notes": "Corruption trigger mechanism. External accountability."
     },
     {

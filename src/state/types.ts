@@ -432,6 +432,10 @@ export interface ActionDefinition {
       civilian_harm_effects?: Partial<Metrics>
     }
   }
+  corruption_risk?: {
+    condition: string
+    flag: string
+  }
   requirements?: {
     min_personnel?: number
     min_intel_points?: number
@@ -456,6 +460,16 @@ export interface ActionsContent {
   actions: ActionDefinition[]
 }
 
+export interface ActionRiskOutcome {
+  type: 'civilian_harm'
+  applied: boolean
+  roll: number
+  threshold: number
+  metric_deltas: Partial<Metrics>
+  flag_additions: string[]
+  media_event_key: string | null
+}
+
 /** Per-session action execution log entry for status reporting. */
 export interface ActionLogEntry {
   turn: number
@@ -465,6 +479,7 @@ export interface ActionLogEntry {
   resource_deltas: Partial<Resources>
   metric_deltas: Partial<Metrics>
   flag_additions: string[]
+  risk_outcomes?: ActionRiskOutcome[]
 }
 
 // ---------------------------------------------------------------------------

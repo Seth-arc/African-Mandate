@@ -102,12 +102,15 @@
 **Player Experience Summary:** Player configures up to 3 actions, balancing resource costs against expected metric shifts.  
 **System Notes:**  
 - Validate action: costs, cooldowns, intel gate, target eligibility.  
+- `action.intel_gate` is evaluated against `{resources.intel_points}`. `{ai_state.intel_confidence}` remains a forecast/confidence signal and does not unlock actions.
+- `requirements.condition` and `corruption_risk.condition` use the restricted action-condition DSL; unsupported authored expressions fail content load rather than silently evaluating at runtime.
 - Default `cooldown_turns = 1` per action (from `game_config.default_action_cooldown_turns`).  
 - Default `intel_gate = 10` per action (from `game_config.default_intel_gate`).  
 - Targeting effects: zone actions apply full effect; territory actions apply 50% effect across 2-3 zones in the territory.  
 - Governance/Economic actions resolve after 2 turns (queued effects shown in Status Report).  
 - When rendering UI labels, map `Governance/Economic` → `governance_economic` and `Community Mediation` → `community_mediation` so analytics/category-spam logic receives canonical keys even though the user-facing labels include spaces and slashes.  
 - On commit: deduct allocated `{costs.*}` (as configured by sliders), apply immediate `{effects}`, append to `{actions_log}`.  
+- On commit: resolve `effects.risks` deterministically. A fired civilian-harm risk applies its metric deltas, appends `civilian_harm_incident`, records `risk_outcomes`, and feeds the media civilian-harm event path.
 - Update `{actions_remaining}` and lock action slots when 0.
 
 ## Phase 8: Crisis Response & End-Turn Resolution

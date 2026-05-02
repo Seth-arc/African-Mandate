@@ -21,6 +21,7 @@ import eventsYamlRaw from '../data/events.yaml?raw'
 import cutscenesJson from '../data/cutscenes.json'
 import localizationJson from '../data/localization_en.json'
 import { parseEventsYaml } from '../data/eventsLoader'
+import { assertSupportedActionCondition } from '../systems/actionConditionEvaluator'
 
 const TERRITORY_KEYS: TerritoryKey[] = [
   'mali',
@@ -98,7 +99,17 @@ function copyNumberRecord(
   )
 }
 
-function validateContentConsistency(content: GameContent): void {
+function copyCorruptionRisk(
+  action: { corruption_risk?: ActionDefinition['corruption_risk'] }
+): ActionDefinition['corruption_risk'] {
+  if (!action.corruption_risk) return undefined
+  return {
+    condition: action.corruption_risk.condition,
+    flag: action.corruption_risk.flag,
+  }
+}
+
+export function validateContentConsistency(content: GameContent): void {
   const territoryKeys = new Set(content.territories.territories.map((territory) => territory.territory_key))
   const zoneIds = new Set<string>()
 
@@ -134,6 +145,22 @@ function validateContentConsistency(content: GameContent): void {
     if (!zoneIds.has(seed.zone_id)) {
       throw new Error(`zone_runtime_seed references unknown zone ${seed.zone_id}`)
     }
+  }
+
+  const actionIds = new Set<string>()
+  for (const action of content.actions.actions) {
+    if (actionIds.has(action.action_id)) {
+      throw new Error(`Duplicate action_id in content: ${action.action_id}`)
+    }
+    actionIds.add(action.action_id)
+    assertSupportedActionCondition(
+      action.requirements?.condition,
+      `Action ${action.action_id} requirements.condition`
+    )
+    assertSupportedActionCondition(
+      action.corruption_risk?.condition,
+      `Action ${action.action_id} corruption_risk.condition`
+    )
   }
 }
 
@@ -233,6 +260,7 @@ function loadContent(): GameContent {
               }
             : undefined,
         },
+        corruption_risk: copyCorruptionRisk(action),
         requirements: action.requirements
           ? {
               ...action.requirements,

@@ -132,6 +132,67 @@
   gap: 1rem;
 }
 
+.save-status-banner {
+  margin: 0.7rem clamp(1rem, 2vw, 1.5rem) 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(18, 18, 18, 0.92);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-size: 0.86rem;
+}
+
+.save-status-banner strong {
+  color: var(--text);
+}
+
+.save-status-banner.is-error {
+  border-color: rgba(209, 87, 87, 0.58);
+  background: rgba(52, 18, 18, 0.92);
+}
+
+.save-status-banner.is-saving {
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+.save-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.save-status-btn {
+  min-height: 2rem;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 6px;
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 0.7rem;
+}
+
+.save-status-btn.subtle {
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.save-status-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.save-status-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .game-nav-btn {
   min-height: var(--control-height);
   padding: 0.5rem 1rem;

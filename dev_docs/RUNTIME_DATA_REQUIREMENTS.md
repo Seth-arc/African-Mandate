@@ -116,6 +116,15 @@ Events and Logs
   - targets (territories, zones, actors)
   - costs (budget, personnel, political_capital, intel_points, time_months)
   - effects
+  - flag_additions (including authored flags, corruption-risk flags, and deterministic risk flags)
+  - risk_outcomes (optional array):
+    - type (`civilian_harm`)
+    - applied (boolean)
+    - roll (deterministic 0.0-1.0 value)
+    - threshold
+    - metric_deltas
+    - flag_additions
+    - media_event_key (`media_civilian_harm_report` when applied)
 - status_report:
   - session_id
   - turn
@@ -172,7 +181,7 @@ Canonical Accessor Paths (For Trigger Evaluation)
   - security_actions_without_oversight: Count of security actions taken while oversight_level.level == 'none' in last 3 turns
     - Formula: count(actions_log WHERE action_category == 'security' AND turn >= current_turn - 2 AND oversight_level_at_turn == 'none')
   - civilian_harm_incidents: Count of civilian harm incidents recorded in last 2 turns
-    - Formula: count(incident_log WHERE type == 'civilian_harm' AND turn >= current_turn - 1)
+    - Formula: count(actions_log WHERE flag_additions contains 'civilian_harm_incident' AND turn >= current_turn - 1)
   - intel_report_age_turns: Integer age of current featured intel report
     - Formula: current_turn - intel_reports[featured].created_turn
   - intel_report_generated: Boolean flag when a new intel report is generated this turn

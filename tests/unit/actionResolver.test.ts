@@ -9,6 +9,10 @@ import {
   applyAction,
   executeActionWithLog,
 } from '../../src/systems/actionResolver'
+import {
+  assertSupportedActionCondition,
+  evaluateActionCondition,
+} from '../../src/systems/actionConditionEvaluator'
 import { createInitialState } from '../../src/state/initState'
 import type { GameState, GameConfig, ActionDefinition } from '../../src/state/types'
 import { GameError } from '../../src/state/types'
@@ -111,6 +115,91 @@ describe('actionResolver', () => {
         expect((e as GameError).code).toBe('INVALID_TARGET')
       }
     })
+
+    it('uses resources.intel_points for action.intel_gate instead of intel_confidence', () => {
+      const action = actionsJson.actions.find(
+        (a: { action_id: string }) => a.action_id === 'security_targeted_operation'
+      ) as ActionDefinition
+      const cost = getResolvedCost(action)
+      const locked = makeState({
+        resources: {
+          ...config.starting_resources,
+          intel_points: 19,
+        },
+        ai_state: {
+          ...config.starting_ai_state,
+          intel_confidence: 100,
+        },
+      })
+
+      try {
+        validateAction(locked, action, { zone_id: 'mopti' }, cost)
+        expect.fail('should throw')
+      } catch (e) {
+        expect(e).toBeInstanceOf(GameError)
+        expect((e as GameError).code).toBe('INTEL_GATE')
+        expect((e as GameError).message).toContain('intel_points')
+      }
+
+      const unlocked = makeState({
+        resources: {
+          ...config.starting_resources,
+          intel_points: 20,
+        },
+        ai_state: {
+          ...config.starting_ai_state,
+          intel_confidence: 0,
+        },
+      })
+      expect(() => validateAction(unlocked, action, { zone_id: 'mopti' }, cost)).not.toThrow()
+    })
+
+    it('enforces supported requirements.condition expressions', () => {
+      const action = actionsJson.actions.find(
+        (a: { action_id: string }) => a.action_id === 'negotiation_splinter_faction'
+      ) as ActionDefinition
+      const cost = getResolvedCost(action)
+      const target = { actor_key: 'insurgent_splinter' }
+      const base = makeState({
+        resources: {
+          ...config.starting_resources,
+          intel_points: 20,
+        },
+      })
+      const blocked = {
+        ...base,
+        session: {
+          ...base.session,
+          metrics: {
+            ...base.session.metrics,
+            insurgency: 50,
+          },
+        },
+        narrative_flags: {
+          splinter_dialogue_open: true,
+        },
+      }
+
+      try {
+        validateAction(blocked, action, target, cost)
+        expect.fail('should throw')
+      } catch (e) {
+        expect(e).toBeInstanceOf(GameError)
+        expect((e as GameError).code).toBe('REQUIREMENT_CONDITION')
+      }
+
+      const allowed = {
+        ...blocked,
+        session: {
+          ...blocked.session,
+          metrics: {
+            ...blocked.session.metrics,
+            insurgency: 49,
+          },
+        },
+      }
+      expect(() => validateAction(allowed, action, target, cost)).not.toThrow()
+    })
   })
 
   describe('applyAction', () => {
@@ -163,6 +252,75 @@ describe('actionResolver', () => {
       expect(next.delayed_effects?.[0]?.turn_due).toBe(2)
       expect(next.delayed_effects?.[0]?.resources?.intel_points).toBe(10)
     })
+
+    it('sets authored corruption-risk flags only when the safe condition is true', () => {
+      const action = actionsJson.actions.find(
+        (a: { action_id: string }) => a.action_id === 'humanitarian_aid_distribution'
+      ) as ActionDefinition
+      const state = makeState()
+      const result = executeActionWithLog(state, action, { zone_id: 'mopti' })
+
+      expect(result.state.narrative_flags?.humanitarian_aid_spend_high).toBe(true)
+      expect(result.logEntry.flag_additions).toContain('humanitarian_aid_spend_high')
+
+      const guarded = {
+        ...state,
+        oversight_level: {
+          level: 'strong' as const,
+          set_on_turn: 1,
+        },
+      }
+      const guardedResult = executeActionWithLog(guarded, action, { zone_id: 'mopti' })
+      expect(guardedResult.state.narrative_flags?.humanitarian_aid_spend_high).toBeUndefined()
+      expect(guardedResult.logEntry.flag_additions).not.toContain('humanitarian_aid_spend_high')
+    })
+
+    it('resolves civilian harm risks deterministically, applies deltas, and logs media-event linkage', () => {
+      const action: ActionDefinition = {
+        ...(actionsJson.actions[0] as ActionDefinition),
+        action_id: 'test_civilian_harm_risk',
+        cooldown_turns: 0,
+        effects: {
+          metrics: {
+            stability: 1,
+          },
+          flags: ['base_effect_applied'],
+          risks: {
+            civilian_harm_chance: 1,
+            civilian_harm_effects: {
+              civilian_support: -7,
+              global_legitimacy: -4,
+            },
+          },
+        },
+      }
+      const state = makeState()
+      const result = executeActionWithLog(state, action, { zone_id: 'mopti' })
+
+      expect(result.state.session.metrics.stability).toBe(state.session.metrics.stability + 1)
+      expect(result.state.session.metrics.civilian_support).toBe(state.session.metrics.civilian_support - 7)
+      expect(result.state.session.metrics.global_legitimacy).toBe(state.session.metrics.global_legitimacy - 4)
+      expect(result.state.narrative_flags?.civilian_harm_incident).toBe(true)
+      expect(result.logEntry.flag_additions).toEqual(
+        expect.arrayContaining(['base_effect_applied', 'civilian_harm_incident'])
+      )
+      expect(result.logEntry.risk_outcomes?.[0]).toMatchObject({
+        type: 'civilian_harm',
+        applied: true,
+        threshold: 1,
+        metric_deltas: {
+          civilian_support: -7,
+          global_legitimacy: -4,
+        },
+        flag_additions: ['civilian_harm_incident'],
+        media_event_key: 'media_civilian_harm_report',
+      })
+      expect(result.logEntry.metric_deltas).toMatchObject({
+        stability: 1,
+        civilian_support: -7,
+        global_legitimacy: -4,
+      })
+    })
   })
 
   describe('executeActionWithLog', () => {
@@ -182,6 +340,35 @@ describe('actionResolver', () => {
       expect(result.logEntry.metric_deltas.insurgency).toBe(-3)
       expect(result.logEntry.resource_deltas.budget).toBe(-1_000_000)
       expect(result.logEntry.flag_additions).toContain('patrol_active_in_zone')
+    })
+  })
+
+  describe('action condition evaluator', () => {
+    it('evaluates documented requirements and corruption-risk condition examples', () => {
+      const state = makeState({
+        metrics: {
+          ...config.starting_metrics,
+          insurgency: 49,
+        },
+      })
+
+      expect(evaluateActionCondition(state, 'insurgency < 50')).toBe(true)
+      expect(evaluateActionCondition(state, "oversight_level.level == 'none'")).toBe(true)
+      expect(
+        evaluateActionCondition(
+          { ...state, narrative_flags: { splinter_dialogue_open: true } },
+          'flags.splinter_dialogue_open == true'
+        )
+      ).toBe(true)
+    })
+
+    it('rejects unsupported authored action conditions before runtime use', () => {
+      expect(() =>
+        assertSupportedActionCondition('insurgency approximately 50', 'test unsupported condition')
+      ).toThrow(/Unsupported action condition/)
+      expect(() =>
+        assertSupportedActionCondition('unknown_flag == true', 'test unsupported path')
+      ).toThrow(/Unsupported action condition path/)
     })
   })
 })

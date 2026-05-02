@@ -14,10 +14,12 @@ import type {
   ActorSentiment,
   AiState,
   ActionLogEntry,
+  ActionRiskOutcome,
 } from '../state/types'
 import { GameError } from '../state/types'
 import { reconcileTerritoryStateFromZones } from '../state/territoryStateRuntime'
 import { upsertIntelFeedByGenerator } from './intelResolver'
+import { evaluateActionCondition } from './actionConditionEvaluator'
 
 const METRIC_KEYS = [
   'stability',
@@ -45,6 +47,19 @@ function clampResource(value: number): number {
 
 function clampAiStateValue(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+function targetSeed(target: ActionTarget): string {
+  return target.zone_id ?? target.territory_key ?? target.actor_key ?? 'no_target'
+}
+
+function hashToUnitInterval(input: string): number {
+  let hash = 2166136261
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0) / 0x100000000
 }
 
 /**
@@ -106,9 +121,9 @@ export function validateAction(
   }
 
   const intelGate = action.intel_gate ?? config.default_intel_gate ?? 0
-  if (session.ai_state.intel_confidence < intelGate) {
+  if (session.resources.intel_points < intelGate) {
     throw new GameError(
-      `Action requires intel_confidence >= ${intelGate}, current ${session.ai_state.intel_confidence}`,
+      `Action requires intel_points >= ${intelGate}, current ${session.resources.intel_points}`,
       'INTEL_GATE'
     )
   }
@@ -157,6 +172,9 @@ export function validateAction(
     if (!narrativeFlags[flag]) {
       throw new GameError(`Required flag not set: ${flag}`, 'REQUIREMENT_FLAGS_REQUIRED')
     }
+  }
+  if (req.condition && !evaluateActionCondition(state, req.condition)) {
+    throw new GameError(`Requirement condition not met: ${req.condition}`, 'REQUIREMENT_CONDITION')
   }
 
   switch (action.target_scope) {
@@ -249,6 +267,96 @@ function applyAiStateEffects(current: AiState, effects: Partial<AiState> | undef
   }
 }
 
+function applyRiskMetrics(current: Metrics, outcomes: ActionRiskOutcome[]): Metrics {
+  let next = { ...current }
+  for (const outcome of outcomes) {
+    if (!outcome.applied) continue
+    next = applyMetricsEffects(next, outcome.metric_deltas)
+  }
+  return next
+}
+
+function resolveCivilianHarmRisk(
+  state: GameState,
+  action: ActionDefinition,
+  target: ActionTarget
+): ActionRiskOutcome[] {
+  const risk = action.effects.risks
+  const threshold = risk?.civilian_harm_chance
+  if (threshold === undefined) return []
+
+  const boundedThreshold = Math.max(0, Math.min(1, threshold))
+  const seed = [
+    state.session.turn,
+    action.action_id,
+    targetSeed(target),
+    state.session.actions_remaining,
+  ].join(':')
+  const roll = hashToUnitInterval(seed)
+  const applied = roll < boundedThreshold
+  const metricDeltas = applied && risk?.civilian_harm_effects ? { ...risk.civilian_harm_effects } : {}
+  const flagAdditions = applied ? ['civilian_harm_incident'] : []
+
+  return [
+    {
+      type: 'civilian_harm',
+      applied,
+      roll: Number(roll.toFixed(6)),
+      threshold: boundedThreshold,
+      metric_deltas: metricDeltas,
+      flag_additions: flagAdditions,
+      media_event_key: applied ? 'media_civilian_harm_report' : null,
+    },
+  ]
+}
+
+function resolveCorruptionRiskFlags(state: GameState, action: ActionDefinition): string[] {
+  const risk = action.corruption_risk
+  if (!risk) return []
+  if (!evaluateActionCondition(state, risk.condition)) return []
+  return [risk.flag]
+}
+
+function applyFlagAdditions(
+  state: GameState,
+  flags: string[],
+  turn: number
+): GameState {
+  if (flags.length === 0) return state
+
+  const narrativeFlags = { ...(state.narrative_flags ?? {}) }
+  const narrativeFlagTurns = { ...(state.narrative_flag_turns ?? {}) }
+  for (const flag of flags) {
+    narrativeFlags[flag] = true
+    if (narrativeFlagTurns[flag] === undefined) {
+      narrativeFlagTurns[flag] = turn
+    }
+  }
+  return {
+    ...state,
+    narrative_flags: narrativeFlags,
+    narrative_flag_turns: narrativeFlagTurns,
+  }
+}
+
+function resolveActionOutcomeMetadata(
+  state: GameState,
+  action: ActionDefinition,
+  target: ActionTarget
+): { riskOutcomes: ActionRiskOutcome[]; flagAdditions: string[] } {
+  const riskOutcomes = resolveCivilianHarmRisk(state, action, target)
+  const riskFlags = riskOutcomes.flatMap((outcome) => outcome.flag_additions)
+  const corruptionFlags = resolveCorruptionRiskFlags(state, action)
+  return {
+    riskOutcomes,
+    flagAdditions: [
+      ...(action.effects.flags ?? []),
+      ...corruptionFlags,
+      ...riskFlags,
+    ],
+  }
+}
+
 /**
  * Apply zone_effects to a single zone. Returns new ZoneState.
  */
@@ -311,33 +419,19 @@ export function applyEffects(
 ): GameState {
   const { effects } = action
   let nextState: GameState = { ...state }
+  const outcomeMetadata = resolveActionOutcomeMetadata(state, action, target)
 
   nextState = {
     ...nextState,
     session: {
       ...nextState.session,
-      metrics: applyMetricsEffects(nextState.session.metrics, effects.metrics),
+      metrics: applyRiskMetrics(applyMetricsEffects(nextState.session.metrics, effects.metrics), outcomeMetadata.riskOutcomes),
       resources: applyResourceEffects(nextState.session.resources, effects.resources),
       ai_state: applyAiStateEffects(nextState.session.ai_state, effects.ai_state),
     },
   }
 
-  const flags = effects.flags ?? []
-  if (flags.length > 0) {
-    const narrativeFlags = { ...(nextState.narrative_flags ?? {}) }
-    const narrativeFlagTurns = { ...(nextState.narrative_flag_turns ?? {}) }
-    for (const flag of flags) {
-      narrativeFlags[flag] = true
-      if (narrativeFlagTurns[flag] === undefined) {
-        narrativeFlagTurns[flag] = state.session.turn
-      }
-    }
-    nextState = {
-      ...nextState,
-      narrative_flags: narrativeFlags,
-      narrative_flag_turns: narrativeFlagTurns,
-    }
-  }
+  nextState = applyFlagAdditions(nextState, outcomeMetadata.flagAdditions, state.session.turn)
 
   if (effects.sets_oversight_level) {
     nextState = {
@@ -467,6 +561,7 @@ export function executeActionWithLog(
   const cost = getResolvedCost(action, allocation)
   const beforeMetrics = { ...state.session.metrics }
   const beforeResources = { ...state.session.resources }
+  const outcomeMetadata = resolveActionOutcomeMetadata(state, action, target)
   const afterState = applyAction(state, action, target, allocation)
   const metric_deltas = deriveMetricDeltas(beforeMetrics, afterState.session.metrics)
   const resource_deltas = deriveResourceDeltas(beforeResources, afterState.session.resources)
@@ -477,7 +572,8 @@ export function executeActionWithLog(
     costs: { ...cost },
     metric_deltas,
     resource_deltas,
-    flag_additions: action.effects.flags ? [...action.effects.flags] : [],
+    flag_additions: outcomeMetadata.flagAdditions,
+    risk_outcomes: outcomeMetadata.riskOutcomes.length > 0 ? outcomeMetadata.riskOutcomes : undefined,
   }
   const nextState: GameState = {
     ...afterState,

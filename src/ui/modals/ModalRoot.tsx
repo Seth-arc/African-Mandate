@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore, type ModalKind, type RevealMode } from '../../state/uiStore'
 import { useSessionStore } from '../../state/sessionStore'
@@ -211,6 +211,31 @@ function isTextEntryElement(target: EventTarget | null): boolean {
   if (target.isContentEditable) return true
   const tagName = target.tagName
   return tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT'
+}
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',')
+
+function getFocusableElements(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => {
+    if (element.getAttribute('aria-hidden') === 'true') return false
+    if (element.hidden) return false
+    const style = window.getComputedStyle(element)
+    return style.display !== 'none' && style.visibility !== 'hidden'
+  })
+}
+
+function reportAutosaveFailure(error: unknown, reason: string): void {
+  recordTelemetryEvent('autosave_failed', {
+    reason,
+    message: error instanceof Error ? error.message : 'Autosave failed',
+  })
 }
 
 type LoadedContent = NonNullable<ReturnType<typeof useGameStore.getState>['state']['content']>
@@ -2988,7 +3013,7 @@ function IntelReportBody(): ReactNode {
       const currentState = useGameStore.getState().state
       const nextState = markIntelReportRead(currentState, selectedReportKey)
       useGameStore.setState({ state: nextState })
-      void autosaveState(nextState, 'intel').catch(() => undefined)
+      void autosaveState(nextState, 'intel').catch((error: unknown) => reportAutosaveFailure(error, 'intel'))
     } catch {
       // Keep intel modal usable even when persistence update fails.
     }
@@ -3901,7 +3926,7 @@ function DialogueBody(): ReactNode {
     try {
       const result = executeDialogueChoice(state, dialogue.dialogue_id, choiceId)
       useGameStore.setState({ state: result.state })
-      void autosaveState(result.state, 'dialogue').catch(() => undefined)
+      void autosaveState(result.state, 'dialogue').catch((error: unknown) => reportAutosaveFailure(error, 'dialogue'))
       setDialogueOutcome(result.outcomeTextKey, result.choice.choice_id)
     } catch (error: unknown) {
       if (error instanceof GameError) {
@@ -4225,10 +4250,11 @@ function buildForecastConfidence(
   unfavorableCount: number
 ): ForecastConfidence {
   const intelConfidence = state.session.ai_state.intel_confidence
+  const availableIntelPoints = state.session.resources.intel_points
   const intelGate = action.intel_gate ?? state.config.default_intel_gate ?? 0
   let score = intelConfidence >= 70 ? 2 : intelConfidence >= 45 ? 1 : 0
 
-  if (intelGate > intelConfidence - 5) {
+  if (intelGate > 0 && availableIntelPoints < intelGate + 5) {
     score = Math.min(score, 1)
   }
   if (action.delay_turns && action.delay_turns > 0) {
@@ -4244,7 +4270,10 @@ function buildForecastConfidence(
   const clampedScore = Math.max(0, Math.min(2, score))
   const tier: ForecastConfidenceTier = clampedScore >= 2 ? 'high' : clampedScore === 1 ? 'medium' : 'low'
   const label: ForecastConfidence['label'] = tier === 'high' ? 'High' : tier === 'medium' ? 'Medium' : 'Low'
-  const rationaleParts = [`Intel ${intelConfidence}/100`, `gate ${intelGate}`]
+  const rationaleParts = [
+    `Confidence ${intelConfidence}/100`,
+    intelGate > 0 ? `Intel points ${availableIntelPoints}/${intelGate} gate` : 'No intel-point gate',
+  ]
   if (action.delay_turns && action.delay_turns > 0) {
     rationaleParts.push(`delayed impact +${action.delay_turns} turn`)
   }
@@ -4899,7 +4928,9 @@ function ActionTransitionBody(): ReactNode {
       toggleIntelFeed()
     }
     useGameStore.setState({ state: transition.afterState })
-    void autosaveState(transition.afterState, 'after_action').catch(() => undefined)
+    void autosaveState(transition.afterState, 'after_action').catch((error: unknown) =>
+      reportAutosaveFailure(error, 'after_action')
+    )
     setPendingActionTransition(null)
     closeModal()
   }, [
@@ -5840,7 +5871,7 @@ function TurnLoadingBody(): ReactNode {
       if (nextState) {
         clearTakeActionSelection()
         useGameStore.setState({ state: nextState })
-        void autosaveState(nextState, 'end_turn').catch(() => undefined)
+        void autosaveState(nextState, 'end_turn').catch((error: unknown) => reportAutosaveFailure(error, 'end_turn'))
       }
       return
     }
@@ -5853,7 +5884,7 @@ function TurnLoadingBody(): ReactNode {
       if (nextState) {
         clearTakeActionSelection()
         useGameStore.setState({ state: nextState })
-        void autosaveState(nextState, 'end_turn').catch(() => undefined)
+        void autosaveState(nextState, 'end_turn').catch((error: unknown) => reportAutosaveFailure(error, 'end_turn'))
       }
       exitTimerRef.current = null
     }, 220)
@@ -6392,7 +6423,9 @@ export function ModalRoot(): ReactNode {
   const sessionTurn = useGameStore((s) => s.state.session.turn)
   const actionsRemaining = useGameStore((s) => s.state.session.actions_remaining)
   const previousModalRef = useRef<ModalKind>('none')
+  const modalBackdropRef = useRef<HTMLDivElement | null>(null)
   const modalContentRef = useRef<HTMLDivElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
   const keyboardPrimaryTriggerRef = useRef(false)
   const revealFrameRef = useRef<number | null>(null)
   const [missionBriefRevealVisible, setMissionBriefRevealVisible] = useState(false)
@@ -6541,11 +6574,112 @@ export function ModalRoot(): ReactNode {
     }
   }, [modal])
 
+  useLayoutEffect(() => {
+    if (modal === 'none') return undefined
+    if (typeof window === 'undefined') return undefined
+
+    const root = modalContentRef.current
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement && (!root || !root.contains(activeElement))) {
+      previousFocusRef.current = activeElement
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const modalRoot = modalContentRef.current
+      if (!modalRoot) return
+      const primaryButton = pickPrimaryCtaButton(modalRoot, modal)
+      const firstFocusable = getFocusableElements(modalRoot)[0] ?? modalRoot
+      const target = primaryButton ?? firstFocusable
+      target.focus({ preventScroll: true })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+    }
+  }, [modal])
+
+  useEffect(() => {
+    if (modal !== 'none') return undefined
+    if (typeof window === 'undefined') return undefined
+
+    const previousFocus = previousFocusRef.current
+    previousFocusRef.current = null
+    if (!previousFocus?.isConnected) return undefined
+
+    const frame = window.requestAnimationFrame(() => {
+      previousFocus.focus({ preventScroll: true })
+    })
+    return () => {
+      window.cancelAnimationFrame(frame)
+    }
+  }, [modal])
+
+  useEffect(() => {
+    if (modal === 'none') return undefined
+    const backdrop = modalBackdropRef.current
+    const parent = backdrop?.parentElement
+    if (!backdrop || !parent) return undefined
+
+    const siblings = Array.from(parent.children).filter(
+      (child): child is HTMLElement => child instanceof HTMLElement && child !== backdrop
+    )
+    const previousValues = siblings.map((element) => ({
+      element,
+      inert: element.inert,
+      ariaHidden: element.getAttribute('aria-hidden'),
+    }))
+
+    for (const sibling of siblings) {
+      sibling.inert = true
+      sibling.setAttribute('aria-hidden', 'true')
+    }
+
+    return () => {
+      for (const item of previousValues) {
+        item.element.inert = item.inert
+        if (item.ariaHidden === null) {
+          item.element.removeAttribute('aria-hidden')
+        } else {
+          item.element.setAttribute('aria-hidden', item.ariaHidden)
+        }
+      }
+    }
+  }, [modal])
+
   useEffect(() => {
     if (modal === 'none') return undefined
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.defaultPrevented) return
+
+      if (event.key === 'Tab') {
+        const root = modalContentRef.current
+        if (!root) return
+        const focusable = getFocusableElements(root)
+        if (focusable.length === 0) {
+          event.preventDefault()
+          root.focus({ preventScroll: true })
+          return
+        }
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        const activeElement = document.activeElement
+        if (!event.shiftKey && activeElement === last) {
+          event.preventDefault()
+          first?.focus({ preventScroll: true })
+          return
+        }
+        if (event.shiftKey && activeElement === first) {
+          event.preventDefault()
+          last?.focus({ preventScroll: true })
+          return
+        }
+        if (activeElement instanceof HTMLElement && !root.contains(activeElement)) {
+          event.preventDefault()
+          first?.focus({ preventScroll: true })
+        }
+        return
+      }
 
       if (event.key === 'Enter' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         if (isTextEntryElement(event.target)) return
@@ -6785,9 +6919,8 @@ export function ModalRoot(): ReactNode {
 
   return (
     <div
+      ref={modalBackdropRef}
       className={backdropClassName}
-      role="dialog"
-      aria-modal="true"
       style={backdropStyle}
       onClick={(event) => {
         if (isBlockingModal) return
@@ -6797,6 +6930,10 @@ export function ModalRoot(): ReactNode {
       <div
         ref={modalContentRef}
         className={modalContentClassName}
+        role="dialog"
+        aria-modal="true"
+        aria-label={heading}
+        tabIndex={-1}
         style={modalStyle}
         onClickCapture={(event) => {
           const target = event.target

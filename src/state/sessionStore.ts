@@ -62,6 +62,10 @@ interface SessionStoreState {
   loading: boolean
   saving: boolean
   error: string | null
+  save_error: string | null
+  save_status: 'idle' | 'saving' | 'saved' | 'not_saved'
+  failed_save_reason: SaveReason | null
+  failed_save_mode: SaveMode | null
   entry_gate_active: boolean
   entry_gate_confirmed: boolean
   entry_launch_kind: EntryLaunchKind
@@ -96,6 +100,7 @@ interface SessionStoreState {
   setReducedMotionEnabled: (enabled: boolean) => void
   setTooltipsEnabled: (enabled: boolean) => void
   clearError: () => void
+  clearSaveError: () => void
 }
 
 let authSubscriptionDisposer: (() => void) | null = null
@@ -142,8 +147,12 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
   loading: false,
   saving: false,
   error: null,
-  entry_gate_active: false,
-  entry_gate_confirmed: true,
+  save_error: null,
+  save_status: 'idle',
+  failed_save_reason: null,
+  failed_save_mode: null,
+  entry_gate_active: true,
+  entry_gate_confirmed: false,
   entry_launch_kind: null,
   auth_mode: 'guest',
   user_id: null,
@@ -293,7 +302,14 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
   },
 
   saveState: async (runtimeState, mode, reason) => {
-    set({ saving: true, error: null })
+    set({
+      saving: true,
+      error: null,
+      save_error: null,
+      save_status: 'saving',
+      failed_save_reason: null,
+      failed_save_mode: null,
+    })
     try {
       const state = get()
       if (state.entry_gate_active && !state.entry_gate_confirmed) {
@@ -322,10 +338,21 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
       set({
         active_session_id: summary.session_id,
         active_session_name_draft: summary.session_name ?? '',
+        save_status: 'saved',
+        save_error: null,
+        failed_save_reason: null,
+        failed_save_mode: null,
       })
       await get().refreshSessions()
     } catch (error) {
-      set({ error: messageFromError(error) })
+      const message = messageFromError(error)
+      set({
+        error: message,
+        save_error: message,
+        save_status: 'not_saved',
+        failed_save_reason: reason,
+        failed_save_mode: mode,
+      })
       throw error
     } finally {
       set({ saving: false })
@@ -463,5 +490,14 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
 
   clearError: () => {
     set({ error: null })
+  },
+
+  clearSaveError: () => {
+    set({
+      save_error: null,
+      save_status: 'idle',
+      failed_save_reason: null,
+      failed_save_mode: null,
+    })
   },
 }))

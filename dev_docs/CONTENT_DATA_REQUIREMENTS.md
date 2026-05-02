@@ -100,9 +100,15 @@ Note: starting_metrics are the authoritative campaign-start values and supersede
     - Runtime caps allocations to available resource totals.
   - cooldown_turns (optional; defaults to game_config.default_action_cooldown_turns)
   - effects (metric deltas, actor shifts, flags)
+  - effects.risks (optional):
+    - civilian_harm_chance: deterministic 0.0-1.0 threshold resolved from turn + action + target seed
+    - civilian_harm_effects: metric deltas applied only when the deterministic risk outcome fires
+    - Fired civilian-harm outcomes append `civilian_harm_incident` to actions_log and feed the media civilian-harm event path.
   - delay_turns (optional; number of turns before delayed_effects resolve)
   - delayed_effects (optional; same schema as effects, applied after delay_turns)
-  - intel_gate (optional; defaults to game_config.default_intel_gate)
+  - intel_gate (optional; defaults to game_config.default_intel_gate); gates against `resources.intel_points`, not `ai_state.intel_confidence`
+  - requirements.condition (optional restricted expression DSL): supports AND/OR combinations of comparisons against metrics, resources, ai_state, oversight_level, audit_status, turn, act, and narrative flags. Unsupported expressions fail content load.
+  - corruption_risk.condition (optional restricted expression DSL): same evaluator as requirements.condition. When true, appends corruption_risk.flag to narrative flags and the action log.
   - note: community_mediation counts toward diplomacy and humanitarian analytics/category spam
 
 7) Events and Narrative

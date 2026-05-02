@@ -22,6 +22,7 @@ See **[BUILD_STEPS.md](./BUILD_STEPS.md)** for the full process from scaffold th
 - `npm run build` — Production build
 - `npm run typecheck` — TypeScript check
 - `npm test` — Unit tests
+- `npm run test:e2e` — Playwright E2E player journey and mobile gate suite
 
 ## Project root
 
