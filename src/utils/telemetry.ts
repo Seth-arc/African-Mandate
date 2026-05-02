@@ -24,14 +24,31 @@ export interface TelemetryRecord {
 declare global {
   interface Window {
     __africanMandateTelemetry?: TelemetryRecord[]
+    __africanMandateTelemetryEnabled?: boolean
   }
+}
+
+let telemetryEnabled = false
+
+export function setTelemetryEnabled(enabled: boolean): void {
+  telemetryEnabled = enabled
+  if (typeof window !== 'undefined') {
+    window.__africanMandateTelemetryEnabled = enabled
+  }
+}
+
+export function isTelemetryEnabled(): boolean {
+  if (typeof window !== 'undefined' && typeof window.__africanMandateTelemetryEnabled === 'boolean') {
+    return window.__africanMandateTelemetryEnabled
+  }
+  return telemetryEnabled
 }
 
 export function recordTelemetryEvent(
   name: TelemetryEventName,
   payload: Record<string, unknown> = {}
 ): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined' || !isTelemetryEnabled()) return
 
   const record: TelemetryRecord = {
     name,

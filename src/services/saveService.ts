@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { ensureCurrentProfileRecord } from './authService'
+import { applyDifficultyToConfig, resolveDifficultyMode } from '../state/gameSetup'
 import { resolveActionName } from '../state/selectors'
 import type { GameState } from '../state/types'
 import { GameError } from '../state/types'
@@ -9,6 +11,7 @@ import { requireSupabaseClient } from './supabaseClient'
 const SNAPSHOT_VERSION = 1
 const LOCAL_INDEX_KEY = 'african_mandate.sessions.index.v1'
 const LOCAL_RECORD_KEY_PREFIX = 'african_mandate.sessions.record.v1.'
+export const SESSION_NAME_MAX_LENGTH = 72
 
 export type SaveReason = 'manual' | 'after_action' | 'end_turn' | 'dialogue' | 'intel'
 export type SaveMode = 'auto' | 'manual'
@@ -74,6 +77,13 @@ const localSessionIndexSchema = z.array(z.string().min(1))
 
 function defaultSessionName(turn: number): string {
   return `Mandate - Turn ${turn}`
+}
+
+export function normalizeSessionName(name: string | null | undefined): string | null {
+  if (typeof name !== 'string') return null
+  const trimmed = name.trim()
+  if (trimmed.length === 0) return null
+  return trimmed.slice(0, SESSION_NAME_MAX_LENGTH)
 }
 
 function getRecordKey(sessionId: string): string {
@@ -189,11 +199,14 @@ export function deserializeGameState(snapshotRaw: unknown, baseState: GameState)
   if (!runtimeState.session) {
     throw new GameError('Persisted snapshot is missing required session state.', 'INVALID_SNAPSHOT')
   }
+  const difficultyMode = resolveDifficultyMode(
+    'difficulty_mode' in runtimeState ? runtimeState.difficulty_mode : undefined
+  )
 
   const restored: GameState = {
     ...baseState,
     ...structuredClone(runtimeState),
-    config: baseState.config,
+    config: applyDifficultyToConfig(baseState.config, difficultyMode),
     content: baseState.content,
   }
   validateGameState(restored)
@@ -221,7 +234,7 @@ export function saveLocalSessionSnapshot(input: SaveSessionInput): SessionSummar
   const snapshot = serializeGameState(input.state)
   const record: LocalSessionRecord = {
     session_id: sessionId,
-    session_name: input.session_name ?? defaultSessionName(input.state.session.turn),
+    session_name: normalizeSessionName(input.session_name) ?? defaultSessionName(input.state.session.turn),
     turn: input.state.session.turn,
     max_turns: input.state.session.max_turns,
     last_played_at: lastPlayedAt,
@@ -246,6 +259,21 @@ export function loadLocalSessionSnapshot(sessionId: string, baseState: GameState
     throw new GameError(`Local session not found: ${sessionId}`, 'SESSION_NOT_FOUND')
   }
   return deserializeGameState(record.snapshot, baseState)
+}
+
+export function renameLocalSessionSnapshot(sessionId: string, sessionName: string | null | undefined): SessionSummary {
+  const storage = getStorage()
+  const record = readLocalRecord(storage, sessionId)
+  if (!record) {
+    throw new GameError(`Local session not found: ${sessionId}`, 'SESSION_NOT_FOUND')
+  }
+
+  const nextRecord: LocalSessionRecord = {
+    ...record,
+    session_name: normalizeSessionName(sessionName),
+  }
+  writeLocalRecord(storage, nextRecord)
+  return toSummary(nextRecord)
 }
 
 function deriveActionCategory(state: GameState, actionId: string): string {
@@ -308,6 +336,7 @@ export async function listCloudSessions(userId: string): Promise<SessionSummary[
 
 export async function saveCloudSessionSnapshot(input: SaveSessionInput): Promise<SessionSummary> {
   const userId = requireAuthenticatedUserId(input.user_id)
+  await ensureCurrentProfileRecord(userId)
   const client = requireSupabaseClient()
   const sessionId = input.session_id ?? generateSessionId()
   const lastPlayedAt = new Date().toISOString()
@@ -316,7 +345,7 @@ export async function saveCloudSessionSnapshot(input: SaveSessionInput): Promise
   const row: GameSessionInsert = {
     id: sessionId,
     user_id: userId,
-    session_name: input.session_name ?? defaultSessionName(input.state.session.turn),
+    session_name: normalizeSessionName(input.session_name) ?? defaultSessionName(input.state.session.turn),
     turn: input.state.session.turn,
     actions_remaining: input.state.session.actions_remaining,
     max_turns: input.state.session.max_turns,
@@ -358,6 +387,36 @@ export async function saveCloudSessionSnapshot(input: SaveSessionInput): Promise
     schema_version: row.schema_version ?? 20,
     is_guest: false,
   }
+}
+
+export async function renameCloudSessionSnapshot(
+  sessionId: string,
+  userId: string,
+  sessionName: string | null | undefined
+): Promise<SessionSummary> {
+  const authUserId = requireAuthenticatedUserId(userId)
+  await ensureCurrentProfileRecord(authUserId)
+  const client = requireSupabaseClient()
+  const normalizedSessionName = normalizeSessionName(sessionName)
+
+  const { data, error } = await client
+    .from('game_sessions')
+    .update({
+      session_name: normalizedSessionName,
+    })
+    .eq('id', sessionId)
+    .eq('user_id', authUserId)
+    .select('id,session_name,turn,max_turns,last_played_at')
+    .maybeSingle()
+
+  if (error) {
+    throw new GameError(`Cloud session rename failed: ${error.message}`, 'SESSION_RENAME_FAILED')
+  }
+  if (!data) {
+    throw new GameError(`Cloud session not found: ${sessionId}`, 'SESSION_NOT_FOUND')
+  }
+
+  return mapCloudRowToSummary(data)
 }
 
 export async function loadCloudSessionSnapshot(

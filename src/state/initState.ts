@@ -115,9 +115,16 @@ function buildActorSentiments(content: GameContent): Record<string, ActorSentime
   }, {})
 }
 
-function buildIntelFeed(_content: GameContent): IntelFeedItem[] {
-  // Start empty: reports appear only after their generator action/event fires.
-  return []
+function buildIntelFeed(content: GameContent): IntelFeedItem[] {
+  return content.intel_reports.intel_reports.map((report) => {
+    const urgency = report.urgency.toLowerCase()
+    return {
+      report_key: report.report_key,
+      is_urgent: urgency === 'high' || urgency === 'critical',
+      occurred_at: 1,
+      is_read: false,
+    }
+  })
 }
 
 /**

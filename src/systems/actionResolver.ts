@@ -180,12 +180,14 @@ export function validateAction(
       if (target.actor_key === undefined || target.actor_key === '') {
         throw new GameError('Actor action requires target.actor_key', 'INVALID_TARGET')
       }
-      const allowed = action.target_actors ?? []
-      if (allowed.length > 0 && !allowed.includes(target.actor_key)) {
-        throw new GameError(
-          `Actor ${target.actor_key} is not a valid target for this action; allowed: ${allowed.join(', ')}`,
-          'INVALID_TARGET'
-        )
+      {
+        const allowed = action.target_actors ?? []
+        if (allowed.length > 0 && !allowed.includes(target.actor_key)) {
+          throw new GameError(
+            `Actor ${target.actor_key} is not a valid target for this action; allowed: ${allowed.join(', ')}`,
+            'INVALID_TARGET'
+          )
+        }
       }
       break
     default:

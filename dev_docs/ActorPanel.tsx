@@ -19,12 +19,12 @@ interface ActorPanelEntry {
   actorKey: string
   name: string
   title: string
-  isMissionAuthority: boolean
   dialogueState: ActorDialogueState
   canEngageNow: boolean
   engagementMode: ActorEngagementMode | null
   dialogueId: string | null
   actionId: string | null
+  isMissionAuthority: boolean
 }
 
 function normalizeAssetSrc(path: string | null | undefined): string | null {
@@ -125,33 +125,34 @@ export function ActorPanel(): ReactNode {
 
   const selectedZone = selectedZoneId ? zone_state?.[selectedZoneId] : undefined
   const selectedZoneActorCount = selectedZone?.actors_present.length ?? 0
-  const actorEntries: ActorPanelEntry[] = sortedActors.flatMap<ActorPanelEntry>((actor) => {
+  const actorEntries: ActorPanelEntry[] = sortedActors.flatMap((actor) => {
     const actorKey = actor.actor_key
+
+    // AU Commissioner: always pinned. Resolve actual dialogue state so the card
+    // upgrades to fully engageable when a briefing is active, and falls back to
+    // the greyed-out mission authority card when no dialogue window is open.
     if (actorKey === AU_COMMISSIONER_ACTOR_KEY) {
-      const currentWindowDialogue = content?.dialogues.dialogues.find((dialogue) => {
-        if (dialogue.actor_key !== actorKey) return false
-        return dialogue.available_turns.length === 0 || dialogue.available_turns.includes(state.session.turn)
-      }) ?? null
       const dialogueAvailability = getActorDialogueAvailability(state, actorKey)
-      const dialogueState: ActorDialogueState = !currentWindowDialogue
+      const dialogueState: ActorDialogueState = !dialogueAvailability
         ? 'none'
-        : dialogueAvailability?.isAvailable
+        : dialogueAvailability.isAvailable
           ? 'available'
           : 'pending'
       const hasDialogue = dialogueState === 'available' && Boolean(dialogueAvailability?.dialogueId)
-      const commissionerEntry: ActorPanelEntry = {
+      const canEngageNow = hasDialogue
+      const engagementMode: ActorEngagementMode | null = hasDialogue ? 'dialogue' : null
+      return [{
         actor,
         actorKey,
         name: resolveActorName(content, actorKey),
         title: resolveActorTitle(content, actorKey),
-        isMissionAuthority: true,
         dialogueState,
-        canEngageNow: hasDialogue,
-        engagementMode: hasDialogue ? 'dialogue' : null,
+        canEngageNow,
+        engagementMode,
         dialogueId: hasDialogue ? dialogueAvailability?.dialogueId ?? null : null,
         actionId: null,
-      }
-      return [commissionerEntry]
+        isMissionAuthority: true,
+      }]
     }
 
     const active = isActorActive(state, actor)
@@ -179,25 +180,22 @@ export function ActorPanel(): ReactNode {
     }
     const canEngageNow = hasDialogue || hasAction
     const engagementMode: ActorEngagementMode | null = hasDialogue ? 'dialogue' : hasAction ? 'action' : null
-    const actorEntry: ActorPanelEntry = {
+    return [{
       actor,
       actorKey,
       name: resolveActorName(content, actorKey),
       title: resolveActorTitle(content, actorKey),
-      isMissionAuthority: false,
       dialogueState,
       canEngageNow,
       engagementMode,
       dialogueId: hasDialogue ? dialogueAvailability?.dialogueId ?? null : null,
       actionId: actionableActorAction?.action_id ?? null,
-    }
-    return [actorEntry]
+      isMissionAuthority: false,
+    }]
   })
 
   const filteredEntries = actorEntries.filter((entry) => {
-    if (entry.isMissionAuthority) {
-      return true
-    }
+    if (entry.isMissionAuthority) return true
     if (activeFilter === 'dialogue_open') {
       return entry.dialogueState === 'available'
     }
@@ -232,9 +230,6 @@ export function ActorPanel(): ReactNode {
   return (
     <div className="sidebar-panel" id="actor-panel" data-ui-tooltip="panel.actor_roster">
       <h2 className="sidebar-panel-title">Actors</h2>
-      <p className="sidebar-panel-note">
-        Review stakeholder profiles, briefing access, and engagement readiness before committing a turn.
-      </p>
       {selectedZone && selectedZoneActorCount > 0 && (
         <div className="actor-context-pill-list" aria-label="Selected zone contextual actors">
           {selectedZone.actors_present.slice(0, 3).map((actorName, index) => (
@@ -286,33 +281,74 @@ export function ActorPanel(): ReactNode {
       {filteredEntries.length > 0 && (
         <ul className="actor-list">
           {filteredEntries.map((entry) => {
-            const availabilityBadgeLabel = entry.isMissionAuthority
-              ? entry.dialogueState === 'available'
+            if (entry.isMissionAuthority) {
+              const briefingBadgeLabel = entry.dialogueState === 'available'
                 ? 'Briefing open'
                 : entry.dialogueState === 'pending'
                   ? 'Briefing pending'
                   : 'Mission Authority'
-              : entry.dialogueState === 'available'
-                ? 'Dialogue open'
-                : entry.dialogueState === 'pending'
-                  ? 'Dialogue pending'
-                  : 'Action ready'
-            const availabilityBadgeClass = entry.isMissionAuthority
-              ? entry.dialogueState === 'available'
+              const briefingBadgeClass = entry.dialogueState === 'available'
                 ? 'actor-chip actor-chip-engageable'
                 : entry.dialogueState === 'pending'
                   ? 'actor-chip actor-chip-locked'
                   : 'actor-chip actor-chip-mission-authority'
+              return (
+                <li
+                  key={entry.actorKey}
+                  className={`actor-card${entry.dialogueState === 'none' ? ' actor-card--mission-authority' : ''}`}
+                  data-actor-key={entry.actorKey}
+                  data-ui-tooltip="actor.card"
+                >
+                  <button
+                    type="button"
+                    className="actor-card-trigger"
+                    onClick={() => openActorProfile(entry.actorKey)}
+                    aria-haspopup="dialog"
+                    aria-label={`Open profile for ${entry.name}`}
+                  >
+                    <div className="actor-card-header">
+                      <ActorCardPortrait actor={entry.actor} name={entry.name} />
+                      <div className="actor-card-heading">
+                        <div className="actor-card-name-row">
+                          <div className="actor-card-name">
+                            {entry.name}
+                          </div>
+                          <span className={briefingBadgeClass}>
+                            {briefingBadgeLabel}
+                          </span>
+                        </div>
+                        <div className="actor-card-title">
+                          {entry.title}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                  <div className="actor-card-actions">
+                    <button
+                      type="button"
+                      className="action-config-confirm actor-card-action"
+                      data-ui-tooltip="actor.engage"
+                      onClick={() => openEngagement(entry)}
+                      disabled={!entry.canEngageNow}
+                    >
+                      Engage
+                    </button>
+                  </div>
+                </li>
+              )
+            }
+            const availabilityBadgeLabel = entry.dialogueState === 'available'
+              ? 'Dialogue open'
               : entry.dialogueState === 'pending'
-                ? 'actor-chip actor-chip-locked'
-                : 'actor-chip actor-chip-engageable'
-            const cardClassName = `actor-card${
-              entry.isMissionAuthority && entry.dialogueState === 'none' ? ' actor-card--mission-authority' : ''
-            }`
+                ? 'Dialogue pending'
+                : 'Action ready'
+            const availabilityBadgeClass = entry.dialogueState === 'pending'
+              ? 'actor-chip actor-chip-locked'
+              : 'actor-chip actor-chip-engageable'
             return (
               <li
                 key={entry.actorKey}
-                className={cardClassName}
+                className="actor-card"
                 data-actor-key={entry.actorKey}
                 data-ui-tooltip="actor.card"
               >

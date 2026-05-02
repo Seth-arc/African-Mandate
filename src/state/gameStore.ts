@@ -1,13 +1,14 @@
 import { create } from 'zustand'
 import type {
   ActionDefinition,
+  DifficultyMode,
   GameContent,
   GameState,
   StrategicValue,
   TerritoryKey,
   ZoneType,
 } from './types'
-import { createInitialState } from './initState'
+import { createCampaignState } from './gameSetup'
 import gameConfigJson from '../data/game_config.json'
 import territoriesJson from '../data/territories.json'
 import zonesJson from '../data/zones.json'
@@ -142,12 +143,14 @@ function loadConfig(): GameState['config'] {
     total_turns: gc.total_turns,
     action_slots_per_turn: gc.action_slots_per_turn,
     starting_resources: { ...gc.starting_resources },
+    base_starting_resources: { ...gc.starting_resources },
     starting_metrics: { ...gc.starting_metrics },
     starting_ai_state: { ...gc.starting_ai_state },
     win_conditions: { ...gc.win_conditions },
     critical_thresholds: { ...gc.critical_thresholds },
     default_action_cooldown_turns: gc.default_action_cooldown_turns,
     default_intel_gate: gc.default_intel_gate,
+    event_frequency_multiplier: 1,
     turn_duration_months: Array.isArray(gc.turn_duration_months) ? [...gc.turn_duration_months] : undefined,
   }
 }
@@ -266,15 +269,16 @@ function loadContent(): GameContent {
 
 interface GameStore {
   state: GameState
-  reset: () => void
+  reset: (difficultyMode?: DifficultyMode) => void
 }
 
 export const useGameStore = create<GameStore>((set) => {
-  const config = loadConfig()
   const content = loadContent()
-  const initialState = createInitialState(config, content)
+  const createState = (difficultyMode: DifficultyMode = 'standard'): GameState =>
+    createCampaignState(loadConfig(), content, difficultyMode)
+  const initialState = createState()
   return {
     state: initialState,
-    reset: () => set({ state: createInitialState(loadConfig(), loadContent()) }),
+    reset: (difficultyMode = 'standard') => set({ state: createState(difficultyMode) }),
   }
 })

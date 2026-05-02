@@ -72,7 +72,7 @@ export function ActionBar(): ReactNode {
 
   return (
     <footer className={`game-action-bar pressure-${pressure.level}`} id="action-bar">
-      <div className="game-action-pressure" aria-live="polite">
+      <div className="game-action-pressure" aria-live="polite" data-ui-tooltip="action_bar.pressure">
         <div className="game-action-pressure-head">
           <span className={`game-action-pressure-pill is-${pressure.level}`}>{pressure.label} pressure</span>
           <span className="game-action-pressure-meta">
@@ -96,6 +96,7 @@ export function ActionBar(): ReactNode {
           type="button"
           className="game-action-btn"
           id="btn-take-action"
+          data-ui-tooltip="action_bar.take_action"
           disabled={!canOpenActionModal}
           onClick={openActionConfig}
         >
@@ -105,6 +106,7 @@ export function ActionBar(): ReactNode {
           type="button"
           className={endTurnClassName}
           id="btn-end-turn"
+          data-ui-tooltip="action_bar.end_turn"
           disabled={Boolean(endingType) || pendingCommand !== null}
           onClick={handleEndTurn}
         >

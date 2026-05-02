@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { SESSION_NAME_MAX_LENGTH } from '../../services/saveService'
 import { useGameStore } from '../../state/gameStore'
 import { useSessionStore } from '../../state/sessionStore'
 import { useUiStore } from '../../state/uiStore'
@@ -10,15 +11,107 @@ function formatSessionLabel(name: string | null, turn: number): string {
   return `Mandate - Turn ${turn}`
 }
 
+function formatLastPlayed(value: string): string {
+  try {
+    return new Date(value).toLocaleString()
+  } catch {
+    return value
+  }
+}
+
 export function SessionManagerBody(): ReactNode {
   const sessionStore = useSessionStore()
   const resetGame = useGameStore((s) => s.reset)
+  const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
-  const [profileName, setProfileName] = useState('')
-  const [email, setEmail] = useState('')
-  const requiresAccessChoice = sessionStore.entry_gate_active && !sessionStore.entry_gate_confirmed
+  const [renameDrafts, setRenameDrafts] = useState<Record<string, string>>({})
+
+  const requiresEntryChoice = sessionStore.entry_gate_active && !sessionStore.entry_gate_confirmed
   const isAuthenticated = sessionStore.auth_mode === 'authenticated'
+  const latestSession = sessionStore.sessions[0] ?? null
+  const activeSession = useMemo(
+    () =>
+      sessionStore.active_session_id
+        ? sessionStore.sessions.find((session) => session.session_id === sessionStore.active_session_id) ?? null
+        : null,
+    [sessionStore.active_session_id, sessionStore.sessions]
+  )
+
+  useEffect(() => {
+    setRenameDrafts((current) => {
+      const next = { ...current }
+      let changed = false
+
+      for (const session of sessionStore.sessions) {
+        if (!(session.session_id in next)) {
+          next[session.session_id] = session.session_name ?? ''
+          changed = true
+        }
+      }
+
+      for (const sessionId of Object.keys(next)) {
+        if (!sessionStore.sessions.some((session) => session.session_id === sessionId)) {
+          delete next[sessionId]
+          changed = true
+        }
+      }
+
+      return changed ? next : current
+    })
+  }, [sessionStore.sessions])
+
+  const handleContinueWithGoogle = async (): Promise<void> => {
+    setStatusMessage(null)
+    try {
+      await sessionStore.signInWithGoogle()
+    } catch {
+      setStatusMessage('Google sign-in failed.')
+    }
+  }
+
+  const handleSignOut = async (): Promise<void> => {
+    setStatusMessage(null)
+    try {
+      await sessionStore.signOutToGuest()
+      setStatusMessage('Signed out. This browser remains available for guest saves.')
+    } catch {
+      setStatusMessage('Sign-out failed.')
+    }
+  }
+
+  const handleStartCampaign = (): void => {
+    sessionStore.startNewCampaign()
+    resetGame(sessionStore.preferences.difficulty_mode)
+    setStatusMessage(null)
+
+    if (requiresEntryChoice) {
+      sessionStore.completeEntryGate('new')
+      openModal('onboarding_loading')
+      return
+    }
+
+    closeModal()
+  }
+
+  const handleLoad = async (sessionId: string): Promise<void> => {
+    setStatusMessage(null)
+    try {
+      const baseState = useGameStore.getState().state
+      const restored = await sessionStore.loadState(sessionId, baseState)
+      useGameStore.setState({ state: restored })
+
+      if (requiresEntryChoice) {
+        sessionStore.completeEntryGate('resume')
+        openModal('onboarding_loading')
+        return
+      }
+
+      closeModal()
+    } catch {
+      setStatusMessage('Session load failed.')
+    }
+  }
 
   const handleManualSave = async (): Promise<void> => {
     setStatusMessage(null)
@@ -31,241 +124,418 @@ export function SessionManagerBody(): ReactNode {
     }
   }
 
-  const handleLoad = async (sessionId: string): Promise<void> => {
+  const handleRenameSession = async (sessionId: string): Promise<void> => {
     setStatusMessage(null)
     try {
-      const baseState = useGameStore.getState().state
-      const restored = await sessionStore.loadState(sessionId, baseState)
-      useGameStore.setState({ state: restored })
-      setStatusMessage('Session restored.')
-      closeModal()
+      await sessionStore.renameSession(sessionId, renameDrafts[sessionId] ?? '')
+      setStatusMessage('Session name updated.')
     } catch {
-      setStatusMessage('Session load failed.')
+      setStatusMessage('Rename failed.')
     }
   }
 
-  const handleNewCampaign = (): void => {
-    resetGame()
-    sessionStore.startNewCampaign()
-    setStatusMessage('Started a new campaign.')
-  }
-
-  const handleSignOut = async (): Promise<void> => {
+  const handleRenameActiveSession = async (): Promise<void> => {
+    if (!sessionStore.active_session_id) return
     setStatusMessage(null)
     try {
-      await sessionStore.signOutToGuest()
-      setStatusMessage('Signed out. Guest mode keeps progress for this run only.')
+      await sessionStore.renameSession(sessionStore.active_session_id, sessionStore.active_session_name_draft)
+      setStatusMessage('Active session name updated.')
     } catch {
-      setStatusMessage('Sign-out failed.')
-    }
-  }
-
-  const handleSignIn = async (flow: 'signup' | 'login' = 'login'): Promise<void> => {
-    setStatusMessage(null)
-    try {
-      await sessionStore.signInWithGoogle()
-    } catch {
-      setStatusMessage(flow === 'signup' ? 'Sign-up failed.' : 'Sign-in failed.')
-    }
-  }
-
-  const handleContinueAsGuest = async (): Promise<void> => {
-    setStatusMessage(null)
-    try {
-      await sessionStore.confirmGuestEntry()
-      setStatusMessage('Guest mode confirmed. Save/load is disabled until you sign in.')
-    } catch {
-      setStatusMessage('Guest mode activation failed.')
+      setStatusMessage('Active session rename failed.')
     }
   }
 
   return (
-    <div className="action-config-layout">
-      {requiresAccessChoice && (
-        <div className="session-auth-shell">
-          <div className="session-auth-card">
-            <div className="session-auth-header">
-              <span className="session-auth-kicker">Secure Access</span>
-              <h3 className="session-auth-title">Login / Sign Up</h3>
-              <p className="session-auth-text">
-                Signing in enables cloud save, restore, and leaderboard participation.
-              </p>
+    <div className="action-config-layout session-manager-layout">
+      <section className="session-manager-banner" aria-labelledby="session-manager-title">
+        <div className="session-manager-banner-top">
+          <div className="session-manager-banner-copy">
+            <span className="session-manager-banner-kicker">Mission access</span>
+            <h3 className="session-manager-banner-title" id="session-manager-title">
+              Continue a mandate or launch a new campaign
+            </h3>
+            <p className="session-manager-banner-text">
+              Select a card to resume a saved mandate or start a fresh campaign. Guest mode keeps saves in this browser.
+              Google sign-in enables cloud save and restore.
+            </p>
+          </div>
+          <div className="session-manager-meta" aria-label="Session overview">
+            <span className="session-manager-meta-pill">{isAuthenticated ? 'Signed in' : 'Guest mode'}</span>
+            <span className="session-manager-meta-pill">
+              {isAuthenticated ? 'Cloud saves' : 'Browser saves'}: {sessionStore.sessions.length}
+            </span>
+            <span className="session-manager-meta-pill">
+              Difficulty: {sessionStore.preferences.difficulty_mode}
+            </span>
+          </div>
+        </div>
+
+        <div className="session-manager-account-strip">
+          <div className="session-manager-account-copy">
+            <span className="session-manager-account-label">
+              {isAuthenticated ? 'Cloud save is available' : 'Guest mode is active'}
+            </span>
+            <p className="session-manager-account-text">
+              {isAuthenticated
+                ? `Signed in as ${sessionStore.user_display_name ?? sessionStore.user_email ?? sessionStore.user_id}.`
+                : 'Continue in this browser, or sign in with Google when you want cloud persistence.'}
+            </p>
+          </div>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              className="action-config-secondary"
+              onClick={() => void handleSignOut()}
+              disabled={sessionStore.loading}
+            >
+              Sign out
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="action-config-secondary session-auth-google"
+              onClick={() => void handleContinueWithGoogle()}
+              disabled={sessionStore.loading}
+            >
+              <span className="session-auth-google-icon" aria-hidden="true">G</span>
+              Continue with Google
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="session-manager-primary" aria-labelledby="session-manager-launch-title">
+        <div className="session-manager-section-heading">
+          <h4 className="session-manager-section-title" id="session-manager-launch-title">Campaign launch</h4>
+          <p className="session-manager-section-copy">
+            Select a card to resume a saved mandate, or use Start new campaign to begin a fresh run.
+          </p>
+        </div>
+
+        <div className="session-launch-grid">
+          <article className="session-launch-card">
+            <span className="session-launch-kicker">Resume</span>
+            <h5 className="session-launch-title">Continue mandate</h5>
+            <div className="session-launch-meta">
+              {latestSession ? (
+                <>
+                  <span>{formatSessionLabel(latestSession.session_name, latestSession.turn)}</span>
+                  <span>Turn {latestSession.turn} / {latestSession.max_turns}</span>
+                  <span>Last played {formatLastPlayed(latestSession.last_played_at)}</span>
+                </>
+              ) : (
+                <span>No saved mandates are available yet.</span>
+              )}
             </div>
-
-            <label className="session-auth-field">
-              <span>Profile Name</span>
-              <input
-                className="session-auth-input"
-                type="text"
-                placeholder="Special Envoy"
-                value={profileName}
-                onChange={(event) => setProfileName(event.target.value)}
-              />
-            </label>
-
-            <label className="session-auth-field">
-              <span>Email</span>
-              <input
-                className="session-auth-input"
-                type="email"
-                placeholder="envoy@au.int"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </label>
-
-            <div className="session-auth-actions">
-              <button
-                type="button"
-                className="action-config-confirm"
-                onClick={() => void handleSignIn('signup')}
-                disabled={sessionStore.loading}
-              >
-                Sign Up
-              </button>
+            <p className="session-launch-copy">
+              {latestSession
+                ? `Resume the most recent ${isAuthenticated ? 'cloud' : 'browser'} save immediately.`
+                : `A ${isAuthenticated ? 'cloud' : 'browser'} save will appear here after your first manual or autosave.`}
+            </p>
+            <div className="session-entry-actions">
               <button
                 type="button"
                 className="action-config-secondary"
-                onClick={() => void handleSignIn('login')}
+                onClick={() => latestSession && void handleLoad(latestSession.session_id)}
+                disabled={sessionStore.loading || !latestSession}
+              >
+                Continue mandate
+              </button>
+            </div>
+          </article>
+
+          <article className="session-launch-card">
+            <span className="session-launch-kicker">New</span>
+            <h5 className="session-launch-title">Start new campaign</h5>
+            <div className="session-manager-name-field">
+              <label className="session-manager-name-label" htmlFor="session-launch-name">
+                Session name
+              </label>
+              <input
+                id="session-launch-name"
+                className="session-manager-name-input"
+                type="text"
+                maxLength={SESSION_NAME_MAX_LENGTH}
+                placeholder="Mandate name"
+                value={sessionStore.launch_session_name_draft}
+                onChange={(event) => sessionStore.setLaunchSessionNameDraft(event.target.value)}
+              />
+            </div>
+            <p className="session-launch-copy">
+              Start from Turn 1 using the selected difficulty and interface preferences below.
+            </p>
+            <div className="session-entry-actions">
+              <button
+                type="button"
+                className="action-config-confirm"
+                onClick={handleStartCampaign}
                 disabled={sessionStore.loading}
               >
-                Login
+                Start new campaign
               </button>
             </div>
-
-            <button
-              type="button"
-              className="session-auth-guest"
-              onClick={() => void handleContinueAsGuest()}
-              disabled={sessionStore.loading}
-            >
-              Continue as Guest
-            </button>
-          </div>
+          </article>
         </div>
-      )}
+      </section>
 
-      {!requiresAccessChoice && (
-        <div className="actor-profile-section">
-          <div className="actor-profile-row">
-            <span>Access mode</span>
-            <strong>{isAuthenticated ? 'Signed in' : 'Guest'}</strong>
-          </div>
-          {isAuthenticated ? (
-            <>
-              <div className="actor-profile-row">
-                <span>User</span>
-                <strong>{sessionStore.user_display_name ?? sessionStore.user_email ?? sessionStore.user_id}</strong>
+      <div className="session-manager-disclosures">
+        <details className="session-manager-disclosure" open>
+          <summary className="session-manager-disclosure-summary">
+            <span className="session-manager-disclosure-copy">
+              <span className="session-manager-disclosure-title">Campaign settings</span>
+              <span className="session-manager-disclosure-text">
+                Difficulty, analytics, accessibility, and interface help preferences.
+              </span>
+            </span>
+            <span className="session-manager-disclosure-indicator" aria-hidden="true">Expand</span>
+          </summary>
+          <div className="session-manager-disclosure-panel">
+            <fieldset className="session-preferences-fieldset">
+              <legend className="session-preferences-legend">Difficulty</legend>
+              <div className="session-difficulty-grid">
+                <label className="session-difficulty-option">
+                  <input
+                    type="radio"
+                    name="session-difficulty"
+                    value="narrative"
+                    checked={sessionStore.preferences.difficulty_mode === 'narrative'}
+                    onChange={() => sessionStore.setDifficultyMode('narrative')}
+                  />
+                  <span className="session-difficulty-card">
+                    <span className="session-difficulty-title">Narrative</span>
+                    <span className="session-difficulty-copy">More onboarding guidance, more starting capacity, lighter event pressure.</span>
+                  </span>
+                </label>
+                <label className="session-difficulty-option">
+                  <input
+                    type="radio"
+                    name="session-difficulty"
+                    value="standard"
+                    checked={sessionStore.preferences.difficulty_mode === 'standard'}
+                    onChange={() => sessionStore.setDifficultyMode('standard')}
+                  />
+                  <span className="session-difficulty-card">
+                    <span className="session-difficulty-title">Standard</span>
+                    <span className="session-difficulty-copy">Default pacing and resource profile for the full demo experience.</span>
+                  </span>
+                </label>
+                <label className="session-difficulty-option">
+                  <input
+                    type="radio"
+                    name="session-difficulty"
+                    value="expert"
+                    checked={sessionStore.preferences.difficulty_mode === 'expert'}
+                    onChange={() => sessionStore.setDifficultyMode('expert')}
+                  />
+                  <span className="session-difficulty-card">
+                    <span className="session-difficulty-title">Expert</span>
+                    <span className="session-difficulty-copy">Lower starting resources and heavier event pressure from the outset.</span>
+                  </span>
+                </label>
               </div>
-              <button type="button" className="action-config-secondary" onClick={() => void handleSignOut()}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="actor-profile-text">
-                Guest mode is playable, but session save/load is disabled. Sign in to enable persistence.
-              </p>
-              <button type="button" className="action-config-secondary" onClick={() => void handleSignIn('login')}>
-                Sign in
-              </button>
-            </>
-          )}
-        </div>
-      )}
+            </fieldset>
 
-      {!requiresAccessChoice && isAuthenticated && (
-        <div className="actor-profile-section">
-          <div className="actor-profile-row">
-            <span>Autosave (cloud)</span>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              <input
-                type="checkbox"
-                checked={sessionStore.autosave_enabled}
-                onChange={(event) => sessionStore.setAutosaveEnabled(event.target.checked)}
-              />
-              <span>{sessionStore.autosave_enabled ? 'Enabled' : 'Disabled'}</span>
-            </label>
+            <fieldset className="session-preferences-fieldset">
+              <legend className="session-preferences-legend">Interface preferences</legend>
+              <div className="session-preferences-group session-preferences-group--split">
+                <label className="session-preference-toggle">
+                  <input
+                    type="checkbox"
+                    checked={sessionStore.preferences.analytics_opt_in}
+                    onChange={(event) => sessionStore.setAnalyticsOptIn(event.target.checked)}
+                  />
+                  <span>Analytics opt-in</span>
+                </label>
+                <label className="session-preference-toggle">
+                  <input
+                    type="checkbox"
+                    checked={sessionStore.preferences.high_contrast_enabled}
+                    onChange={(event) => sessionStore.setHighContrastEnabled(event.target.checked)}
+                  />
+                  <span>High contrast</span>
+                </label>
+                <label className="session-preference-toggle">
+                  <input
+                    type="checkbox"
+                    checked={sessionStore.preferences.reduced_motion_enabled}
+                    onChange={(event) => sessionStore.setReducedMotionEnabled(event.target.checked)}
+                  />
+                  <span>Reduced motion</span>
+                </label>
+                <label className="session-preference-toggle">
+                  <input
+                    type="checkbox"
+                    checked={sessionStore.preferences.tooltips_enabled}
+                    onChange={(event) => sessionStore.setTooltipsEnabled(event.target.checked)}
+                  />
+                  <span>Context tooltips on hover</span>
+                </label>
+              </div>
+            </fieldset>
           </div>
-          <div className="action-config-review-actions">
-            <button type="button" className="action-config-confirm" onClick={() => void handleManualSave()} disabled={sessionStore.saving}>
-              Save now
-            </button>
-            <button type="button" className="action-config-secondary" onClick={handleNewCampaign}>
-              New campaign
-            </button>
-          </div>
-        </div>
-      )}
+        </details>
 
-      {!requiresAccessChoice && isAuthenticated && (
-        <div className="actor-profile-section">
-          <div className="actor-profile-row">
-            <span>Cloud sessions</span>
-            <strong>{sessionStore.sessions.length}</strong>
+        <details className="session-manager-disclosure">
+          <summary className="session-manager-disclosure-summary">
+            <span className="session-manager-disclosure-copy">
+              <span className="session-manager-disclosure-title">Saved mandates</span>
+              <span className="session-manager-disclosure-text">
+                Review, rename, and restore {isAuthenticated ? 'cloud' : 'browser'} sessions.
+              </span>
+            </span>
+            <span className="session-manager-disclosure-indicator" aria-hidden="true">Expand</span>
+          </summary>
+          <div className="session-manager-disclosure-panel">
+            {sessionStore.sessions.length === 0 ? (
+              <p className="session-launch-copy">No saved mandates yet.</p>
+            ) : (
+              <div className="session-list">
+                {sessionStore.sessions.map((session) => {
+                  const isActive = session.session_id === sessionStore.active_session_id
+                  const inputId = `saved-session-name-${session.session_id}`
+
+                  return (
+                    <article key={session.session_id} className="action-config-review">
+                      <div className="action-config-review-row">
+                        <span>{formatSessionLabel(session.session_name, session.turn)}</span>
+                        <strong>{isActive ? 'Active' : isAuthenticated ? 'Cloud' : 'Browser'}</strong>
+                      </div>
+                      <div className="action-config-review-row">
+                        <span>Progress</span>
+                        <strong>Turn {session.turn} / {session.max_turns}</strong>
+                      </div>
+                      <div className="action-config-review-row">
+                        <span>Last played</span>
+                        <strong>{formatLastPlayed(session.last_played_at)}</strong>
+                      </div>
+                      <div className="session-manager-name-row">
+                        <div className="session-manager-name-field">
+                          <label className="session-manager-name-label" htmlFor={inputId}>Session name</label>
+                          <input
+                            id={inputId}
+                            className="session-manager-name-input"
+                            type="text"
+                            maxLength={SESSION_NAME_MAX_LENGTH}
+                            value={renameDrafts[session.session_id] ?? ''}
+                            onChange={(event) =>
+                              setRenameDrafts((current) => ({
+                                ...current,
+                                [session.session_id]: event.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="action-config-secondary"
+                          onClick={() => void handleRenameSession(session.session_id)}
+                          disabled={sessionStore.saving}
+                        >
+                          Rename
+                        </button>
+                      </div>
+                      <div className="action-config-review-actions">
+                        <button
+                          type="button"
+                          className="action-config-secondary"
+                          onClick={() => void handleLoad(session.session_id)}
+                          disabled={sessionStore.loading}
+                        >
+                          {requiresEntryChoice ? 'Resume mandate' : 'Load session'}
+                        </button>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
           </div>
-          {sessionStore.sessions.length === 0 ? (
-            <p className="actor-profile-text">No cloud sessions yet.</p>
-          ) : (
-            <div style={{ display: 'grid', gap: '0.45rem' }}>
-              {sessionStore.sessions.map((session) => {
-                const active = session.session_id === sessionStore.active_session_id
-                return (
-                  <div key={session.session_id} className="action-config-review">
-                    <div className="action-config-review-row">
-                      <span>{formatSessionLabel(session.session_name, session.turn)}</span>
-                      <strong>{active ? 'Active' : 'Saved'}</strong>
-                    </div>
-                    <div className="action-config-review-row">
-                      <span>Progress</span>
-                      <strong>Turn {session.turn} / {session.max_turns}</strong>
-                    </div>
-                    <div className="action-config-review-row">
-                      <span>Last played</span>
-                      <strong>{new Date(session.last_played_at).toLocaleString()}</strong>
-                    </div>
-                    <button
-                      type="button"
-                      className="action-config-secondary"
-                      onClick={() => void handleLoad(session.session_id)}
-                      disabled={sessionStore.loading}
-                    >
-                      Load cloud session
-                    </button>
-                  </div>
-                )
-              })}
+        </details>
+
+        <details className="session-manager-disclosure">
+          <summary className="session-manager-disclosure-summary">
+            <span className="session-manager-disclosure-copy">
+              <span className="session-manager-disclosure-title">Save controls</span>
+              <span className="session-manager-disclosure-text">
+                Manual save, autosave, and active session naming controls.
+              </span>
+            </span>
+            <span className="session-manager-disclosure-indicator" aria-hidden="true">Expand</span>
+          </summary>
+          <div className="session-manager-disclosure-panel">
+            <div className="session-manager-tools">
+              <div className="session-manager-tools-row">
+                <span className="session-manager-tools-label">Autosave</span>
+                <label className="session-preference-toggle">
+                  <input
+                    type="checkbox"
+                    checked={sessionStore.autosave_enabled}
+                    onChange={(event) => sessionStore.setAutosaveEnabled(event.target.checked)}
+                  />
+                  <span>{sessionStore.autosave_enabled ? 'Enabled' : 'Disabled'}</span>
+                </label>
+              </div>
+
+              <div className="session-manager-name-row">
+                <div className="session-manager-name-field">
+                  <label className="session-manager-name-label" htmlFor="active-session-name">Active session name</label>
+                  <input
+                    id="active-session-name"
+                    className="session-manager-name-input"
+                    type="text"
+                    maxLength={SESSION_NAME_MAX_LENGTH}
+                    placeholder="Mandate name"
+                    value={sessionStore.active_session_name_draft}
+                    onChange={(event) => sessionStore.setActiveSessionNameDraft(event.target.value)}
+                    disabled={!sessionStore.active_session_id}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="action-config-secondary"
+                  onClick={() => void handleRenameActiveSession()}
+                  disabled={sessionStore.saving || !sessionStore.active_session_id}
+                >
+                  Rename
+                </button>
+              </div>
+
+              <div className="action-config-review-actions">
+                <button
+                  type="button"
+                  className="action-config-confirm"
+                  onClick={() => void handleManualSave()}
+                  disabled={sessionStore.saving}
+                >
+                  Save now
+                </button>
+                <button
+                  type="button"
+                  className="action-config-secondary"
+                  onClick={handleStartCampaign}
+                  disabled={sessionStore.loading}
+                >
+                  New campaign
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-      )}
 
-      {!requiresAccessChoice && !isAuthenticated && (
-        <div className="actor-profile-section">
-          <div className="actor-profile-row">
-            <span>Persistence</span>
-            <strong>Disabled in guest mode</strong>
+            {activeSession && (
+              <p className="session-launch-copy">
+                Active mandate: {formatSessionLabel(activeSession.session_name, activeSession.turn)}.
+              </p>
+            )}
           </div>
-          <p className="actor-profile-text">
-            Guest sessions cannot be saved or loaded. Sign in when you want persistent campaign progress.
-          </p>
-          <div className="action-config-review-actions">
-            <button type="button" className="action-config-secondary" onClick={handleNewCampaign}>
-              New campaign
-            </button>
-            <button type="button" className="action-config-confirm" onClick={() => void handleSignIn('login')}>
-              Enable cloud save
-            </button>
-          </div>
-        </div>
-      )}
+        </details>
+      </div>
 
       {(statusMessage || sessionStore.error) && (
-        <div className="action-config-validation">
+        <div className="action-config-validation" role="alert">
           {statusMessage ?? sessionStore.error}
         </div>
       )}
-      {!requiresAccessChoice && (
+
+      {!requiresEntryChoice && (
         <div className="action-config-review-actions">
           <button type="button" className="action-config-secondary" onClick={closeModal}>
             Close

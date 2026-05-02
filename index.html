@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>African Mandate</title>
+    <link rel="icon" type="image/png" href="/assets/logos/Alliance_of_Sahel_States_Logo.png">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -13,7 +14,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="image" href="/img/hero.png">
-    <link rel="preload" as="video" href="/assets/vid/pre-interface%20loading_video.mp4" type="video/mp4">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -458,6 +458,16 @@
             color: #000;
         }
 
+        .cta-meta {
+            margin: 1rem auto 0;
+            max-width: 420px;
+            min-height: 1.25rem;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.76rem;
+            line-height: 1.45;
+            text-align: center;
+        }
+
         .cta-btn.primary:hover {
             background: var(--gold);
             border-color: var(--gold);
@@ -620,7 +630,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: url('/assets/actors/player_about.png') center center / cover no-repeat;
+            background: url('/assets/actors/player.png') center center / cover no-repeat;
             opacity: 0.5;
             filter: saturate(1.05) contrast(1.05);
             pointer-events: none;
@@ -1015,6 +1025,7 @@
                     <button class="cta-btn primary" id="enterArenaBtn">Play</button>
                     <button class="cta-btn secondary" id="aboutBtn">About</button>
                 </div>
+                <p class="cta-meta" id="enterArenaStatus" aria-live="polite"></p>
             </div>
         </section>
 
@@ -1234,6 +1245,7 @@
 
         // 4. ENTRY + MODAL FUNCTIONALITY
         const enterArenaBtn = document.getElementById('enterArenaBtn');
+        const enterArenaStatus = document.getElementById('enterArenaStatus');
         const aboutBtn = document.getElementById('aboutBtn');
         const aboutModal = document.getElementById('aboutModal');
         const modalClose = document.getElementById('modalClose');
@@ -1255,7 +1267,7 @@
         let gameThemeFadeToken = 0;
         let introCompleted = false;
         let introTransitionInProgress = false;
-        const enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Enter the Arena';
+        let enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Enter the Arena';
 
         function getGameThemeAudio() {
             if (gameThemeAudio) return gameThemeAudio;
@@ -1347,6 +1359,32 @@
             enterArenaBtn.classList.toggle('is-loading', isLoading);
             enterArenaBtn.disabled = isLoading;
             enterArenaBtn.textContent = isLoading ? 'Initializing...' : enterArenaDefaultLabel;
+        }
+
+        function setEnterArenaStatus(detail) {
+            if (!enterArenaBtn || !enterArenaStatus) return;
+
+            const hasSessions = Boolean(detail?.has_sessions);
+            const sessionCount = Number(detail?.session_count) || 0;
+            const lastPlayedAt = typeof detail?.last_played_at === 'string' ? detail.last_played_at : null;
+            const turn = Number.isFinite(Number(detail?.turn)) ? Number(detail.turn) : null;
+
+            enterArenaDefaultLabel = hasSessions ? 'Continue Mandate' : 'Play';
+            if (!enterArenaBtn.classList.contains('is-loading')) {
+                enterArenaBtn.textContent = enterArenaDefaultLabel;
+            }
+
+            if (!hasSessions) {
+                enterArenaStatus.textContent = 'Start a fresh campaign from Turn 1.';
+                enterArenaBtn.removeAttribute('title');
+                return;
+            }
+
+            const lastPlayedLabel = lastPlayedAt ? new Date(lastPlayedAt).toLocaleString() : 'recently';
+            const turnLabel = turn ? `Turn ${turn}` : 'Saved mandate';
+            const pickerLabel = sessionCount > 1 ? ` ${sessionCount} sessions available in the resume picker.` : '';
+            enterArenaStatus.textContent = `${turnLabel} last played ${lastPlayedLabel}.${pickerLabel}`;
+            enterArenaBtn.title = `Last played ${lastPlayedLabel}`;
         }
 
         function setIntroLoadingVisible(isVisible, message = 'Loading opening scene...') {
@@ -1636,6 +1674,10 @@
             const fadeDurationMs = Number.isFinite(maybeDuration) && maybeDuration > 0 ? maybeDuration : 1800;
             fadeOutGameThemeAudio(fadeDurationMs);
         });
+        window.addEventListener('african-mandate:landing-session-status', (event) => {
+            setEnterArenaStatus(event?.detail);
+        });
+        setEnterArenaStatus(null);
         if (aboutBtn) aboutBtn.addEventListener('click', openModal);
         if (modalClose) modalClose.addEventListener('click', closeModal);
         if (mobileGateClose) mobileGateClose.addEventListener('click', closeMobileGateModal);

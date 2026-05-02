@@ -409,29 +409,40 @@ export function getActorDialogueAvailability(
   if (dialogues.length === 0) {
     return null
   }
-  const dialogue = dialogues[0]
-  if (!dialogue) {
-    return null
-  }
-  const inTurnWindow =
-    dialogue.available_turns.length === 0 || dialogue.available_turns.includes(state.session.turn)
-  if (!inTurnWindow) {
+  const currentWindowDialogues = dialogues.filter(
+    (dialogue) => dialogue.available_turns.length === 0 || dialogue.available_turns.includes(state.session.turn)
+  )
+  const availableDialogue = currentWindowDialogues.find((dialogue) =>
+    evaluateDialogueCondition(state, dialogue.trigger_condition)
+  )
+  if (availableDialogue) {
     return {
-      dialogueId: dialogue.dialogue_id,
-      isAvailable: false,
-      reason: `Available turns: ${dialogue.available_turns.join(', ')}`,
+      dialogueId: availableDialogue.dialogue_id,
+      isAvailable: true,
+      reason: null,
     }
   }
-  if (!evaluateDialogueCondition(state, dialogue.trigger_condition)) {
+
+  const blockedDialogue = currentWindowDialogues[0]
+  if (blockedDialogue) {
     return {
-      dialogueId: dialogue.dialogue_id,
+      dialogueId: blockedDialogue.dialogue_id,
       isAvailable: false,
       reason: 'Trigger condition not met',
     }
   }
+
+  const nextDialogue =
+    dialogues.find((dialogue) =>
+      dialogue.available_turns.length === 0 || dialogue.available_turns.some((turn) => turn >= state.session.turn)
+    ) ??
+    dialogues[0]
+  if (!nextDialogue) {
+    return null
+  }
   return {
-    dialogueId: dialogue.dialogue_id,
-    isAvailable: true,
-    reason: null,
+    dialogueId: nextDialogue.dialogue_id,
+    isAvailable: false,
+    reason: `Available turns: ${nextDialogue.available_turns.join(', ')}`,
   }
 }

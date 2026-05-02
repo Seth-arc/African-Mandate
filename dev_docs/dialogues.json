@@ -445,7 +445,7 @@
       "node_graph": {
         "root": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act1.root.line_001",
+          "text_key": "loc.dialogue.commissioner_act1.root.line_001",
           "next": "choice_node"
         },
         "choice_node": {
@@ -453,43 +453,41 @@
           "choices": [
             {
               "choice_id": "acknowledge_mandate",
-              "label_key": "loc.dialogue.commissioner.act1.choice.acknowledge.label",
-              "description_key": "loc.dialogue.commissioner.act1.choice.acknowledge.desc",
+              "label_key": "loc.dialogue.commissioner_act1.choice.acknowledge_mandate.label",
+              "description_key": "loc.dialogue.commissioner_act1.choice.acknowledge_mandate.desc",
               "costs": {
                 "political_capital": 0,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "global_legitimacy": 1
+                  "stability": 2,
+                  "global_legitimacy": 2
                 },
-                "flags": ["commissioner_act1_acknowledged"]
+                "flags": ["commissioner_mandate_accepted"]
               },
               "next": "outcome_acknowledge"
             },
             {
-              "choice_id": "clarify_priorities",
-              "label_key": "loc.dialogue.commissioner.act1.choice.clarify_priorities.label",
-              "description_key": "loc.dialogue.commissioner.act1.choice.clarify_priorities.desc",
+              "choice_id": "request_priority_clarification",
+              "label_key": "loc.dialogue.commissioner_act1.choice.request_clarification.label",
+              "description_key": "loc.dialogue.commissioner_act1.choice.request_clarification.desc",
               "costs": {
                 "political_capital": 3,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "regional_synergy": 1
+                  "civilian_support": 2
                 },
-                "resources": {
-                  "intel_points": 4
-                },
-                "flags": ["commissioner_act1_priorities_clarified"]
+                "flags": ["commissioner_clarification_requested"]
               },
-              "next": "outcome_priorities"
+              "next": "outcome_clarification"
             },
             {
               "choice_id": "flag_resource_constraints",
-              "label_key": "loc.dialogue.commissioner.act1.choice.flag_constraints.label",
-              "description_key": "loc.dialogue.commissioner.act1.choice.flag_constraints.desc",
+              "label_key": "loc.dialogue.commissioner_act1.choice.flag_resources.label",
+              "description_key": "loc.dialogue.commissioner_act1.choice.flag_resources.desc",
               "costs": {
                 "political_capital": 5,
                 "budget": 0
@@ -498,198 +496,118 @@
                 "resources": {
                   "political_capital": 8
                 },
-                "flags": ["commissioner_act1_resource_constraints_flagged"]
+                "flags": ["commissioner_resource_flag_raised"]
               },
-              "next": "outcome_constraints"
+              "next": "outcome_resources"
             },
             {
-              "choice_id": "request_au_backing",
-              "label_key": "loc.dialogue.commissioner.act1.choice.request_backing.label",
-              "description_key": "loc.dialogue.commissioner.act1.choice.request_backing.desc",
+              "choice_id": "request_broader_au_backing",
+              "label_key": "loc.dialogue.commissioner_act1.choice.request_support.label",
+              "description_key": "loc.dialogue.commissioner_act1.choice.request_support.desc",
               "costs": {
                 "political_capital": 8,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "global_legitimacy": 1
+                  "regional_synergy": 3,
+                  "global_legitimacy": 2
                 },
-                "resources": {
-                  "budget": 750000,
-                  "personnel": 150
-                },
-                "flags": ["commissioner_act1_backing_requested"]
+                "flags": ["commissioner_au_support_requested"]
               },
-              "next": "outcome_backing"
+              "next": "outcome_support"
             }
           ]
         },
         "outcome_acknowledge": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act1.outcome.acknowledge.line_001",
+          "text_key": "loc.dialogue.commissioner_act1.outcome.acknowledge.line_001",
           "end": true
         },
-        "outcome_priorities": {
+        "outcome_clarification": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act1.outcome.priorities.line_001",
+          "text_key": "loc.dialogue.commissioner_act1.outcome.clarification.line_001",
           "end": true
         },
-        "outcome_constraints": {
+        "outcome_resources": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act1.outcome.constraints.line_001",
+          "text_key": "loc.dialogue.commissioner_act1.outcome.resources.line_001",
           "end": true
         },
-        "outcome_backing": {
+        "outcome_support": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act1.outcome.backing.line_001",
+          "text_key": "loc.dialogue.commissioner_act1.outcome.support.line_001",
           "end": true
         }
       }
     },
     {
-      "dialogue_id": "dialogue_commissioner_act2_briefing",
+      "dialogue_id": "dialogue_commissioner_act2_coalition",
       "actor_key": "au_chairperson_diallo",
       "trigger_condition": "",
       "available_turns": [5, 6, 7, 8],
       "node_graph": {
         "root": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act2.root.line_001",
+          "text_key": "loc.dialogue.commissioner_act2.root.line_001",
           "next": "choice_node"
         },
         "choice_node": {
           "type": "choice",
           "choices": [
             {
-              "choice_id": "report_status",
-              "label_key": "loc.dialogue.commissioner.act2.choice.report_status.label",
-              "description_key": "loc.dialogue.commissioner.act2.choice.report_status.desc",
+              "choice_id": "report_coalition_status",
+              "label_key": "loc.dialogue.commissioner_act2.choice.report_coalition.label",
+              "description_key": "loc.dialogue.commissioner_act2.choice.report_coalition.desc",
               "costs": {
                 "political_capital": 0,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "regional_synergy": 1
+                  "global_legitimacy": 2
                 },
-                "flags": ["commissioner_act2_status_reported"]
+                "flags": ["commissioner_coalition_reported"]
               },
-              "next": "outcome_status"
+              "next": "outcome_coalition"
             },
             {
-              "choice_id": "brief_on_aes_engagement",
-              "label_key": "loc.dialogue.commissioner.act2.choice.aes_brief.label",
-              "description_key": "loc.dialogue.commissioner.act2.choice.aes_brief.desc",
+              "choice_id": "brief_aes_engagement",
+              "label_key": "loc.dialogue.commissioner_act2.choice.brief_aes.label",
+              "description_key": "loc.dialogue.commissioner_act2.choice.brief_aes.desc",
               "costs": {
                 "political_capital": 5,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "regional_synergy": 2
+                  "regional_synergy": 3
                 },
-                "resources": {
-                  "intel_points": 3
-                },
-                "flags": ["commissioner_act2_aes_briefed"]
+                "flags": ["commissioner_aes_briefed"]
               },
               "next": "outcome_aes"
             },
             {
-              "choice_id": "request_diplomacy_priority_reallocation",
-              "label_key": "loc.dialogue.commissioner.act2.choice.reallocate_diplomacy.label",
-              "description_key": "loc.dialogue.commissioner.act2.choice.reallocate_diplomacy.desc",
+              "choice_id": "request_diplomacy_priority",
+              "label_key": "loc.dialogue.commissioner_act2.choice.request_diplomacy.label",
+              "description_key": "loc.dialogue.commissioner_act2.choice.request_diplomacy.desc",
               "costs": {
                 "political_capital": 8,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "regional_synergy": 1,
-                  "global_legitimacy": 1
+                  "global_legitimacy": 4,
+                  "regional_synergy": 2
                 },
-                "resources": {
-                  "intel_points": 5
-                },
-                "flags": ["commissioner_act2_diplomacy_reallocated"]
+                "flags": ["commissioner_diplomacy_priority"]
               },
-              "next": "outcome_reallocate"
+              "next": "outcome_diplomacy"
             },
             {
               "choice_id": "flag_ecowas_fracture_risk",
-              "label_key": "loc.dialogue.commissioner.act2.choice.flag_fracture.label",
-              "description_key": "loc.dialogue.commissioner.act2.choice.flag_fracture.desc",
-              "costs": {
-                "political_capital": 5,
-                "budget": 0
-              },
-              "effects": {
-                "metrics": {
-                  "regional_synergy": 1,
-                  "global_legitimacy": 2
-                },
-                "flags": ["commissioner_act2_ecowas_fracture_flagged"]
-              },
-              "next": "outcome_fracture"
-            }
-          ]
-        },
-        "outcome_status": {
-          "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act2.outcome.status.line_001",
-          "end": true
-        },
-        "outcome_aes": {
-          "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act2.outcome.aes.line_001",
-          "end": true
-        },
-        "outcome_reallocate": {
-          "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act2.outcome.reallocate.line_001",
-          "end": true
-        },
-        "outcome_fracture": {
-          "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act2.outcome.fracture.line_001",
-          "end": true
-        }
-      }
-    },
-    {
-      "dialogue_id": "dialogue_commissioner_act3_briefing",
-      "actor_key": "au_chairperson_diallo",
-      "trigger_condition": "",
-      "available_turns": [9, 10, 11, 12],
-      "node_graph": {
-        "root": {
-          "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act3.root.line_001",
-          "next": "choice_node"
-        },
-        "choice_node": {
-          "type": "choice",
-          "choices": [
-            {
-              "choice_id": "report_posture",
-              "label_key": "loc.dialogue.commissioner.act3.choice.report_posture.label",
-              "description_key": "loc.dialogue.commissioner.act3.choice.report_posture.desc",
-              "costs": {
-                "political_capital": 0,
-                "budget": 0
-              },
-              "effects": {
-                "metrics": {
-                  "stability": 1
-                },
-                "flags": ["commissioner_act3_posture_reported"]
-              },
-              "next": "outcome_posture"
-            },
-            {
-              "choice_id": "flag_civilian_protection_gap",
-              "label_key": "loc.dialogue.commissioner.act3.choice.flag_protection_gap.label",
-              "description_key": "loc.dialogue.commissioner.act3.choice.flag_protection_gap.desc",
+              "label_key": "loc.dialogue.commissioner_act2.choice.flag_ecowas.label",
+              "description_key": "loc.dialogue.commissioner_act2.choice.flag_ecowas.desc",
               "costs": {
                 "political_capital": 5,
                 "budget": 0
@@ -697,143 +615,208 @@
               "effects": {
                 "metrics": {
                   "civilian_support": 2,
-                  "global_legitimacy": 2
+                  "stability": 1
                 },
-                "flags": ["commissioner_act3_protection_gap_flagged"]
+                "flags": ["commissioner_ecowas_risk_flagged"]
               },
-              "next": "outcome_protection_gap"
-            },
-            {
-              "choice_id": "request_security_priority_reallocation",
-              "label_key": "loc.dialogue.commissioner.act3.choice.reallocate_security.label",
-              "description_key": "loc.dialogue.commissioner.act3.choice.reallocate_security.desc",
-              "costs": {
-                "political_capital": 8,
-                "budget": 0
-              },
-              "effects": {
-                "resources": {
-                  "budget": 400000,
-                  "personnel": 250
-                },
-                "flags": ["commissioner_act3_security_reallocated"]
-              },
-              "next": "outcome_reallocate_security"
-            },
-            {
-              "choice_id": "request_force_expansion",
-              "label_key": "loc.dialogue.commissioner.act3.choice.request_expansion.label",
-              "description_key": "loc.dialogue.commissioner.act3.choice.request_expansion.desc",
-              "costs": {
-                "political_capital": 12,
-                "budget": 0
-              },
-              "effects": {
-                "metrics": {
-                  "global_legitimacy": -3
-                },
-                "resources": {
-                  "budget": 900000,
-                  "personnel": 500
-                },
-                "flags": ["commissioner_act3_force_expansion_requested"]
-              },
-              "next": "outcome_expansion"
+              "next": "outcome_ecowas"
             }
           ]
         },
-        "outcome_posture": {
+        "outcome_coalition": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act3.outcome.posture.line_001",
+          "text_key": "loc.dialogue.commissioner_act2.outcome.coalition.line_001",
           "end": true
         },
-        "outcome_protection_gap": {
+        "outcome_aes": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act3.outcome.protection_gap.line_001",
+          "text_key": "loc.dialogue.commissioner_act2.outcome.aes.line_001",
           "end": true
         },
-        "outcome_reallocate_security": {
+        "outcome_diplomacy": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act3.outcome.reallocate_security.line_001",
+          "text_key": "loc.dialogue.commissioner_act2.outcome.diplomacy.line_001",
           "end": true
         },
-        "outcome_expansion": {
+        "outcome_ecowas": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act3.outcome.expansion.line_001",
+          "text_key": "loc.dialogue.commissioner_act2.outcome.ecowas.line_001",
           "end": true
         }
       }
     },
     {
-      "dialogue_id": "dialogue_commissioner_act4_briefing",
+      "dialogue_id": "dialogue_commissioner_act3_security",
       "actor_key": "au_chairperson_diallo",
       "trigger_condition": "",
-      "available_turns": [13, 14, 15, 16],
+      "available_turns": [9, 10, 11, 12],
       "node_graph": {
         "root": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act4.root.line_001",
+          "text_key": "loc.dialogue.commissioner_act3.root.line_001",
           "next": "choice_node"
         },
         "choice_node": {
           "type": "choice",
           "choices": [
             {
-              "choice_id": "report_progress",
-              "label_key": "loc.dialogue.commissioner.act4.choice.report_progress.label",
-              "description_key": "loc.dialogue.commissioner.act4.choice.report_progress.desc",
+              "choice_id": "report_security_posture",
+              "label_key": "loc.dialogue.commissioner_act3.choice.report_security.label",
+              "description_key": "loc.dialogue.commissioner_act3.choice.report_security.desc",
               "costs": {
                 "political_capital": 0,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "global_legitimacy": 1
+                  "stability": 2
                 },
-                "flags": ["commissioner_act4_progress_reported"]
+                "flags": ["commissioner_security_reported"]
               },
-              "next": "outcome_progress"
+              "next": "outcome_security"
             },
             {
-              "choice_id": "flag_corruption_exposure",
-              "label_key": "loc.dialogue.commissioner.act4.choice.flag_corruption.label",
-              "description_key": "loc.dialogue.commissioner.act4.choice.flag_corruption.desc",
+              "choice_id": "flag_civilian_protection_gap",
+              "label_key": "loc.dialogue.commissioner_act3.choice.flag_civilian.label",
+              "description_key": "loc.dialogue.commissioner_act3.choice.flag_civilian.desc",
               "costs": {
                 "political_capital": 5,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "global_legitimacy": 2
+                  "civilian_support": 3
                 },
-                "resources": {
-                  "intel_points": 3
-                },
-                "flags": ["commissioner_act4_corruption_flagged"]
+                "flags": ["commissioner_civilian_flag"]
               },
-              "next": "outcome_corruption"
+              "next": "outcome_civilian"
             },
             {
-              "choice_id": "request_accountability_framework",
-              "label_key": "loc.dialogue.commissioner.act4.choice.request_accountability.label",
-              "description_key": "loc.dialogue.commissioner.act4.choice.request_accountability.desc",
+              "choice_id": "request_security_priority_reallocation",
+              "label_key": "loc.dialogue.commissioner_act3.choice.request_security_priority.label",
+              "description_key": "loc.dialogue.commissioner_act3.choice.request_security_priority.desc",
               "costs": {
                 "political_capital": 8,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "global_legitimacy": 3
+                  "stability": 3,
+                  "insurgency": -2
                 },
-                "flags": ["commissioner_act4_accountability_framework_requested"],
-                "sets_audit_status": "pending"
+                "flags": ["commissioner_security_priority"]
+              },
+              "next": "outcome_priority"
+            },
+            {
+              "choice_id": "request_force_authorization_expansion",
+              "label_key": "loc.dialogue.commissioner_act3.choice.request_force_expansion.label",
+              "description_key": "loc.dialogue.commissioner_act3.choice.request_force_expansion.desc",
+              "costs": {
+                "political_capital": 12,
+                "budget": 0
+              },
+              "effects": {
+                "metrics": {
+                  "stability": 4,
+                  "global_legitimacy": -2
+                },
+                "flags": ["commissioner_force_expansion_requested"]
+              },
+              "next": "outcome_expansion"
+            }
+          ]
+        },
+        "outcome_security": {
+          "speaker_key": "au_chairperson_diallo",
+          "text_key": "loc.dialogue.commissioner_act3.outcome.security.line_001",
+          "end": true
+        },
+        "outcome_civilian": {
+          "speaker_key": "au_chairperson_diallo",
+          "text_key": "loc.dialogue.commissioner_act3.outcome.civilian.line_001",
+          "end": true
+        },
+        "outcome_priority": {
+          "speaker_key": "au_chairperson_diallo",
+          "text_key": "loc.dialogue.commissioner_act3.outcome.priority.line_001",
+          "end": true
+        },
+        "outcome_expansion": {
+          "speaker_key": "au_chairperson_diallo",
+          "text_key": "loc.dialogue.commissioner_act3.outcome.expansion.line_001",
+          "end": true
+        }
+      }
+    },
+    {
+      "dialogue_id": "dialogue_commissioner_act4_governance",
+      "actor_key": "au_chairperson_diallo",
+      "trigger_condition": "",
+      "available_turns": [13, 14, 15, 16],
+      "node_graph": {
+        "root": {
+          "speaker_key": "au_chairperson_diallo",
+          "text_key": "loc.dialogue.commissioner_act4.root.line_001",
+          "next": "choice_node"
+        },
+        "choice_node": {
+          "type": "choice",
+          "choices": [
+            {
+              "choice_id": "report_governance_progress",
+              "label_key": "loc.dialogue.commissioner_act4.choice.report_governance.label",
+              "description_key": "loc.dialogue.commissioner_act4.choice.report_governance.desc",
+              "costs": {
+                "political_capital": 0,
+                "budget": 0
+              },
+              "effects": {
+                "metrics": {
+                  "global_legitimacy": 2
+                },
+                "flags": ["commissioner_governance_reported"]
+              },
+              "next": "outcome_governance"
+            },
+            {
+              "choice_id": "flag_corruption_exposure",
+              "label_key": "loc.dialogue.commissioner_act4.choice.flag_corruption.label",
+              "description_key": "loc.dialogue.commissioner_act4.choice.flag_corruption.desc",
+              "costs": {
+                "political_capital": 5,
+                "budget": 0
+              },
+              "effects": {
+                "metrics": {
+                  "global_legitimacy": 4,
+                  "civilian_support": 2
+                },
+                "flags": ["commissioner_corruption_flagged"]
+              },
+              "next": "outcome_corruption"
+            },
+            {
+              "choice_id": "request_accountability_framework",
+              "label_key": "loc.dialogue.commissioner_act4.choice.request_accountability.label",
+              "description_key": "loc.dialogue.commissioner_act4.choice.request_accountability.desc",
+              "costs": {
+                "political_capital": 8,
+                "budget": 0
+              },
+              "effects": {
+                "metrics": {
+                  "global_legitimacy": 5,
+                  "regional_synergy": 2
+                },
+                "flags": ["commissioner_accountability_requested"]
               },
               "next": "outcome_accountability"
             },
             {
-              "choice_id": "defer_review",
-              "label_key": "loc.dialogue.commissioner.act4.choice.defer_review.label",
-              "description_key": "loc.dialogue.commissioner.act4.choice.defer_review.desc",
+              "choice_id": "defer_governance_review",
+              "label_key": "loc.dialogue.commissioner_act4.choice.defer_governance.label",
+              "description_key": "loc.dialogue.commissioner_act4.choice.defer_governance.desc",
               "costs": {
                 "political_capital": 0,
                 "budget": 0
@@ -842,43 +825,43 @@
                 "metrics": {
                   "global_legitimacy": -2
                 },
-                "flags": ["commissioner_act4_review_deferred"]
+                "flags": ["commissioner_governance_deferred"]
               },
-              "next": "outcome_defer"
+              "next": "outcome_deferred"
             }
           ]
         },
-        "outcome_progress": {
+        "outcome_governance": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act4.outcome.progress.line_001",
+          "text_key": "loc.dialogue.commissioner_act4.outcome.governance.line_001",
           "end": true
         },
         "outcome_corruption": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act4.outcome.corruption.line_001",
+          "text_key": "loc.dialogue.commissioner_act4.outcome.corruption.line_001",
           "end": true
         },
         "outcome_accountability": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act4.outcome.accountability.line_001",
+          "text_key": "loc.dialogue.commissioner_act4.outcome.accountability.line_001",
           "end": true
         },
-        "outcome_defer": {
+        "outcome_deferred": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act4.outcome.defer.line_001",
+          "text_key": "loc.dialogue.commissioner_act4.outcome.deferred.line_001",
           "end": true
         }
       }
     },
     {
-      "dialogue_id": "dialogue_commissioner_act5_briefing",
+      "dialogue_id": "dialogue_commissioner_act5_assessment",
       "actor_key": "au_chairperson_diallo",
       "trigger_condition": "",
       "available_turns": [17, 18, 19, 20],
       "node_graph": {
         "root": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act5.root.line_001",
+          "text_key": "loc.dialogue.commissioner_act5.root.line_001",
           "next": "choice_node"
         },
         "choice_node": {
@@ -886,96 +869,91 @@
           "choices": [
             {
               "choice_id": "present_stabilization_report",
-              "label_key": "loc.dialogue.commissioner.act5.choice.present_report.label",
-              "description_key": "loc.dialogue.commissioner.act5.choice.present_report.desc",
+              "label_key": "loc.dialogue.commissioner_act5.choice.present_report.label",
+              "description_key": "loc.dialogue.commissioner_act5.choice.present_report.desc",
               "costs": {
                 "political_capital": 0,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "global_legitimacy": 2,
-                  "regional_synergy": 1
+                  "stability": 2,
+                  "global_legitimacy": 3
                 },
-                "flags": ["commissioner_act5_report_presented"]
+                "flags": ["commissioner_final_report_presented"]
               },
               "next": "outcome_report"
             },
             {
               "choice_id": "flag_transition_risks",
-              "label_key": "loc.dialogue.commissioner.act5.choice.flag_transition.label",
-              "description_key": "loc.dialogue.commissioner.act5.choice.flag_transition.desc",
+              "label_key": "loc.dialogue.commissioner_act5.choice.flag_transition.label",
+              "description_key": "loc.dialogue.commissioner_act5.choice.flag_transition.desc",
               "costs": {
                 "political_capital": 5,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "regional_synergy": 2,
-                  "civilian_support": 1
+                  "civilian_support": 3,
+                  "regional_synergy": 2
                 },
-                "flags": ["commissioner_act5_transition_risks_flagged"]
+                "flags": ["commissioner_transition_risks_flagged"]
               },
               "next": "outcome_transition"
             },
             {
               "choice_id": "request_mandate_extension",
-              "label_key": "loc.dialogue.commissioner.act5.choice.request_extension.label",
-              "description_key": "loc.dialogue.commissioner.act5.choice.request_extension.desc",
+              "label_key": "loc.dialogue.commissioner_act5.choice.request_extension.label",
+              "description_key": "loc.dialogue.commissioner_act5.choice.request_extension.desc",
               "costs": {
                 "political_capital": 10,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "regional_synergy": 1,
-                  "global_legitimacy": -1
+                  "stability": 3
                 },
-                "resources": {
-                  "budget": 800000,
-                  "personnel": 200
-                },
-                "flags": ["commissioner_act5_extension_requested"]
+                "flags": ["commissioner_mandate_extension_requested"]
               },
               "next": "outcome_extension"
             },
             {
-              "choice_id": "declare_mission_complete",
-              "label_key": "loc.dialogue.commissioner.act5.choice.declare_complete.label",
-              "description_key": "loc.dialogue.commissioner.act5.choice.declare_complete.desc",
+              "choice_id": "declare_mission_objectives_met",
+              "label_key": "loc.dialogue.commissioner_act5.choice.declare_success.label",
+              "description_key": "loc.dialogue.commissioner_act5.choice.declare_success.desc",
               "costs": {
                 "political_capital": 15,
                 "budget": 0
               },
               "effects": {
                 "metrics": {
-                  "stability": 1,
-                  "global_legitimacy": 3
+                  "global_legitimacy": 5,
+                  "stability": 3
                 },
-                "flags": ["commissioner_act5_mission_complete_declared"]
+                "flags": ["commissioner_mission_declared_complete"]
               },
-              "next": "outcome_complete"
+              "next": "outcome_success"
             }
           ]
         },
         "outcome_report": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act5.outcome.report.line_001",
+          "text_key": "loc.dialogue.commissioner_act5.outcome.report.line_001",
           "end": true
         },
         "outcome_transition": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act5.outcome.transition.line_001",
+          "text_key": "loc.dialogue.commissioner_act5.outcome.transition.line_001",
           "end": true
         },
         "outcome_extension": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act5.outcome.extension.line_001",
+          "text_key": "loc.dialogue.commissioner_act5.outcome.extension.line_001",
           "end": true
         },
-        "outcome_complete": {
+        "outcome_success": {
           "speaker_key": "au_chairperson_diallo",
-          "text_key": "loc.dialogue.commissioner.act5.outcome.complete.line_001",
+          "text_key": "loc.dialogue.commissioner_act5.outcome.success.line_001",
           "end": true
         }
       }

@@ -29,6 +29,8 @@ export interface AiState {
   intel_confidence: number
 }
 
+export type DifficultyMode = 'narrative' | 'standard' | 'expert'
+
 export type OversightLevel = 'none' | 'basic' | 'strong'
 export type AuditStatus = 'none' | 'pending' | 'passed' | 'failed'
 
@@ -65,6 +67,8 @@ export interface GameState {
   session: GameSession
   /** Loaded from game_config at init. */
   config: GameConfig
+  /** Active difficulty profile for the current campaign. */
+  difficulty_mode?: DifficultyMode
   /** Content data loaded from JSON at startup. */
   content?: GameContent
   /** Per-session territory state. Keyed by territory_key. */
@@ -126,6 +130,7 @@ export interface GameConfig {
   total_turns: number
   action_slots_per_turn: number
   starting_resources: Resources
+  base_starting_resources?: Resources
   starting_metrics: Metrics
   starting_ai_state: AiState
   win_conditions: Record<string, { operator: string; value: number }>
@@ -134,6 +139,8 @@ export interface GameConfig {
   default_action_cooldown_turns?: number
   /** Used when action omits intel_gate. From game_config.default_intel_gate. */
   default_intel_gate?: number
+  /** Global multiplier applied to probabilistic runtime event triggers. */
+  event_frequency_multiplier?: number
   /** Months consumed per turn (1-based index). From game_config.turn_duration_months. */
   turn_duration_months?: number[]
 }

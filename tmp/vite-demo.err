@@ -1,0 +1,463 @@
+[2m11:34:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m11:34:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m11:34:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m11:34:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m4:23:16 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/services/authService.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/services/authService.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts. Does the file exist?
+[2m4:23:16 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/services/authService.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/services/authService.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts. Does the file exist?
+[2m4:24:35 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m4:24:35 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m4:24:35 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m4:24:35 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m4:24:35 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx. Does the file exist?
+[2m4:25:26 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/telemetry.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/utils/telemetry.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m4:25:26 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/telemetry.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/utils/telemetry.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/layout/GameLayout.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/layout/GameLayout.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/layout/GameLayout.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/ui/modals/SessionManagerBody.tsx (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/SessionManagerBody.tsx) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/telemetry.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/utils/telemetry.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/layout/GameLayout.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/layout/GameLayout.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/state/sessionStore.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/layout/GameLayout.tsx. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/services/authService.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/services/authService.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/services/saveService.ts. Does the file exist?
+[2m11:08:14 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/app/App.tsx (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx) in C:/Users/ssnguna/Local Sites/African-Mandate/src/main.tsx. Does the file exist?
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m11:11:45 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m11:12:04 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../state/sessionStore" from "src/app/App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/app/App.tsx[39m:7:32
+[33m  7  |  import { useGameStore } from "../state/gameStore";
+  8  |  import { useTour } from "../tour/TourContext";
+  9  |  import { useSessionStore } from "../state/sessionStore";
+     |                                   ^
+  10 |  import { useUiStore } from "../state/uiStore";
+  11 |  function App() {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/telemetry.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/utils/telemetry.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/ui/modals/SessionManagerBody.tsx (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/SessionManagerBody.tsx) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/telemetry.ts (resolved id: C:/Users/ssnguna/Local Sites/African-Mandate/src/utils/telemetry.ts) in C:/Users/ssnguna/Local Sites/African-Mandate/src/ui/modals/ModalRoot.tsx. Does the file exist?
+[2m11:12:49 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../utils/telemetry" from "src/state/sessionStore.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/ssnguna/Local Sites/African-Mandate/src/state/sessionStore.ts[39m:23:36
+[33m  16 |    saveLocalSessionSnapshot
+  17 |  } from "../services/saveService";
+  18 |  import { setTelemetryEnabled } from "../utils/telemetry";
+     |                                       ^
+  19 |  import { reconcileTerritoryStateFromZones } from "./territoryStateRuntime";
+  20 |  import {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/ssnguna/Local%20Sites/African-Mandate/node_modules/vite/dist/node/chunks/config.js:24542:20)

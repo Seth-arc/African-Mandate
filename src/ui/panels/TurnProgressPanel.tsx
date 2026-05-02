@@ -51,7 +51,7 @@ export function TurnProgressPanel(): ReactNode {
 
   if (!session) {
     return (
-      <div className="sidebar-panel" id="turn-progress-panel">
+      <div className="sidebar-panel" id="turn-progress-panel" data-ui-tooltip="panel.turn_progress">
         <h2 className="sidebar-panel-title">Turn progression</h2>
         <p className="game-text-muted">Loading...</p>
       </div>
@@ -83,25 +83,25 @@ export function TurnProgressPanel(): ReactNode {
   const hasAnyProgress = latestAction !== null || latestResolvedTurn !== null
 
   return (
-    <div className="sidebar-panel" id="turn-progress-panel">
+    <div className="sidebar-panel" id="turn-progress-panel" data-ui-tooltip="panel.turn_progress">
       <h2 className="sidebar-panel-title">Turn progression</h2>
       <div className="turn-progress-now">
-        <div className="turn-progress-now-item">
+        <div className="turn-progress-now-item" data-ui-tooltip="turn.act">
           <span className="turn-progress-now-label">Act</span>
           <strong className="turn-progress-now-value">{act}</strong>
         </div>
-        <div className="turn-progress-now-item">
+        <div className="turn-progress-now-item" data-ui-tooltip="turn.counter">
           <span className="turn-progress-now-label">Turn</span>
           <strong className="turn-progress-now-value">
             {session.turn}/{session.max_turns}
           </strong>
         </div>
-        <div className="turn-progress-now-item turn-progress-now-item--actions">
+        <div className="turn-progress-now-item turn-progress-now-item--actions" data-ui-tooltip="turn.actions">
           <span className="turn-progress-now-label">Actions</span>
           <strong className="turn-progress-now-value">{session.actions_remaining} left</strong>
         </div>
       </div>
-      <div className={`turn-pressure-block turn-pressure-block--${pressure.level}`}>
+      <div className={`turn-pressure-block turn-pressure-block--${pressure.level}`} data-ui-tooltip="turn.operational_pressure">
         <div className="turn-pressure-head">
           <span className="turn-pressure-label">Operational pressure</span>
           <strong className="turn-pressure-value">

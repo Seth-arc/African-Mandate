@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ErrorBoundary } from './ErrorBoundary'
 import { GameLayout } from '../ui/layout/GameLayout'
 import { DemoTourOverlay } from '../ui/onboarding/DemoTour'
+import { useGameStore } from '../state/gameStore'
 import { useTour } from '../tour/TourContext'
 import { useSessionStore } from '../state/sessionStore'
 import { useUiStore } from '../state/uiStore'
@@ -14,7 +15,8 @@ function App(): ReactNode {
   const beginEntryGate = useSessionStore((s) => s.beginEntryGate)
   const entryGateActive = useSessionStore((s) => s.entry_gate_active)
   const entryGateConfirmed = useSessionStore((s) => s.entry_gate_confirmed)
-  const authMode = useSessionStore((s) => s.auth_mode)
+  const entryLaunchKind = useSessionStore((s) => s.entry_launch_kind)
+  const difficultyMode = useGameStore((s) => s.state.difficulty_mode ?? 'standard')
   const { start: startTour, isOpen: isTourOpen } = useTour()
   const openModal = useUiStore((s) => s.openModal)
   const modal = useUiStore((s) => s.modal)
@@ -69,31 +71,18 @@ function App(): ReactNode {
 
   useEffect(() => {
     if (!entryFlowPending) return
-    if (!entryGateConfirmed) return
-    if (modal !== 'session_manager') return
-
+    if (modal !== 'onboarding_loading') return
     if (typeof window === 'undefined') {
-      openModal('onboarding_loading')
       setEntryFlowPending(false)
       return
     }
     const frame = window.requestAnimationFrame(() => {
-      openModal('onboarding_loading')
       setEntryFlowPending(false)
     })
     return () => {
       window.cancelAnimationFrame(frame)
     }
-  }, [entryFlowPending, entryGateConfirmed, modal, openModal])
-
-  useEffect(() => {
-    if (!entryFlowPending) return
-    if (!entryGateConfirmed) return
-    if (modal !== 'none') return
-
-    openModal('onboarding_loading')
-    setEntryFlowPending(false)
-  }, [entryFlowPending, entryGateConfirmed, modal, openModal])
+  }, [entryFlowPending, modal])
 
   const preEntryFlowVeilActive =
     typeof document !== 'undefined' &&
@@ -128,7 +117,8 @@ function App(): ReactNode {
   useEffect(() => {
     if (!entryGateActive || !entryGateConfirmed) return
     if (entryFlowPending) return
-    if (authMode !== 'guest') return
+    if (entryLaunchKind !== 'new') return
+    if (difficultyMode !== 'narrative') return
     if (modal !== 'none') return
     if (interfaceRevealActive) return
     if (isTourOpen) return
@@ -150,7 +140,8 @@ function App(): ReactNode {
       if (
         sessionState.entry_gate_active &&
         sessionState.entry_gate_confirmed &&
-        sessionState.auth_mode === 'guest' &&
+        sessionState.entry_launch_kind === 'new' &&
+        useGameStore.getState().state.difficulty_mode === 'narrative' &&
         uiState.modal === 'none'
       ) {
         startTour(0)
@@ -158,7 +149,17 @@ function App(): ReactNode {
       }
       autoTourTriggeredRef.current = false
     }, 760)
-  }, [authMode, entryFlowPending, entryGateActive, entryGateConfirmed, interfaceRevealActive, isTourOpen, modal, startTour])
+  }, [
+    difficultyMode,
+    entryFlowPending,
+    entryGateActive,
+    entryGateConfirmed,
+    entryLaunchKind,
+    interfaceRevealActive,
+    isTourOpen,
+    modal,
+    startTour,
+  ])
 
   useEffect(() => {
     return () => {

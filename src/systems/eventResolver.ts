@@ -910,7 +910,9 @@ function evaluateTriggerForEvent(
     throw new Error(`Invalid trigger_conditions for event ${event.event_id}: ${details}`)
   }
 
-  const rng = hashToUnitInterval(`${event.event_id}:${turn}`)
+  const eventFrequencyMultiplier = state.config.event_frequency_multiplier ?? 1
+  const baseRng = hashToUnitInterval(`${event.event_id}:${turn}`)
+  const rng = Math.max(0, Math.min(1, baseRng / eventFrequencyMultiplier))
   if (triggerUsesZoneScope(condition)) {
     const zones = Object.values(state.zone_state ?? {})
     if (zones.length === 0) return false

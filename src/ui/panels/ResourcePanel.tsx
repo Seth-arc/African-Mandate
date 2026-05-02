@@ -11,7 +11,7 @@ export function ResourcePanel(): ReactNode {
   /* Loading: no session yet (should not happen once app is mounted). */
   if (!state.session) {
     return (
-      <div className="sidebar-panel" id="resource-panel">
+      <div className="sidebar-panel" id="resource-panel" data-ui-tooltip="panel.resources">
         <h2 className="sidebar-panel-title">Resources</h2>
         <p className="game-text-muted">Loading…</p>
       </div>
@@ -24,7 +24,7 @@ export function ResourcePanel(): ReactNode {
   const hasAny = r.budget > 0 || r.political_capital > 0 || r.personnel > 0 || r.intel_points > 0 || r.time_months > 0
 
   return (
-    <div className="sidebar-panel" id="resource-panel">
+    <div className="sidebar-panel" id="resource-panel" data-ui-tooltip="panel.resources">
       <h2 className="sidebar-panel-title">Resources</h2>
       {!hasAny && (
         <p className="game-text-muted" style={{ marginBottom: '0.75rem' }}>
@@ -32,20 +32,21 @@ export function ResourcePanel(): ReactNode {
         </p>
       )}
       <ul className="resource-list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        <ResourceItem label="Budget" value={`$${(r.budget / 1_000_000).toFixed(1)}M`} />
-        <ResourceItem label="Political capital" value={String(r.political_capital)} />
-        <ResourceItem label="Personnel" value={String(r.personnel)} />
-        <ResourceItem label="Intel points" value={String(r.intel_points)} />
-        <ResourceItem label="Time (months)" value={String(r.time_months)} />
+        <ResourceItem label="Budget" value={`$${(r.budget / 1_000_000).toFixed(1)}M`} tooltipId="resource.budget" />
+        <ResourceItem label="Political capital" value={String(r.political_capital)} tooltipId="resource.political_capital" />
+        <ResourceItem label="Personnel" value={String(r.personnel)} tooltipId="resource.personnel" />
+        <ResourceItem label="Intel points" value={String(r.intel_points)} tooltipId="resource.intel_points" />
+        <ResourceItem label="Time (months)" value={String(r.time_months)} tooltipId="resource.time_months" />
       </ul>
     </div>
   )
 }
 
-function ResourceItem({ label, value }: { label: string; value: string }): ReactNode {
+function ResourceItem({ label, value, tooltipId }: { label: string; value: string; tooltipId: string }): ReactNode {
   return (
     <li
       className="resource-item"
+      data-ui-tooltip={tooltipId}
       style={{
         display: 'flex',
         justifyContent: 'space-between',

@@ -1,0 +1,197 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "updated_at": "2026-03-14T00:00:00Z",
+  "tooltips": [
+    {
+      "id": "shell.demo_mode",
+      "title": "Demo mode",
+      "description": "This build runs on synthetic training data so learners can explore flows without touching live operational records."
+    },
+    {
+      "id": "shell.mode_status",
+      "title": "Session mode",
+      "description": "Shows whether this mandate is running in guest browser mode or with authenticated cloud persistence."
+    },
+    {
+      "id": "nav.onboarding",
+      "title": "Onboarding",
+      "description": "Reopens the guided tour so you can revisit the core command surfaces and interface flow."
+    },
+    {
+      "id": "nav.mission_brief",
+      "title": "Mission brief",
+      "description": "Opens the mandate framing, objectives, and strategic context for the current campaign."
+    },
+    {
+      "id": "nav.status_report",
+      "title": "Status report",
+      "description": "Summarizes current resources, metrics, and recent operations in a single executive report."
+    },
+    {
+      "id": "nav.menu",
+      "title": "Session menu",
+      "description": "Access save controls, settings, tutorial replay, credits, and exit options."
+    },
+    {
+      "id": "panel.turn_progress",
+      "title": "Turn progression",
+      "description": "Tracks the current act, current turn, recent action history, and the latest resolution signals."
+    },
+    {
+      "id": "turn.act",
+      "title": "Act",
+      "description": "Narrative phase of the campaign. Each act changes the framing and pressure of the mandate."
+    },
+    {
+      "id": "turn.counter",
+      "title": "Turn counter",
+      "description": "Shows how far the mandate has progressed through the fixed campaign timeline."
+    },
+    {
+      "id": "turn.actions",
+      "title": "Actions remaining",
+      "description": "How many command decisions you can still take before ending the current turn."
+    },
+    {
+      "id": "turn.operational_pressure",
+      "title": "Operational pressure",
+      "description": "Composite signal combining urgent intel, critical zones, opposition pressure, and deadline risk."
+    },
+    {
+      "id": "panel.resources",
+      "title": "Resources",
+      "description": "Mission resources available for decisions, deployments, and oversight commitments."
+    },
+    {
+      "id": "resource.budget",
+      "title": "Budget",
+      "description": "Mission funding available for operations and programs. This panel reports it in millions of dollars."
+    },
+    {
+      "id": "resource.political_capital",
+      "title": "Political capital",
+      "description": "Diplomatic leverage you can spend on negotiations, oversight, and politically costly moves."
+    },
+    {
+      "id": "resource.personnel",
+      "title": "Personnel",
+      "description": "Deployable AU staff and mission capacity available for field commitments."
+    },
+    {
+      "id": "resource.intel_points",
+      "title": "Intel points",
+      "description": "Analytical capacity used to investigate threats and uncover hidden operational risk."
+    },
+    {
+      "id": "resource.time_months",
+      "title": "Time",
+      "description": "Shared mandate clock. Actions and turn advancement both consume this limited pool."
+    },
+    {
+      "id": "panel.metrics",
+      "title": "Regional metrics",
+      "description": "Top-line indicators used to judge mandate performance across security, legitimacy, and coalition health."
+    },
+    {
+      "id": "metric.stability",
+      "title": "Stability",
+      "description": "Overall level of order and control across the operating environment. Higher is better."
+    },
+    {
+      "id": "metric.insurgency",
+      "title": "Insurgency",
+      "description": "Active militant pressure and organized armed threat across the theater. Lower is better."
+    },
+    {
+      "id": "metric.civilian_support",
+      "title": "Civilian support",
+      "description": "Public confidence that the mandate is protecting communities and acting credibly."
+    },
+    {
+      "id": "metric.global_legitimacy",
+      "title": "Global legitimacy",
+      "description": "External trust in the mandate from international partners, observers, and funding actors."
+    },
+    {
+      "id": "metric.regional_synergy",
+      "title": "Regional synergy",
+      "description": "Level of cooperation among regional institutions, neighboring states, and mission partners."
+    },
+    {
+      "id": "panel.scenario",
+      "title": "Scenario panel",
+      "description": "Context strip for the currently selected territory or zone, with fast links into relevant detail surfaces."
+    },
+    {
+      "id": "panel.intel_feed",
+      "title": "Intelligence feed",
+      "description": "Filed briefings from the current session. Use this to monitor urgency, confidence, and geographic scope before acting."
+    },
+    {
+      "id": "intel.filter.all",
+      "title": "All briefings",
+      "description": "Shows every filed intel item, regardless of urgency."
+    },
+    {
+      "id": "intel.filter.urgent",
+      "title": "Urgent briefings",
+      "description": "Shows only high-priority reports that should influence near-term decisions."
+    },
+    {
+      "id": "intel.filter.normal",
+      "title": "Normal briefings",
+      "description": "Shows routine or lower-urgency reporting that still adds context to the mandate."
+    },
+    {
+      "id": "intel.item",
+      "title": "Intel briefing",
+      "description": "Open the full briefing to inspect the headline, confidence, urgency, source channel, and affected scope."
+    },
+    {
+      "id": "panel.actor_roster",
+      "title": "Actor roster",
+      "description": "Canonical stakeholders you can monitor or engage during the current mandate."
+    },
+    {
+      "id": "actor.filter.all",
+      "title": "All actors",
+      "description": "Shows every active actor currently visible in the roster, regardless of dialogue state."
+    },
+    {
+      "id": "actor.filter.dialogue_open",
+      "title": "Dialogue open",
+      "description": "Shows actors whose dialogue channel is currently available this turn."
+    },
+    {
+      "id": "actor.filter.dialogue_pending",
+      "title": "Dialogue pending",
+      "description": "Shows actors with authored dialogue that is still locked behind turn timing or trigger conditions."
+    },
+    {
+      "id": "actor.card",
+      "title": "Actor card",
+      "description": "Quick profile surface for a stakeholder. Open it to inspect role, relationship status, and engagement route."
+    },
+    {
+      "id": "actor.engage",
+      "title": "Engage",
+      "description": "Jumps directly into the currently available engagement route for that actor when one is open."
+    },
+    {
+      "id": "action_bar.pressure",
+      "title": "Command pressure",
+      "description": "Live signal of how much operational strain the mandate is under before you commit another action or end turn."
+    },
+    {
+      "id": "action_bar.take_action",
+      "title": "Take action",
+      "description": "Open the action planner to allocate resources and target the next intervention."
+    },
+    {
+      "id": "action_bar.end_turn",
+      "title": "End turn",
+      "description": "Resolve the turn, process events, and advance the mandate clock once you are done issuing actions."
+    }
+  ]
+}

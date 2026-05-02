@@ -7,11 +7,13 @@
  * - src/data/* content packs referenced below
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createCampaignState } from '../../src/state/gameSetup'
 import { createInitialState } from '../../src/state/initState'
 import {
   deserializeGameState,
   listLocalSessions,
   loadLocalSessionSnapshot,
+  renameLocalSessionSnapshot,
   requireAuthenticatedUserId,
   saveCloudSessionSnapshot,
   saveLocalSessionSnapshot,
@@ -164,6 +166,41 @@ describe('saveService', () => {
     expect(restored.action_log?.[0]?.target.zone_id).toBe('mopti')
   })
 
+  it('renames guest sessions in local storage without touching snapshot state', () => {
+    const state = buildState()
+    const summary = saveLocalSessionSnapshot({
+      state,
+      session_name: 'Field Office Run',
+      reason: 'manual',
+      mode: 'manual',
+    })
+
+    const renamed = renameLocalSessionSnapshot(summary.session_id, 'Diplomatic Track')
+    expect(renamed.session_name).toBe('Diplomatic Track')
+
+    const cleared = renameLocalSessionSnapshot(summary.session_id, '   ')
+    expect(cleared.session_name).toBeNull()
+
+    const baseState = createInitialState(config, buildContent())
+    const restored = loadLocalSessionSnapshot(summary.session_id, baseState)
+    expect(restored.session.turn).toBe(3)
+    expect(restored.action_log?.[0]?.action_id).toBe('security_patrol_deployment')
+  })
+
+  it('restores difficulty-specific config from persisted runtime state', () => {
+    const expertState = createCampaignState(config, buildContent(), 'expert')
+    const snapshot = serializeGameState(expertState)
+    const baseState = createCampaignState(config, buildContent(), 'narrative')
+
+    const restored = deserializeGameState(snapshot, baseState)
+
+    expect(restored.difficulty_mode).toBe('expert')
+    expect(restored.config.event_frequency_multiplier).toBe(1.2)
+    expect(restored.config.starting_resources.budget).toBe(
+      Math.round(config.starting_resources.budget * 0.8)
+    )
+  })
+
   it('enforces auth guard for cloud session writes', async () => {
     expect(() => requireAuthenticatedUserId(null)).toThrowError(GameError)
     try {
@@ -183,4 +220,3 @@ describe('saveService', () => {
     ).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
   })
 })
-

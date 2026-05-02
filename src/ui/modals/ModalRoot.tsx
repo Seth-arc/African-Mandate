@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore, type ModalKind, type RevealMode } from '../../state/uiStore'
 import { useSessionStore } from '../../state/sessionStore'
@@ -61,6 +61,92 @@ const MODAL_STYLE = {
   overflow: 'auto',
   boxShadow: 'var(--shadow-lg)',
 } as const
+
+type ThemeAudioWindow = Window & {
+  __africanMandateThemeAudio?: HTMLAudioElement
+}
+
+const SHARED_THEME_AUDIO_SRC = '/assets/audio/music/Briefing%20Room%20Runway.mp3'
+const SHARED_THEME_AUDIO_TARGET_VOLUME = 0.42
+let sharedThemeFadeRaf: number | null = null
+let sharedThemeFadeToken = 0
+
+function getSharedThemeAudio(): HTMLAudioElement | null {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') return null
+
+  const themedWindow = window as ThemeAudioWindow
+  if (themedWindow.__africanMandateThemeAudio) {
+    return themedWindow.__africanMandateThemeAudio
+  }
+
+  const audio = new Audio(SHARED_THEME_AUDIO_SRC)
+  audio.preload = 'auto'
+  audio.loop = true
+  audio.volume = SHARED_THEME_AUDIO_TARGET_VOLUME
+  audio.setAttribute('playsinline', 'true')
+  themedWindow.__africanMandateThemeAudio = audio
+  return audio
+}
+
+function startSharedThemeAudio(): void {
+  const audio = getSharedThemeAudio()
+  if (!audio) return
+
+  sharedThemeFadeToken += 1
+  if (sharedThemeFadeRaf !== null && typeof window !== 'undefined') {
+    window.cancelAnimationFrame(sharedThemeFadeRaf)
+    sharedThemeFadeRaf = null
+  }
+
+  audio.volume = SHARED_THEME_AUDIO_TARGET_VOLUME
+  const playPromise = audio.play()
+  if (playPromise && typeof playPromise.catch === 'function') {
+    void playPromise.catch(() => undefined)
+  }
+}
+
+function fadeOutSharedThemeAudio(durationMs = 1800): void {
+  const audio = getSharedThemeAudio()
+  if (!audio || typeof window === 'undefined') return
+
+  const startVolume = Math.max(0, Number(audio.volume) || SHARED_THEME_AUDIO_TARGET_VOLUME)
+  if (startVolume <= 0) {
+    audio.pause()
+    audio.currentTime = 0
+    audio.volume = SHARED_THEME_AUDIO_TARGET_VOLUME
+    return
+  }
+
+  const safeDurationMs = Math.max(300, durationMs)
+  const startAt = performance.now()
+  const fadeToken = ++sharedThemeFadeToken
+
+  if (sharedThemeFadeRaf !== null) {
+    window.cancelAnimationFrame(sharedThemeFadeRaf)
+    sharedThemeFadeRaf = null
+  }
+
+  const stepFade = (now: number): void => {
+    if (fadeToken !== sharedThemeFadeToken) return
+
+    const elapsed = Math.max(0, now - startAt)
+    const progress = Math.min(1, elapsed / safeDurationMs)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    audio.volume = Math.max(0, startVolume * (1 - eased))
+
+    if (progress < 1) {
+      sharedThemeFadeRaf = window.requestAnimationFrame(stepFade)
+      return
+    }
+
+    audio.pause()
+    audio.currentTime = 0
+    audio.volume = SHARED_THEME_AUDIO_TARGET_VOLUME
+    sharedThemeFadeRaf = null
+  }
+
+  sharedThemeFadeRaf = window.requestAnimationFrame(stepFade)
+}
 
 function modalTitle(modal: ModalKind): string {
   if (modal === 'onboarding_loading') return 'Initializing'
@@ -243,7 +329,7 @@ const ACTOR_PRESENT_AVATAR_MAP: Record<string, string | null> = {
   'ECOWAS leadership': '/assets/actors/ECOWAS Commission.png',
   'Fulani Community': '/assets/actors/Fulani Community.png',
   'Fulani community leaders': '/assets/actors/Fulani Leaders.png',
-  "General Ibrahim Traore's government": '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
+  "General Ousmane Sory's government": '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
   'ISGS': '/assets/actors/ISGS Elements.png',
   'ISGS elements': '/assets/actors/ISGS Elements.png',
   'JNIM': '/assets/actors/JNIM.png',
@@ -257,8 +343,8 @@ const ACTOR_PRESENT_AVATAR_MAP: Record<string, string | null> = {
   'Niger security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
   'Niger Transitional Government': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
   'Refugee communities': '/assets/actors/Malian Refugees.png',
-  'Regional intelligence partners': '/assets/actors/AU Commissioner.png',
-  'Regional peacekeeping partners': '/assets/actors/AU Commissioner.png',
+  'Regional intelligence partners': '/assets/actors/AU%20Commissioner.png',
+  'Regional peacekeeping partners': '/assets/actors/AU%20Commissioner.png',
   'Volunteers for Defense of Homeland (VDP)': '/assets/actors/VDP (Burkina Faso).png',
   'Wagner Group': '/assets/actors/Wagner Group.png',
 }
@@ -395,16 +481,6 @@ function inferActorRole(content: LoadedContent, actorData: ActorData | undefined
   return 'Local stakeholder'
 }
 
-function describeActorProfile(actor: ActorData): string {
-  const typeLabel = formatTokenLabel(actor.type)
-  const factionLabel = formatTokenLabel(actor.faction)
-  const profileLabel = formatTokenLabel(actor.profile)
-  const relationshipMode = actor.relationship_tracked
-    ? 'Relationship effects are tracked in campaign state.'
-    : 'Relationship effects are informational only for this actor.'
-  return `${typeLabel} actor aligned with ${factionLabel}. Profile: ${profileLabel}. ${relationshipMode}`
-}
-
 function actorInitials(name: string): string {
   const tokens = name
     .trim()
@@ -422,6 +498,21 @@ type RelationshipLocation = {
   fallbackSrc: string | null
 }
 
+type ActorZoneLocation = {
+  zoneId: string
+  zoneName: string
+  zoneType: string
+  strategicValue: string
+  threatLabel: string
+}
+
+type ActorTerritoryLocationGroup = {
+  territoryKey: TerritoryKey
+  territoryName: string
+  badge: RelationshipLocation
+  zones: ActorZoneLocation[]
+}
+
 function relationshipLocationCode(label: string): string {
   const tokens = label
     .trim()
@@ -435,6 +526,15 @@ function relationshipLocationCode(label: string): string {
 function resolveRelationshipLocation(content: LoadedContent, actor: ActorData): RelationshipLocation {
   const isRegionalOrInstitutional = actor.type === 'institutional' || actor.actor_key.startsWith('regional_')
   const logoSrc = normalizeAssetSrc(actor.portrait_url)
+
+  if (actor.actor_key === 'au_chairperson_diallo') {
+    return {
+      kind: logoSrc ? 'logo' : 'fallback',
+      label: 'Mission-wide',
+      src: logoSrc,
+      fallbackSrc: null,
+    }
+  }
 
   if (isRegionalOrInstitutional) {
     const scope = RELATIONSHIP_INSTITUTION_SCOPE_MAP[actor.actor_key] ??
@@ -466,6 +566,87 @@ function resolveRelationshipLocation(content: LoadedContent, actor: ActorData): 
     src: logoSrc,
     fallbackSrc: null,
   }
+}
+
+function resolveActorLocationGroups(
+  content: LoadedContent,
+  state: StoreState,
+  actor: ActorData
+): ActorTerritoryLocationGroup[] {
+  const groups = new Map<TerritoryKey, ActorTerritoryLocationGroup>()
+  const runtimeZones = Object.values(state.zone_state ?? {})
+
+  runtimeZones.forEach((zone) => {
+    const actorPresent = zone.actors_present.some((actorName) => {
+      const canonicalActor = resolveCanonicalActorForZoneName(content.actors.actors, content, actorName)
+      return canonicalActor?.actor_key === actor.actor_key
+    })
+
+    if (!actorPresent) return
+
+    const territoryKey = zone.territory_key
+    const zoneData = content.zones.zones.find((entry) => entry.zone_id === zone.zone_id)
+    const territory = content.territories.territories.find((entry) => entry.territory_key === territoryKey)
+    const territoryName = resolveTerritoryName(content, territoryKey)
+    const { primarySrc, fallbackSrc } = resolveTerritoryFlagPaths(territoryKey, territory?.flag_url)
+
+    const existingGroup = groups.get(territoryKey)
+    const group = existingGroup ?? {
+      territoryKey,
+      territoryName,
+      badge: {
+        kind: 'flag' as const,
+        label: territoryName,
+        src: primarySrc,
+        fallbackSrc,
+      },
+      zones: [],
+    }
+
+    group.zones.push({
+      zoneId: zone.zone_id,
+      zoneName: resolveZoneName(content, zone.zone_id),
+      zoneType: zoneTypeLabel(zoneData?.zone_type),
+      strategicValue: zoneData ? STRATEGIC_VALUE_LABELS[zoneData.strategic_value] : 'Operational',
+      threatLabel: zoneThreatLabel(zoneThreatBand(zone.threat_level)),
+    })
+
+    if (!existingGroup) {
+      groups.set(territoryKey, group)
+    }
+  })
+
+  const orderedGroups = Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      zones: [...group.zones].sort((a, b) => a.zoneName.localeCompare(b.zoneName)),
+    }))
+    .sort((a, b) => a.territoryName.localeCompare(b.territoryName))
+
+  if (orderedGroups.length > 0) {
+    return orderedGroups
+  }
+
+  const fallbackTerritoryKey = RELATIONSHIP_ACTOR_TERRITORY_MAP[actor.actor_key]
+  if (!fallbackTerritoryKey) {
+    return []
+  }
+
+  const territory = content.territories.territories.find((entry) => entry.territory_key === fallbackTerritoryKey)
+  const territoryName = resolveTerritoryName(content, fallbackTerritoryKey)
+  const { primarySrc, fallbackSrc } = resolveTerritoryFlagPaths(fallbackTerritoryKey, territory?.flag_url)
+
+  return [{
+    territoryKey: fallbackTerritoryKey,
+    territoryName,
+    badge: {
+      kind: 'flag',
+      label: territoryName,
+      src: primarySrc,
+      fallbackSrc,
+    },
+    zones: [],
+  }]
 }
 
 function RelationshipLocationBadge({ location }: { location: RelationshipLocation }): ReactNode {
@@ -541,6 +722,175 @@ function ActorPortrait({ actor, name }: { actor: ActorData; name: string }): Rea
       ) : (
         <span className="actor-profile-portrait-fallback">{actorInitials(name)}</span>
       )}
+    </div>
+  )
+}
+
+const OPENING_STATEMENT_AUDIO_ACTORS = new Set([
+  'civil_society_konate',
+  'junta_burkina_traore',
+])
+
+const DIALOGUE_AUDIO_WAVEFORM_BARS = Array.from({ length: 40 }, (_, index) => index)
+
+type OpeningStatementAudioAsset = {
+  src: string | null
+  expectedFilename: string
+}
+
+function idleDialogueWaveScale(index: number): number {
+  const band = index % 6
+  return 0.3 + band * 0.09
+}
+
+function sanitizeAudioFilenameSegment(value: string): string {
+  const sanitized = value.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim()
+  return sanitized.length > 0 ? sanitized : 'opening_statement'
+}
+
+function formatAudioTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00'
+  const totalSeconds = Math.floor(seconds)
+  const minutes = Math.floor(totalSeconds / 60)
+  const remainder = totalSeconds % 60
+  return `${minutes}:${String(remainder).padStart(2, '0')}`
+}
+
+function resolveOpeningStatementAudioAsset(
+  content: LoadedContent,
+  actor: ActorData
+): OpeningStatementAudioAsset {
+  const actorName = sanitizeAudioFilenameSegment(resolveActorName(content, actor.actor_key))
+  const expectedFilename = `${actorName}_opening_statement.mp3`
+  if (!OPENING_STATEMENT_AUDIO_ACTORS.has(actor.actor_key)) {
+    return {
+      src: null,
+      expectedFilename,
+    }
+  }
+  return {
+    src: `/assets/audio/opening_statements/${encodeURIComponent(expectedFilename)}`,
+    expectedFilename,
+  }
+}
+
+function DialogueOpeningStatementPlayer({
+  actorName,
+  asset,
+}: {
+  actorName: string
+  asset: OpeningStatementAudioAsset
+}): ReactNode {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioIsPlaying, setAudioIsPlaying] = useState(false)
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [audioFailed, setAudioFailed] = useState(false)
+
+  useEffect(() => {
+    setAudioIsPlaying(false)
+    setAudioCurrentTime(0)
+    setAudioDuration(0)
+    setAudioFailed(false)
+    const audioElement = audioRef.current
+    if (!audioElement) return
+    audioElement.pause()
+    audioElement.currentTime = 0
+  }, [asset.expectedFilename, asset.src])
+
+  const toggleAudioPlayback = (): void => {
+    const audioElement = audioRef.current
+    if (!audioElement) return
+    if (audioElement.paused) {
+      audioElement.play().catch(() => {
+        setAudioIsPlaying(false)
+      })
+      return
+    }
+    audioElement.pause()
+  }
+
+  const handleSeek = (event: SyntheticEvent<HTMLInputElement>): void => {
+    const nextTime = Number(event.currentTarget.value)
+    setAudioCurrentTime(nextTime)
+    const audioElement = audioRef.current
+    if (!audioElement) return
+    audioElement.currentTime = nextTime
+  }
+
+  const hasAudio = Boolean(asset.src) && !audioFailed
+  const audioMax = audioDuration > 0 ? audioDuration : 1
+  const audioValue = Math.max(0, Math.min(audioCurrentTime, audioMax))
+
+  if (!hasAudio) {
+    return (
+      <div className="dialogue-opening-audio-pending">
+        <div className="dialogue-opening-audio-label">Audio briefing</div>
+        <p className="dialogue-review-text">
+          Opening statement audio is pending upload for this actor.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="dialogue-opening-audio-player">
+      <div className="dialogue-opening-audio-label">Audio briefing</div>
+      <div className={`dialogue-opening-waveform${audioIsPlaying ? ' is-playing' : ''}`} aria-hidden="true">
+        {DIALOGUE_AUDIO_WAVEFORM_BARS.map((bar) => {
+          const waveStyle = {
+            '--wave-scale': idleDialogueWaveScale(bar).toFixed(3),
+            '--wave-delay': `${bar * 36}ms`,
+          } as CSSProperties
+          return <span key={`dialogue-wave-${bar}`} style={waveStyle} />
+        })}
+      </div>
+      <div className="dialogue-opening-audio-controls">
+        <button
+          type="button"
+          className="dialogue-opening-audio-control-btn"
+          onClick={toggleAudioPlayback}
+          aria-label={`${audioIsPlaying ? 'Pause' : 'Play'} ${actorName} opening statement audio`}
+        >
+          {audioIsPlaying ? 'Pause' : 'Play'}
+        </button>
+        <div className="dialogue-opening-audio-timeline">
+          <input
+            className="dialogue-opening-audio-seek"
+            type="range"
+            min={0}
+            max={audioMax}
+            step={0.1}
+            value={audioValue}
+            onChange={handleSeek}
+            aria-label={`${actorName} opening statement timeline`}
+          />
+          <div className="dialogue-opening-audio-time">
+            [{formatAudioTime(audioCurrentTime)}/{formatAudioTime(audioDuration)}]
+          </div>
+        </div>
+      </div>
+      <audio
+        ref={audioRef}
+        className="dialogue-opening-audio-native"
+        preload="metadata"
+        controlsList="nodownload noplaybackrate"
+        onContextMenu={(event) => event.preventDefault()}
+        onPlay={() => setAudioIsPlaying(true)}
+        onPause={() => setAudioIsPlaying(false)}
+        onEnded={() => setAudioIsPlaying(false)}
+        onTimeUpdate={(event) => setAudioCurrentTime(event.currentTarget.currentTime)}
+        onLoadedMetadata={(event) =>
+          setAudioDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
+        onDurationChange={(event) =>
+          setAudioDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
+        onError={() => {
+          setAudioFailed(true)
+          setAudioIsPlaying(false)
+        }}
+      >
+        <source src={asset.src ?? undefined} type="audio/mpeg" />
+      </audio>
     </div>
   )
 }
@@ -1240,123 +1590,245 @@ function StatusReportBody(): ReactNode {
   const zoneState = useGameStore((s) => s.state.zone_state)
   const actionLog = useGameStore((s) => s.state.action_log ?? [])
   const content = useGameStore((s) => s.state.content)
+  const openModal = useUiStore((s) => s.openModal)
+  const closeModal = useUiStore((s) => s.closeModal)
 
   const recentEntries = [...actionLog].slice(-10).reverse()
-  const metricRows: Array<{ label: string; value: number }> = [
-    { label: 'Stability', value: session.metrics.stability },
-    { label: 'Insurgency', value: session.metrics.insurgency },
-    { label: 'Civilian support', value: session.metrics.civilian_support },
-    { label: 'Global legitimacy', value: session.metrics.global_legitimacy },
-    { label: 'Regional synergy', value: session.metrics.regional_synergy },
+  const metricRows: Array<{ key: keyof Metrics; label: string; value: number }> = [
+    { key: 'stability', label: 'Stability', value: session.metrics.stability },
+    { key: 'insurgency', label: 'Insurgency', value: session.metrics.insurgency },
+    { key: 'civilian_support', label: 'Civilian support', value: session.metrics.civilian_support },
+    { key: 'global_legitimacy', label: 'Global legitimacy', value: session.metrics.global_legitimacy },
+    { key: 'regional_synergy', label: 'Regional synergy', value: session.metrics.regional_synergy },
   ]
+  const summaryCards = [
+    {
+      label: 'Actions Remaining',
+      value: Math.max(session.actions_remaining, 0).toString(),
+      detail: 'Commands still available this turn',
+    },
+    {
+      label: 'Budget Available',
+      value: formatResourceValue('budget', session.resources.budget),
+      detail: 'Immediate fiscal bandwidth',
+    },
+    {
+      label: 'Personnel Ready',
+      value: formatResourceValue('personnel', session.resources.personnel),
+      detail: 'Deployable field capacity',
+    },
+    {
+      label: 'Political Capital',
+      value: formatResourceValue('political_capital', session.resources.political_capital),
+      detail: 'Negotiation leverage on hand',
+    },
+    {
+      label: 'Intel Reserve',
+      value: formatResourceValue('intel_points', session.resources.intel_points),
+      detail: 'Analysis and collection budget',
+    },
+    {
+      label: 'Time Remaining',
+      value: formatResourceValue('time_months', session.resources.time_months),
+      detail: 'Mandate runway before expiry',
+    },
+  ]
+  const latestEntry = recentEntries[0] ?? null
+  const latestActionName = latestEntry ? resolveActionName(content, latestEntry.action_id) : null
+  const latestTargetLabel = latestEntry ? formatTargetLabel(content, latestEntry.target) : null
 
   return (
-    <div className="campaign-presentation status-report-layout">
-      <div className="campaign-presentation-title">Turn {session.turn} Operational Report</div>
-      <div className="campaign-presentation-meta status-report-meta">
-        <span className="action-config-chip">Actions remaining {session.actions_remaining}</span>
-        <span className="action-config-chip">Budget {session.resources.budget.toLocaleString()}</span>
-        <span className="action-config-chip">Personnel {session.resources.personnel.toLocaleString()}</span>
-        <span className="action-config-chip">Intel {session.resources.intel_points}</span>
-        <span className="action-config-chip">Logged actions {actionLog.length}</span>
-      </div>
-      <p className="campaign-presentation-body">
-        Metrics and resources update from confirmed actions, dialogue effects, event outcomes, and turn progression.
-      </p>
-
-      <div className="campaign-metric-grid">
-        {metricRows.map((row) => (
-          <div className="campaign-metric-row" key={row.label}>
-            <span>{row.label}</span>
-            <strong>{row.value}</strong>
+    <section className="status-report-shell" aria-labelledby="status-report-title">
+      <div className="status-report-header">
+        <div className="status-report-topline">
+          <span className="status-report-kicker">Operational Ledger</span>
+          <div className="status-report-header-actions">
+            <span className="status-report-turn-pill">Turn {session.turn}</span>
           </div>
-        ))}
+        </div>
+
+        <div className="status-report-hero">
+          <div className="status-report-title-group">
+            <h2 className="status-report-title" id="status-report-title">
+              Status Report
+            </h2>
+            <p className="status-report-subtitle">
+              Turn {session.turn} operational picture built from confirmed actions, dialogue effects, event outcomes,
+              and current resource reserves.
+            </p>
+          </div>
+          <aside className={`status-report-highlight${latestEntry ? '' : ' is-empty'}`}>
+            <div className="status-report-highlight-label">
+              {latestEntry ? 'Latest Confirmed Action' : 'Awaiting First Operation'}
+            </div>
+            <div className="status-report-highlight-title">
+              {latestEntry ? latestActionName : 'No operations logged yet'}
+            </div>
+            <p className="status-report-highlight-copy">
+              {latestEntry
+                ? `Targeted ${latestTargetLabel ?? 'an operational objective'} during turn ${latestEntry.turn}.`
+                : 'Confirmed actions will appear here once you execute your first mandate decision.'}
+            </p>
+          </aside>
+        </div>
+
+        <div className="campaign-presentation-meta status-report-meta">
+          <span className="action-config-chip">Actions remaining {session.actions_remaining}</span>
+          <span className="action-config-chip">Budget {formatResourceValue('budget', session.resources.budget)}</span>
+          <span className="action-config-chip">
+            Personnel {formatResourceValue('personnel', session.resources.personnel)}
+          </span>
+          <span className="action-config-chip">
+            Intel {formatResourceValue('intel_points', session.resources.intel_points)}
+          </span>
+          <span className="action-config-chip">Logged actions {actionLog.length}</span>
+        </div>
       </div>
 
-      <section className="modal-section status-report-log-section">
-        <h3 className="modal-section-title">Action Log</h3>
-        <p className="status-report-log-summary">
-          Showing {recentEntries.length} most recent entry{recentEntries.length === 1 ? '' : 'ies'}.
-        </p>
-        {recentEntries.length === 0 ? (
-          <p className="status-report-log-empty">No actions recorded yet.</p>
-        ) : (
-          <div className="status-report-log-table-wrap">
-            <table className="status-report-log-table">
-              <thead>
-                <tr>
-                  <th>Action</th>
-                  <th>Target</th>
-                  <th>Resource Delta</th>
-                  <th>Metric Delta</th>
-                  <th>Turn</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentEntries.map((entry, index) => {
-                  const actionName = resolveActionName(content, entry.action_id)
-                  const actionDefinition = content?.actions.actions.find((item) => item.action_id === entry.action_id)
-                  const actionCategoryLabel = actionDefinition
-                    ? formatCategoryLabel(actionDefinition.category)
-                    : 'Operational Action'
-                  const targetLabel = formatTargetLabel(content, entry.target)
-                  const targetActor = entry.target.actor_key ? resolveActorData(content, entry.target.actor_key) : undefined
-                  const targetActorName = targetActor ? resolveActorName(content, targetActor.actor_key) : null
-                  const targetActorTitle = targetActor ? resolveActorTitle(content, targetActor.actor_key) : null
-                  const targetTerritoryKey =
-                    entry.target.territory_key ??
-                    (entry.target.zone_id ? zoneState?.[entry.target.zone_id]?.territory_key ?? null : null)
-                  const targetTerritory = targetTerritoryKey
-                    ? content?.territories.territories.find((item) => item.territory_key === targetTerritoryKey)
-                    : undefined
-                  const targetTerritoryName = targetTerritoryKey ? resolveTerritoryName(content, targetTerritoryKey) : null
-                  const targetTerritoryFlags = targetTerritoryKey
-                    ? resolveTerritoryFlagPaths(targetTerritoryKey, targetTerritory?.flag_url)
-                    : null
-                  const resourceEntries = collectSignedDeltaEntries(entry.resource_deltas)
-                  const metricEntries = collectSignedDeltaEntries(entry.metric_deltas)
+      <div className="status-report-content">
+        <section className="modal-section status-report-section">
+          <div className="status-report-section-header">
+            <div>
+              <h3 className="modal-section-title">Operational Snapshot</h3>
+              <p className="status-report-section-copy">Current mandate capacity and immediate room to maneuver.</p>
+            </div>
+          </div>
+          <div className="status-report-summary-grid">
+            {summaryCards.map((card) => (
+              <div className="status-report-summary-card" key={card.label}>
+                <span className="status-report-summary-label">{card.label}</span>
+                <strong className="status-report-summary-value">{card.value}</strong>
+                <span className="status-report-summary-detail">{card.detail}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-                  return (
-                    <tr key={`${entry.turn}-${entry.action_id}-${index}`}>
-                      <td>
-                        <div className="status-report-action-cell">
-                          <span className="status-report-action-avatar" aria-hidden="true">
-                            {actorInitials(actionName)}
-                          </span>
-                          <div className="status-report-action-copy">
-                            <div className="status-report-log-title">{actionName}</div>
-                            <div className="status-report-action-subtitle">{actionCategoryLabel}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        {targetActor && targetActorName ? (
-                          <div className="status-report-target-cell">
-                            <ActorPortrait actor={targetActor} name={targetActorName} />
-                            <div className="status-report-target-copy">
-                              <div className="status-report-target-name">{targetActorName}</div>
-                              <div className="status-report-target-subtitle">{targetActorTitle ?? 'Stakeholder'}</div>
-                            </div>
-                          </div>
-                        ) : targetTerritoryName && targetTerritoryFlags ? (
-                          <div className="status-report-target-cell">
-                            <TerritoryFlagBadge
-                              territoryName={targetTerritoryName}
-                              flagSrc={targetTerritoryFlags.primarySrc}
-                              fallbackFlag={targetTerritoryFlags.fallbackSrc}
-                            />
-                            <div className="status-report-target-copy">
-                              <div className="status-report-target-name">{targetLabel}</div>
-                              {targetTerritoryName !== targetLabel && (
-                                <div className="status-report-target-subtitle">{targetTerritoryName}</div>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <span>{targetLabel}</span>
+        <section className="modal-section status-report-section">
+          <div className="status-report-section-header">
+            <div>
+              <h3 className="modal-section-title">Campaign Metrics</h3>
+              <p className="status-report-section-copy">
+                Live health check across stability, legitimacy, civilian support, and insurgent pressure.
+              </p>
+            </div>
+          </div>
+          <div className="status-report-metric-grid">
+            {metricRows.map((row) => {
+              const tone = statusReportMetricTone(row.key, row.value)
+              return (
+                <div className={`status-report-metric-card is-${tone}`} key={row.key}>
+                  <div className="status-report-metric-head">
+                    <span className="status-report-metric-label">{row.label}</span>
+                    <span className={`status-report-metric-state is-${tone}`}>
+                      {statusReportMetricLabel(row.key, row.value)}
+                    </span>
+                  </div>
+                  <strong className="status-report-metric-value">{row.value}</strong>
+                  <div className="status-report-metric-bar" aria-hidden="true">
+                    <span style={{ width: `${Math.max(0, Math.min(100, row.value))}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="modal-section status-report-section status-report-log-section">
+          <div className="status-report-section-header">
+            <div>
+              <h3 className="modal-section-title">Recent Operations</h3>
+              <p className="status-report-section-copy">
+                Showing the {recentEntries.length} most recent confirmed action
+                {recentEntries.length === 1 ? '' : 's'} in this mandate.
+              </p>
+            </div>
+            <span className="status-report-section-badge">Last 10 confirmed actions</span>
+          </div>
+          {recentEntries.length === 0 ? (
+            <p className="status-report-log-empty">
+              No confirmed operations yet. Once you take an action, the resulting resource and metric shifts will land
+              here.
+            </p>
+          ) : (
+            <div className="status-report-log-list">
+              {recentEntries.map((entry, index) => {
+                const actionName = resolveActionName(content, entry.action_id)
+                const actionDefinition = content?.actions.actions.find((item) => item.action_id === entry.action_id)
+                const actionCategoryLabel = actionDefinition
+                  ? formatCategoryLabel(actionDefinition.category)
+                  : 'Operational Action'
+                const targetLabel = formatTargetLabel(content, entry.target)
+                const targetActor = entry.target.actor_key ? resolveActorData(content, entry.target.actor_key) : undefined
+                const targetActorName = targetActor ? resolveActorName(content, targetActor.actor_key) : null
+                const targetActorTitle = targetActor ? resolveActorTitle(content, targetActor.actor_key) : null
+                const targetTerritoryKey =
+                  entry.target.territory_key ??
+                  (entry.target.zone_id ? zoneState?.[entry.target.zone_id]?.territory_key ?? null : null)
+                const targetTerritory = targetTerritoryKey
+                  ? content?.territories.territories.find((item) => item.territory_key === targetTerritoryKey)
+                  : undefined
+                const targetTerritoryName = targetTerritoryKey ? resolveTerritoryName(content, targetTerritoryKey) : null
+                const targetTerritoryFlags = targetTerritoryKey
+                  ? resolveTerritoryFlagPaths(targetTerritoryKey, targetTerritory?.flag_url)
+                  : null
+                const resourceEntries = collectSignedDeltaEntries(entry.resource_deltas)
+                const metricEntries = collectSignedDeltaEntries(entry.metric_deltas)
+
+                let targetNode: ReactNode
+                if (targetActor && targetActorName) {
+                  targetNode = (
+                    <div className="status-report-target-cell">
+                      <ActorPortrait actor={targetActor} name={targetActorName} />
+                      <div className="status-report-target-copy">
+                        <div className="status-report-target-name">{targetActorName}</div>
+                        <div className="status-report-target-subtitle">{targetActorTitle ?? 'Stakeholder'}</div>
+                      </div>
+                    </div>
+                  )
+                } else if (targetTerritoryName && targetTerritoryFlags) {
+                  targetNode = (
+                    <div className="status-report-target-cell">
+                      <TerritoryFlagBadge
+                        territoryName={targetTerritoryName}
+                        flagSrc={targetTerritoryFlags.primarySrc}
+                        fallbackFlag={targetTerritoryFlags.fallbackSrc}
+                      />
+                      <div className="status-report-target-copy">
+                        <div className="status-report-target-name">{targetLabel}</div>
+                        {targetTerritoryName !== targetLabel && (
+                          <div className="status-report-target-subtitle">{targetTerritoryName}</div>
                         )}
-                      </td>
-                      <td>
+                      </div>
+                    </div>
+                  )
+                } else {
+                  targetNode = <span className="status-report-target-name">{targetLabel}</span>
+                }
+
+                return (
+                  <article className="status-report-entry" key={`${entry.turn}-${entry.action_id}-${index}`}>
+                    <div className="status-report-entry-header">
+                      <div className="status-report-action-cell">
+                        <span className="status-report-action-avatar" aria-hidden="true">
+                          {actorInitials(actionName)}
+                        </span>
+                        <div className="status-report-action-copy">
+                          <div className="status-report-log-title">{actionName}</div>
+                          <div className="status-report-action-subtitle">{actionCategoryLabel}</div>
+                        </div>
+                      </div>
+                      <span className="actor-chip">Turn {entry.turn}</span>
+                    </div>
+
+                    <div className="status-report-entry-target">
+                      <span className="status-report-entry-group-label">Target</span>
+                      {targetNode}
+                    </div>
+
+                    <div className="status-report-entry-grid">
+                      <div className="status-report-entry-group">
+                        <span className="status-report-entry-group-label">Resource Delta</span>
                         <div className="status-report-delta-stack">
                           {resourceEntries.length === 0 ? (
                             <span className="relationship-matrix-delta-chip neutral">No change</span>
@@ -1375,8 +1847,10 @@ function StatusReportBody(): ReactNode {
                             })
                           )}
                         </div>
-                      </td>
-                      <td>
+                      </div>
+
+                      <div className="status-report-entry-group">
+                        <span className="status-report-entry-group-label">Metric Delta</span>
                         <div className="status-report-delta-stack">
                           {metricEntries.length === 0 ? (
                             <span className="relationship-matrix-delta-chip neutral">No change</span>
@@ -1397,19 +1871,28 @@ function StatusReportBody(): ReactNode {
                             })
                           )}
                         </div>
-                      </td>
-                      <td className="status-report-turn-cell">
-                        <span className="actor-chip">Turn {entry.turn}</span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    </div>
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="status-report-footer">
+        <button type="button" className="action-config-secondary" onClick={() => openModal('mission_brief')}>
+          Mission brief
+        </button>
+        <button type="button" className="action-config-confirm" onClick={() => openModal('action_config')}>
+          Take action
+        </button>
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
+        </button>
+      </div>
+    </section>
   )
 }
 
@@ -1889,6 +2372,31 @@ function deltaStatusLabel(metricKey: keyof Metrics, delta: number): string {
   return isFavorableDelta(metricKey, delta) ? 'Improved' : 'Worsened'
 }
 
+type StatusReportMetricTone = 'steady' | 'watch' | 'critical'
+
+function statusReportMetricTone(metricKey: keyof Metrics, value: number): StatusReportMetricTone {
+  if (metricKey === 'insurgency') {
+    if (value >= 70) return 'critical'
+    if (value >= 45) return 'watch'
+    return 'steady'
+  }
+  if (value >= 65) return 'steady'
+  if (value >= 45) return 'watch'
+  return 'critical'
+}
+
+function statusReportMetricLabel(metricKey: keyof Metrics, value: number): string {
+  const tone = statusReportMetricTone(metricKey, value)
+  if (metricKey === 'insurgency') {
+    if (tone === 'critical') return 'Escalating'
+    if (tone === 'watch') return 'Elevated'
+    return 'Contained'
+  }
+  if (tone === 'steady') return 'On Track'
+  if (tone === 'watch') return 'Fragile'
+  return 'Under Strain'
+}
+
 function MissionBriefBody(): ReactNode {
   const state = useGameStore((s) => s.state)
   const content = state.content
@@ -2303,27 +2811,17 @@ function CreditsBody(): ReactNode {
     <div className="campaign-presentation">
       <div className="campaign-presentation-title">African Mandate - Credits</div>
       <div className="actor-profile-section">
-        <SectionTitle>Core Contributors</SectionTitle>
+        <SectionTitle>Design and Development</SectionTitle>
         <p className="actor-profile-text">
-          African Mandate is built by multidisciplinary contributors across design, engineering, narrative systems,
-          geospatial operations, and policy simulation.
+          African Mandate was designed and developed by Sethu Nguna, Training and Instructional Design Manager at
+          AidData.
         </p>
       </div>
       <div className="actor-profile-section">
-        <SectionTitle>Acknowledgments</SectionTitle>
-        <ul
-          style={{
-            margin: 0,
-            paddingLeft: '1rem',
-            color: 'var(--text-secondary)',
-            lineHeight: 1.45,
-            fontSize: '0.84rem',
-          }}
-        >
-          <li>African Union policy and stabilization research references</li>
-          <li>Regional data providers and open geospatial map sources</li>
-          <li>Scenario design and narrative prototyping support teams</li>
-        </ul>
+        <SectionTitle>About This Demo</SectionTitle>
+        <p className="actor-profile-text">
+          African Mandate is a demo produced within AidData&apos;s Training Initiative.
+        </p>
       </div>
       <div className="action-config-review-actions">
         <button type="button" className="action-config-secondary" onClick={closeModal}>
@@ -2905,28 +3403,87 @@ function ActorProfileBody(): ReactNode {
   const state = useGameStore((s) => s.state)
   const content = state.content
   const selectedActorKey = useUiStore((s) => s.selectedActorKey)
+  const closeModal = useUiStore((s) => s.closeModal)
   const openModal = useUiStore((s) => s.openModal)
   const setSelectedDialogueId = useUiStore((s) => s.setSelectedDialogueId)
+  const setSelectedAction = useUiStore((s) => s.setSelectedAction)
   const resetDialogueFlow = useUiStore((s) => s.resetDialogueFlow)
 
   if (!content) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading actor profile...</p>
+    return (
+      <article className="actor-dossier-shell">
+        <div className="actor-dossier-content">
+          <p className="actor-dossier-text">Loading actor profile...</p>
+        </div>
+        <div className="actor-dossier-actions">
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
+    )
   }
   if (!selectedActorKey) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No actor selected.</p>
+    return (
+      <article className="actor-dossier-shell">
+        <div className="actor-dossier-content">
+          <p className="actor-dossier-text">No actor selected.</p>
+        </div>
+        <div className="actor-dossier-actions">
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
+    )
   }
 
   const actor = resolveActorData(content, selectedActorKey)
   if (!actor) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Actor not found.</p>
+    return (
+      <article className="actor-dossier-shell">
+        <div className="actor-dossier-content">
+          <p className="actor-dossier-text">Actor not found.</p>
+        </div>
+        <div className="actor-dossier-actions">
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
+    )
   }
 
   const actorSentiment = state.actor_sentiments?.[actor.actor_key]
   const actorActive = isActorActive(state, actor)
   const dialogueAvailability = getActorDialogueAvailability(state, actor.actor_key)
   const hasDialogue = dialogueAvailability !== null
+  const minimumActionAllocation = (action: ActionDefinition): Partial<Resources> => ({
+    budget: action.costs.budget.min,
+    political_capital: action.costs.political_capital.min,
+    personnel: action.costs.personnel.min,
+    intel_points: action.costs.intel_points.min,
+    time_months: action.costs.time_months.min,
+  })
+  const actionableActorAction = content.actions.actions.find((action) => {
+    if (action.target_scope !== 'actor') return false
+    if (!action.target_actors?.includes(actor.actor_key)) return false
+    try {
+      const cost = getResolvedCost(action, minimumActionAllocation(action))
+      validateAction(state, action, { actor_key: actor.actor_key }, cost)
+      return true
+    } catch {
+      return false
+    }
+  }) ?? null
+  const actionName = actionableActorAction ? resolveActionName(content, actionableActorAction.action_id) : null
+  const relationshipLocation = resolveRelationshipLocation(content, actor)
+  const locationGroups = resolveActorLocationGroups(content, state, actor)
+  const relationshipDelta = actorSentiment && actor.default_relationship_score !== null
+    ? actorSentiment.relationship_score - actor.default_relationship_score
+    : null
+  const isVisibleInRelationshipMatrix = actor.relationship_tracked && Boolean(actorSentiment)
   const actorName = resolveActorName(content, actor.actor_key)
-  const actorDescription = describeActorProfile(actor)
 
   const openDialogue = (): void => {
     if (!hasDialogue) {
@@ -2939,102 +3496,255 @@ function ActorProfileBody(): ReactNode {
     openModal('dialogue')
   }
 
+  const openActionPlanning = (): void => {
+    if (!actionableActorAction) {
+      return
+    }
+    setSelectedAction(actionableActorAction.action_id, { actor_key: actor.actor_key })
+    openModal('action_config')
+  }
+
+  const primaryEngagementLabel = hasDialogue
+    ? dialogueAvailability?.isAvailable
+      ? 'Open dialogue'
+      : 'Review dialogue'
+    : actionableActorAction
+      ? `Plan ${actionName ?? 'action'}`
+      : 'No direct engagement'
+  const primaryEngagementAction = hasDialogue ? openDialogue : openActionPlanning
+  const factionLabel = formatTokenLabel(actor.faction)
+  const profileLabel = formatTokenLabel(actor.profile)
+  const typeLabel = formatTokenLabel(actor.type)
+  const defaultSentimentLabel = formatTokenLabel(actor.default_sentiment)
+  const relationshipLabel = actorSentiment
+    ? `${formatTokenLabel(actorSentiment.relationship_label)} (${actorSentiment.relationship_score})`
+    : actor.relationship_tracked
+      ? 'Awaiting live score'
+      : 'Informational only'
+  const dialogueStatusLabel = !hasDialogue
+    ? 'No dialogue authored'
+    : dialogueAvailability.isAvailable
+      ? 'Available now'
+      : dialogueAvailability.reason ?? 'Unavailable'
+  const matrixCoverageLabel = isVisibleInRelationshipMatrix
+    ? 'Visible in live relationship matrix'
+    : actor.relationship_tracked
+      ? 'Relationship-tracked, awaiting live score'
+      : 'Not included in live relationship matrix'
+  const matrixCoverageCopy = isVisibleInRelationshipMatrix
+    ? 'Open the relationship matrix to compare this actor against the rest of the tracked stakeholder map.'
+    : actor.relationship_tracked
+      ? 'This actor is configured for relationship tracking, but the current session does not yet expose a live score row.'
+      : 'This actor appears in the actor roster, but their relationships are informational rather than matrix-tracked.'
+  const engagementSummary = hasDialogue
+    ? dialogueAvailability?.isAvailable
+      ? 'Dialogue is available this turn.'
+      : `Dialogue is authored but ${dialogueAvailability?.reason ?? 'not available this turn'}.`
+    : actionableActorAction
+      ? `No dialogue is authored. Direct engagement is currently available via ${actionName ?? 'the linked action'}.`
+      : 'No dialogue or actor-targeted action is currently available for this actor.'
+  const engagementRouteLabel = hasDialogue
+    ? actionableActorAction
+      ? `Dialogue channel available; alternate action route via ${actionName ?? 'linked action'}`
+      : dialogueAvailability?.isAvailable
+        ? 'Dialogue channel available now'
+        : `Dialogue authored; ${dialogueAvailability?.reason ?? 'not available this turn'}`
+    : actionableActorAction
+      ? `Action route via ${actionName ?? 'linked action'}`
+      : 'No direct engagement route'
+  const activationSummary = actor.activation_condition
+    ? `Unlocks when ${actor.activation_condition}.`
+    : 'Always available in the actor roster once this stakeholder is active in the current campaign layer.'
+  const locationSummary = locationGroups.length > 0
+    ? `${locationGroups.reduce((total, group) => total + group.zones.length, 0)} mapped zone${locationGroups.reduce((total, group) => total + group.zones.length, 0) === 1 ? '' : 's'} across ${locationGroups.length} territor${locationGroups.length === 1 ? 'y' : 'ies'}.`
+    : actor.actor_key === 'au_chairperson_diallo'
+      ? 'Mission authority role. No fixed territory or zone assignment is tracked in the current theater state.'
+      : actor.type === 'institutional' || actor.actor_key.startsWith('regional_')
+        ? 'This stakeholder operates across regional or continental channels rather than a single fixed territory or zone.'
+        : 'No fixed territory or zone assignment is currently flagged for this stakeholder.'
+  const actorReference = actor.actor_key.replace(/_/g, '-').toUpperCase()
+
   return (
-    <div className="actor-profile-layout">
-      <div className="actor-profile-header-row">
-        <ActorPortrait actor={actor} name={actorName} />
-        <div>
-          <div className="actor-profile-name">{actorName}</div>
-          <div className="actor-profile-title">{resolveActorTitle(content, actor.actor_key)}</div>
+    <article className="actor-dossier-shell">
+      <header className="actor-dossier-header">
+        <div className="actor-dossier-topline">
+          <span className="actor-dossier-kicker">Stakeholder dossier</span>
+          <div className="actor-dossier-status-group">
+            <span className={`actor-chip ${actorActive ? 'active' : 'inactive'}`}>
+              {actorActive ? 'Active' : 'Conditional'}
+            </span>
+            <span className="actor-dossier-reference">{actorReference}</span>
+          </div>
         </div>
-        <div className={`actor-chip ${actorActive ? 'active' : 'inactive'}`}>
-          {actorActive ? 'Active' : 'Conditional'}
+        <div className="actor-dossier-hero">
+          <ActorPortrait actor={actor} name={actorName} />
+          <div className="actor-dossier-hero-copy">
+            <h1 className="actor-dossier-name">{actorName}</h1>
+            <p className="actor-dossier-title">{resolveActorTitle(content, actor.actor_key)}</p>
+          </div>
+        </div>
+        <div className="actor-dossier-meta-grid">
+          <div className="actor-dossier-meta-card">
+            <span className="actor-dossier-meta-label">Faction</span>
+            <strong className="actor-dossier-meta-value">{factionLabel}</strong>
+          </div>
+          <div className="actor-dossier-meta-card">
+            <span className="actor-dossier-meta-label">Profile</span>
+            <strong className="actor-dossier-meta-value">{profileLabel}</strong>
+          </div>
+          <div className="actor-dossier-meta-card">
+            <span className="actor-dossier-meta-label">Dialogue status</span>
+            <strong className="actor-dossier-meta-value">{dialogueStatusLabel}</strong>
+          </div>
+          <div className="actor-dossier-meta-card">
+            <span className="actor-dossier-meta-label">Engagement route</span>
+            <strong className="actor-dossier-meta-value">{engagementRouteLabel}</strong>
+          </div>
+        </div>
+      </header>
+
+      <div className="actor-dossier-content">
+        <div className="actor-dossier-grid">
+          <section className="actor-dossier-section">
+            <h2 className="actor-dossier-section-title">Profile</h2>
+            <div className="actor-dossier-info-list">
+              <div className="actor-dossier-info-row">
+                <span>Actor key</span>
+                <strong className="actor-profile-value-code">{actor.actor_key}</strong>
+              </div>
+              <div className="actor-dossier-info-row">
+                <span>Type</span>
+                <strong>{typeLabel}</strong>
+              </div>
+              <div className="actor-dossier-info-row">
+                <span>Default sentiment</span>
+                <strong>{defaultSentimentLabel}</strong>
+              </div>
+              <div className="actor-dossier-info-row">
+                <span>Activation</span>
+                <strong>{activationSummary}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="actor-dossier-section">
+            <h2 className="actor-dossier-section-title">Relationship posture</h2>
+            <div className="actor-dossier-stat-grid">
+              <div className="actor-dossier-stat">
+                <span className="actor-dossier-stat-label">Current relationship</span>
+                <strong className="actor-dossier-stat-value">{relationshipLabel}</strong>
+              </div>
+              <div className="actor-dossier-stat">
+                <span className="actor-dossier-stat-label">Baseline relationship</span>
+                <strong className="actor-dossier-stat-value">{formatBaselineRelationship(actor.default_relationship_score)}</strong>
+              </div>
+              <div className="actor-dossier-stat">
+                <span className="actor-dossier-stat-label">Matrix coverage</span>
+                <strong className="actor-dossier-stat-value">{matrixCoverageLabel}</strong>
+              </div>
+              <div className="actor-dossier-stat">
+                <span className="actor-dossier-stat-label">Score delta</span>
+                <strong className="actor-dossier-stat-value">
+                  {relationshipDelta === null ? 'N/A' : `${relationshipDelta > 0 ? '+' : ''}${relationshipDelta}`}
+                </strong>
+              </div>
+            </div>
+            <div className="actor-dossier-note-block">
+              <span className="actor-dossier-note-label">Matrix location</span>
+              <div className="actor-profile-matrix-location">
+                <RelationshipLocationBadge location={relationshipLocation} />
+              </div>
+            </div>
+            <p className="actor-dossier-text">{matrixCoverageCopy}</p>
+          </section>
+
+          <section className="actor-dossier-section actor-dossier-section--wide">
+            <h2 className="actor-dossier-section-title">Theater location</h2>
+            {locationGroups.length > 0 ? (
+              <div className="actor-dossier-location-list">
+                {locationGroups.map((group) => (
+                  <article className="actor-dossier-location-card" key={group.territoryKey}>
+                    <div className="actor-dossier-location-header">
+                      <RelationshipLocationBadge location={group.badge} />
+                      <div className="actor-dossier-location-header-copy">
+                        <strong className="actor-dossier-location-title">{group.territoryName}</strong>
+                        <span className="actor-dossier-location-count">
+                          {group.zones.length > 0
+                            ? `${group.zones.length} mapped zone${group.zones.length === 1 ? '' : 's'}`
+                            : 'No specific zone currently flagged'}
+                        </span>
+                      </div>
+                    </div>
+                    {group.zones.length > 0 ? (
+                      <ul className="actor-dossier-location-zones">
+                        {group.zones.map((zone) => (
+                          <li className="actor-dossier-location-zone" key={zone.zoneId}>
+                            <strong>{zone.zoneName}</strong>
+                            <span>{zone.zoneType} · {zone.strategicValue} Value · Threat {zone.threatLabel}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="actor-dossier-text">
+                        Territory alignment is known, but no specific zone presence is currently called out in the theater state.
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="actor-dossier-note-block">
+                <span className="actor-dossier-note-label">Location scope</span>
+                <div className="actor-profile-matrix-location">
+                  <RelationshipLocationBadge location={relationshipLocation} />
+                </div>
+              </div>
+            )}
+            <p className="actor-dossier-text">{locationSummary}</p>
+          </section>
+
+          <section className="actor-dossier-section actor-dossier-section--wide">
+            <h2 className="actor-dossier-section-title">Operational notes</h2>
+            <p className="actor-dossier-text">{actor.notes ?? 'No additional notes.'}</p>
+          </section>
+
+          <section className="actor-dossier-section actor-dossier-section--wide">
+            <h2 className="actor-dossier-section-title">Engagement options</h2>
+            <p className="actor-dossier-text">{engagementSummary}</p>
+          </section>
         </div>
       </div>
 
-      <div className="actor-profile-grid">
-        <div className="actor-profile-row">
-          <span>Actor key</span>
-          <strong className="actor-profile-value-code">{actor.actor_key}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Faction</span>
-          <strong>{formatTokenLabel(actor.faction)}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Type</span>
-          <strong>{formatTokenLabel(actor.type)}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Profile</span>
-          <strong>{formatTokenLabel(actor.profile)}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Default sentiment</span>
-          <strong>{formatTokenLabel(actor.default_sentiment)}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Relationship tracking</span>
-          <strong>{actor.relationship_tracked ? 'Tracked' : 'Untracked'}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Baseline relationship</span>
-          <strong>{formatBaselineRelationship(actor.default_relationship_score)}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Relationship</span>
-          <strong>
-            {actorSentiment
-              ? `${actorSentiment.relationship_label} (${actorSentiment.relationship_score})`
-              : 'Untracked'}
-          </strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Dialogue status</span>
-          <strong>
-            {!hasDialogue
-              ? 'No dialogue authored'
-              : dialogueAvailability.isAvailable
-                ? 'Available now'
-                : dialogueAvailability.reason ?? 'Unavailable'}
-          </strong>
-        </div>
-        <div className="actor-profile-row actor-profile-row--stacked">
-          <span>Portrait asset</span>
-          <strong className="actor-profile-value-code">{actor.portrait_url}</strong>
-        </div>
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>Description</SectionTitle>
-        <p className="actor-profile-text">{actorDescription}</p>
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>Notes</SectionTitle>
-        <p className="actor-profile-text">{actor.notes ?? 'No additional notes.'}</p>
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>Activation</SectionTitle>
-        <p className="actor-profile-text">
-          {actor.activation_condition
-            ? `Condition: ${actor.activation_condition}`
-            : 'Always available in actor panel.'}
-        </p>
-      </div>
-
-      <div className="action-config-review-actions">
+      <div className="actor-dossier-actions">
+        <button
+          type="button"
+          className="action-config-secondary"
+          onClick={() => openModal('relationship_matrix')}
+        >
+          View relationship matrix
+        </button>
+        {hasDialogue && actionableActorAction && (
+          <button
+            type="button"
+            className="action-config-secondary"
+            onClick={openActionPlanning}
+          >
+            Plan action
+          </button>
+        )}
         <button
           type="button"
           className="action-config-confirm"
-          onClick={openDialogue}
-          disabled={!hasDialogue}
+          onClick={primaryEngagementAction}
+          disabled={!hasDialogue && !actionableActorAction}
         >
-          {hasDialogue ? 'Open dialogue' : 'No dialogue authored'}
+          {primaryEngagementLabel}
+        </button>
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
         </button>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -3048,7 +3758,6 @@ function DialogueBody(): ReactNode {
   const dialogueChoiceId = useUiStore((s) => s.dialogueChoiceId)
   const setSelectedDialogueId = useUiStore((s) => s.setSelectedDialogueId)
   const setDialogueOutcome = useUiStore((s) => s.setDialogueOutcome)
-  const setDialogueFlowStep = useUiStore((s) => s.setDialogueFlowStep)
   const resetDialogueFlow = useUiStore((s) => s.resetDialogueFlow)
   const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
@@ -3068,23 +3777,75 @@ function DialogueBody(): ReactNode {
   }, [dialogueAvailability, selectedDialogueId, setSelectedDialogueId])
 
   if (!content) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading dialogue...</p>
+    return (
+      <article className="dialogue-review-shell dialogue-review-shell--compact">
+        <div className="dialogue-review-content">
+          <section className="dialogue-review-section">
+            <h2 className="dialogue-review-section-title">Dialogue review</h2>
+            <p className="dialogue-review-text">Loading dialogue...</p>
+          </section>
+        </div>
+        <div className="dialogue-review-actions">
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
+    )
   }
-  if (!selectedActorKey) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No actor selected.</p>
+
+  if (!selectedActorKey || !actor) {
+    return (
+      <article className="dialogue-review-shell dialogue-review-shell--compact">
+        <div className="dialogue-review-content">
+          <section className="dialogue-review-section">
+            <h2 className="dialogue-review-section-title">Dialogue review</h2>
+            <p className="dialogue-review-text">Actor not found.</p>
+          </section>
+        </div>
+        <div className="dialogue-review-actions">
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
+    )
   }
-  if (!actor) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Actor not found.</p>
-  }
+
+  const actorName = resolveActorName(content, actor.actor_key)
+  const actorTitle = resolveActorTitle(content, actor.actor_key)
+  const openingStatementAudio = resolveOpeningStatementAudioAsset(content, actor)
 
   if (!dialogueAvailability) {
     return (
-      <div className="actor-profile-layout">
-        <p className="actor-profile-text">No authored dialogue exists for this actor.</p>
-        <button type="button" className="action-config-secondary" onClick={() => openModal('actor_profile')}>
-          Back to actor profile
-        </button>
-      </div>
+      <article className="dialogue-review-shell dialogue-review-shell--compact">
+        <header className="dialogue-review-header">
+          <div className="dialogue-review-topline">
+            <span className="dialogue-review-kicker">Dialogue channel</span>
+          </div>
+          <div className="dialogue-review-hero">
+            <ActorPortrait actor={actor} name={actorName} />
+            <div className="dialogue-review-hero-copy">
+              <h1 className="dialogue-review-name">{actorName}</h1>
+              <p className="dialogue-review-title">{actorTitle}</p>
+            </div>
+          </div>
+        </header>
+        <div className="dialogue-review-content">
+          <section className="dialogue-review-section">
+            <h2 className="dialogue-review-section-title">Dialogue review</h2>
+            <p className="dialogue-review-text">No authored dialogue exists for this actor.</p>
+          </section>
+        </div>
+        <div className="dialogue-review-actions">
+          <button type="button" className="action-config-secondary" onClick={() => openModal('actor_profile')}>
+            Back to actor profile
+          </button>
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
     )
   }
 
@@ -3092,12 +3853,38 @@ function DialogueBody(): ReactNode {
     content.dialogues.dialogues.find((item) => item.dialogue_id === (selectedDialogueId ?? dialogueAvailability.dialogueId)) ??
     null
   if (!dialogue) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Dialogue not found.</p>
+    return (
+      <article className="dialogue-review-shell dialogue-review-shell--compact">
+        <header className="dialogue-review-header">
+          <div className="dialogue-review-topline">
+            <span className="dialogue-review-kicker">Dialogue channel</span>
+          </div>
+          <div className="dialogue-review-hero">
+            <ActorPortrait actor={actor} name={actorName} />
+            <div className="dialogue-review-hero-copy">
+              <h1 className="dialogue-review-name">{actorName}</h1>
+              <p className="dialogue-review-title">{actorTitle}</p>
+            </div>
+          </div>
+        </header>
+        <div className="dialogue-review-content">
+          <section className="dialogue-review-section">
+            <h2 className="dialogue-review-section-title">Dialogue review</h2>
+            <p className="dialogue-review-text">Dialogue not found.</p>
+          </section>
+        </div>
+        <div className="dialogue-review-actions">
+          <button type="button" className="action-config-secondary" onClick={() => openModal('actor_profile')}>
+            Back to actor profile
+          </button>
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
+            Close
+          </button>
+        </div>
+      </article>
+    )
   }
 
-  const rootText = dialogue.node_graph.root?.text_key
-    ? resolveLocalizedText(content.localization, dialogue.node_graph.root.text_key)
-    : 'No dialogue opening text available.'
   const choiceNode = findDialogueChoiceNode(dialogue)
   const choices = choiceNode?.choices ?? []
 
@@ -3127,42 +3914,62 @@ function DialogueBody(): ReactNode {
 
   if (dialogueFlowStep === 'outcome') {
     return (
-      <div className="actor-profile-layout">
-        <div className="actor-profile-name">{resolveActorName(content, actor.actor_key)}</div>
-        <div className="actor-profile-title">Dialogue outcome</div>
-        <div className="actor-profile-section">
-          {selectedChoice && (
-            <>
-              <SectionTitle>Selected response</SectionTitle>
-              <p className="actor-profile-text">
-                {resolveLocalizedText(content.localization, selectedChoice.label_key)}
+      <article className="dialogue-review-shell">
+        <header className="dialogue-review-header">
+          <div className="dialogue-review-topline">
+            <span className="dialogue-review-kicker">Dialogue outcome</span>
+          </div>
+          <div className="dialogue-review-hero">
+            <ActorPortrait actor={actor} name={actorName} />
+            <div className="dialogue-review-hero-copy">
+              <h1 className="dialogue-review-name">{actorName}</h1>
+              <p className="dialogue-review-title">{actorTitle}</p>
+              <p className="dialogue-review-subtitle">
+                Outcome recorded from the latest exchange with this actor.
               </p>
-            </>
-          )}
-          <SectionTitle>Actor response</SectionTitle>
-          <p className="actor-profile-text">{outcomeText}</p>
-        </div>
-        {isLatestDialogueEntry && latestLog && (
-          <div className="actor-profile-grid">
-            <div className="actor-profile-row">
-              <span>Resource delta</span>
-              <strong>{formatResourceDelta(latestLog.resource_deltas)}</strong>
-            </div>
-            <div className="actor-profile-row">
-              <span>Metric delta</span>
-              <strong>{formatMetricDelta(latestLog.metric_deltas)}</strong>
-            </div>
-            <div className="actor-profile-row">
-              <span>Relationship now</span>
-              <strong>
-                {latestRelationship
-                  ? `${latestRelationship.relationship_label} (${latestRelationship.relationship_score})`
-                  : 'Untracked'}
-              </strong>
             </div>
           </div>
-        )}
-        <div className="action-config-review-actions">
+        </header>
+        <div className="dialogue-review-content">
+          <div className="dialogue-review-grid dialogue-review-grid--single">
+            <section className="dialogue-review-section">
+              {selectedChoice && (
+                <>
+                  <h2 className="dialogue-review-section-title">Selected response</h2>
+                  <p className="dialogue-review-text">
+                    {resolveLocalizedText(content.localization, selectedChoice.label_key)}
+                  </p>
+                </>
+              )}
+              <h2 className="dialogue-review-section-title">Actor response</h2>
+              <p className="dialogue-review-text">{outcomeText}</p>
+            </section>
+            {isLatestDialogueEntry && latestLog && (
+              <section className="dialogue-review-section">
+                <h2 className="dialogue-review-section-title">Outcome summary</h2>
+                <div className="action-config-review">
+                  <div className="action-config-review-row">
+                    <span>Resource delta</span>
+                    <strong>{formatResourceDelta(latestLog.resource_deltas)}</strong>
+                  </div>
+                  <div className="action-config-review-row">
+                    <span>Metric delta</span>
+                    <strong>{formatMetricDelta(latestLog.metric_deltas)}</strong>
+                  </div>
+                  <div className="action-config-review-row">
+                    <span>Relationship now</span>
+                    <strong>
+                      {latestRelationship
+                        ? `${latestRelationship.relationship_label} (${latestRelationship.relationship_score})`
+                        : 'Untracked'}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+        <div className="dialogue-review-actions">
           <button
             type="button"
             className="action-config-secondary"
@@ -3173,120 +3980,118 @@ function DialogueBody(): ReactNode {
           >
             Back to actor profile
           </button>
-          <button type="button" className="action-config-confirm" onClick={closeModal}>
+          <button type="button" className="action-config-secondary" onClick={closeModal}>
             Close
           </button>
         </div>
-      </div>
+      </article>
     )
   }
 
+  const dialogueStatusLabel = dialogueAvailability.isAvailable ? 'Channel open' : 'Channel locked'
+
   return (
-    <div className="actor-profile-layout">
-      <div className="actor-profile-header-row">
-        <ActorPortrait actor={actor} name={resolveActorName(content, actor.actor_key)} />
-        <div>
-          <div className="actor-profile-name">{resolveActorName(content, actor.actor_key)}</div>
-          <div className="actor-profile-title">{resolveActorTitle(content, actor.actor_key)}</div>
+    <article className="dialogue-review-shell">
+      <header className="dialogue-review-header">
+        <div className="dialogue-review-topline">
+          <span className="dialogue-review-kicker">Dialogue channel</span>
+          <div className={`actor-chip ${dialogueAvailability.isAvailable ? 'active' : 'inactive'}`}>
+            {dialogueStatusLabel}
+          </div>
         </div>
-        <div className={`actor-chip ${dialogueAvailability.isAvailable ? 'active' : 'inactive'}`}>
-          {dialogueAvailability.isAvailable ? 'Open' : 'Locked'}
+        <div className="dialogue-review-hero">
+          <ActorPortrait actor={actor} name={actorName} />
+          <div className="dialogue-review-hero-copy">
+            <h1 className="dialogue-review-name">{actorName}</h1>
+            <p className="dialogue-review-title">{actorTitle}</p>
+            <p className="dialogue-review-subtitle">
+              Review the opening statement, then select a response when the channel is available.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="dialogue-review-content">
+        <div className="dialogue-review-grid">
+          <section className="dialogue-review-section">
+            <h2 className="dialogue-review-section-title">Opening statement</h2>
+            <DialogueOpeningStatementPlayer actorName={actorName} asset={openingStatementAudio} />
+          </section>
+
+          <section className="dialogue-review-section">
+            <h2 className="dialogue-review-section-title">Response options</h2>
+            <p className="dialogue-review-text">
+              {dialogueAvailability.isAvailable
+                ? 'Select a response to continue the engagement.'
+                : dialogueAvailability.reason ?? 'Dialogue is not available this turn.'}
+            </p>
+
+            {!dialogueAvailability.isAvailable && (
+              <div className="dialogue-review-warning">
+                {dialogueAvailability.reason ?? 'Dialogue unavailable.'}
+              </div>
+            )}
+
+            {dialogueAvailability.isAvailable && choices.length > 0 && (
+              <div className="dialogue-choice-list">
+                {choices.map((choice) => {
+                  const metricEffects = Object.entries(choice.effects.metrics ?? {})
+                    .map(([key, value]) => `${formatTokenLabel(key)} ${value > 0 ? '+' : ''}${value}`)
+                  const resourceEffects = Object.entries(choice.effects.resources ?? {})
+                    .map(([key, value]) => `${formatTokenLabel(key)} ${value > 0 ? '+' : ''}${value}`)
+                  const relationshipDelta = choice.effects.actor_relationship ?? 0
+                  return (
+                    <button
+                      key={choice.choice_id}
+                      type="button"
+                      className="dialogue-choice-card"
+                      onClick={() => executeChoice(choice.choice_id)}
+                    >
+                      <div className="dialogue-choice-label">
+                        {resolveLocalizedText(content.localization, choice.label_key)}
+                      </div>
+                      <div className="dialogue-choice-description">
+                        {resolveLocalizedText(content.localization, choice.description_key)}
+                      </div>
+                      <div className="dialogue-choice-effects">
+                        {(choice.costs.budget ?? 0) > 0 && (
+                          <span className="actor-chip">Budget -{(choice.costs.budget ?? 0).toLocaleString()}</span>
+                        )}
+                        {(choice.costs.political_capital ?? 0) > 0 && (
+                          <span className="actor-chip">Political -{choice.costs.political_capital}</span>
+                        )}
+                        <span className="actor-chip">
+                          Relationship {relationshipDelta > 0 ? '+' : ''}{relationshipDelta}
+                        </span>
+                        {metricEffects.map((effect) => (
+                          <span key={effect} className="actor-chip">{effect}</span>
+                        ))}
+                        {resourceEffects.map((effect) => (
+                          <span key={effect} className="actor-chip">{effect}</span>
+                        ))}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {dialogueAvailability.isAvailable && choices.length === 0 && (
+              <p className="dialogue-review-note">No response branches are authored for this dialogue yet.</p>
+            )}
+          </section>
         </div>
       </div>
 
-      <div className="actor-profile-section">
-        <SectionTitle>Actor Brief</SectionTitle>
-        <p className="actor-profile-text">{describeActorProfile(actor)}</p>
-        <p className="actor-profile-text">{actor.notes ?? 'No additional notes.'}</p>
-      </div>
-
-      <div className="actor-profile-grid">
-        <div className="actor-profile-row">
-          <span>Actor key</span>
-          <strong className="actor-profile-value-code">{actor.actor_key}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Default sentiment</span>
-          <strong>{formatTokenLabel(actor.default_sentiment)}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Relationship tracking</span>
-          <strong>{actor.relationship_tracked ? 'Tracked' : 'Untracked'}</strong>
-        </div>
-        <div className="actor-profile-row">
-          <span>Baseline relationship</span>
-          <strong>{formatBaselineRelationship(actor.default_relationship_score)}</strong>
-        </div>
-        <div className="actor-profile-row actor-profile-row--stacked">
-          <span>Portrait asset</span>
-          <strong className="actor-profile-value-code">{actor.portrait_url}</strong>
-        </div>
-      </div>
-
-      <div className="actor-profile-section">
-        <SectionTitle>Opening statement</SectionTitle>
-        <p className="actor-profile-text">{rootText}</p>
-      </div>
-
-      {!dialogueAvailability.isAvailable && (
-        <div className="action-config-validation">{dialogueAvailability.reason ?? 'Dialogue unavailable.'}</div>
-      )}
-
-      {dialogueAvailability.isAvailable && choices.length > 0 && (
-        <div className="dialogue-choice-list">
-          {choices.map((choice) => {
-            const metricEffects = Object.entries(choice.effects.metrics ?? {})
-              .map(([key, value]) => `${formatTokenLabel(key)} ${value > 0 ? '+' : ''}${value}`)
-            const resourceEffects = Object.entries(choice.effects.resources ?? {})
-              .map(([key, value]) => `${formatTokenLabel(key)} ${value > 0 ? '+' : ''}${value}`)
-            const relationshipDelta = choice.effects.actor_relationship ?? 0
-            return (
-              <button
-                key={choice.choice_id}
-                type="button"
-                className="dialogue-choice-card"
-                onClick={() => executeChoice(choice.choice_id)}
-              >
-                <div className="dialogue-choice-label">
-                  {resolveLocalizedText(content.localization, choice.label_key)}
-                </div>
-                <div className="dialogue-choice-description">
-                  {resolveLocalizedText(content.localization, choice.description_key)}
-                </div>
-                <div className="dialogue-choice-effects">
-                  {(choice.costs.budget ?? 0) > 0 && (
-                    <span className="actor-chip">Budget -{(choice.costs.budget ?? 0).toLocaleString()}</span>
-                  )}
-                  {(choice.costs.political_capital ?? 0) > 0 && (
-                    <span className="actor-chip">Political -{choice.costs.political_capital}</span>
-                  )}
-                  <span className="actor-chip">
-                    Relationship {relationshipDelta > 0 ? '+' : ''}{relationshipDelta}
-                  </span>
-                  {metricEffects.map((effect) => (
-                    <span key={effect} className="actor-chip">{effect}</span>
-                  ))}
-                  {resourceEffects.map((effect) => (
-                    <span key={effect} className="actor-chip">{effect}</span>
-                  ))}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="action-config-review-actions">
+      <div className="dialogue-review-actions">
         <button type="button" className="action-config-secondary" onClick={() => openModal('actor_profile')}>
           Back to actor profile
         </button>
-        {dialogueFlowStep !== 'choices' && (
-          <button type="button" className="action-config-secondary" onClick={() => setDialogueFlowStep('choices')}>
-            Back to choices
-          </button>
-        )}
+        <button type="button" className="action-config-secondary" onClick={closeModal}>
+          Close
+        </button>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -4347,41 +5152,31 @@ function ActionConfigBody(): ReactNode {
   const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
   const reviewForecastTelemetryRef = useRef<string | null>(null)
-
-  if (!content) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading action definitions...</p>
-  }
-
-  const actions = content.actions.actions
-  if (actions.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No actions available.</p>
-  }
-
+  const actions = content?.actions.actions ?? []
   const categories = Array.from(new Set(actions.map((item) => item.category)))
   const selectedAction = selectedActionId ? actions.find((item) => item.action_id === selectedActionId) : undefined
   const fallbackAction = actions[0]
   const activeCategory = selectedAction?.category ?? categories[0]
-  if (!fallbackAction || !activeCategory) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No actions available.</p>
-  }
-
-  const actionsInCategory = actions.filter((item) => item.category === activeCategory)
+  const actionsInCategory = activeCategory
+    ? actions.filter((item) => item.category === activeCategory)
+    : []
   const action =
     selectedAction && selectedAction.category === activeCategory
       ? selectedAction
-      : (actionsInCategory[0] ?? fallbackAction)
-  const actionId = action.action_id
+      : (actionsInCategory[0] ?? fallbackAction ?? null)
+  const actionId = action?.action_id ?? null
 
   useEffect(() => {
+    if (!action || !actionId) return
     setActionAllocation(buildDefaultAllocation(action))
     setActionFlowStep('configure')
     setActionOutcome(null)
-  }, [actionId, setActionAllocation, setActionFlowStep, setActionOutcome])
+  }, [action, actionId, setActionAllocation, setActionFlowStep, setActionOutcome])
 
   const zoneState = state.zone_state ?? {}
   const allZones = Object.values(zoneState)
   const territoryOptions: TerritorySelectOption[] = Object.values(state.territory_state ?? {}).map((territory) => {
-    const territoryContent = content.territories.territories.find(
+    const territoryContent = content?.territories.territories.find(
       (item) => item.territory_key === territory.territory_key
     )
     const { primarySrc, fallbackSrc } = resolveTerritoryFlagPaths(
@@ -4419,9 +5214,10 @@ function ActionConfigBody(): ReactNode {
 
   const selectedZone = pickPreferredOption(selectedTarget?.zone_id ?? selectedZoneId, zoneOptions)
 
-  const actorPool = action.target_actors && action.target_actors.length > 0
-    ? action.target_actors
-    : Object.keys(state.actor_sentiments ?? {})
+  const actorPool =
+    action?.target_actors && action.target_actors.length > 0
+      ? action.target_actors
+      : Object.keys(state.actor_sentiments ?? {})
 
   const actorOptions: SelectOption<string>[] = actorPool.map((actorKey) => ({
     value: actorKey,
@@ -4431,6 +5227,9 @@ function ActionConfigBody(): ReactNode {
   const selectedActor = pickPreferredOption(selectedTarget?.actor_key ?? selectedActorKey, actorOptions)
 
   const resolvedTarget: ActionTarget = (() => {
+    if (!action) {
+      return {}
+    }
     if (action.target_scope === 'zone') {
       return selectedZone ? { zone_id: selectedZone } : {}
     }
@@ -4447,13 +5246,14 @@ function ActionConfigBody(): ReactNode {
     : null
 
   const handleTerritoryChange = (value: string): void => {
+    if (!actionId) return
     const matched = territoryOptions.find((option) => option.value === value)
     if (!matched) {
-      setSelectedAction(action.action_id, { ...(selectedTarget ?? {}), territory_key: undefined, zone_id: undefined })
+      setSelectedAction(actionId, { ...(selectedTarget ?? {}), territory_key: undefined, zone_id: undefined })
       return
     }
     const defaultZoneForTerritory = allZones.find((zone) => zone.territory_key === matched.value)?.zone_id
-    setSelectedAction(action.action_id, {
+    setSelectedAction(actionId, {
       ...(selectedTarget ?? {}),
       territory_key: matched.value,
       zone_id: defaultZoneForTerritory,
@@ -4461,13 +5261,14 @@ function ActionConfigBody(): ReactNode {
   }
 
   const handleZoneChange = (value: string): void => {
+    if (!actionId) return
     const matched = zoneOptions.find((option) => option.value === value)
     if (!matched) {
-      setSelectedAction(action.action_id, { ...(selectedTarget ?? {}), zone_id: undefined })
+      setSelectedAction(actionId, { ...(selectedTarget ?? {}), zone_id: undefined })
       return
     }
     const zone = zoneState[matched.value]
-    setSelectedAction(action.action_id, {
+    setSelectedAction(actionId, {
       ...(selectedTarget ?? {}),
       territory_key: zone?.territory_key ?? selectedTerritory,
       zone_id: matched.value,
@@ -4475,30 +5276,38 @@ function ActionConfigBody(): ReactNode {
   }
 
   const handleActorChange = (value: string): void => {
+    if (!actionId) return
     const matched = actorOptions.find((option) => option.value === value)
-    setSelectedAction(action.action_id, { ...(selectedTarget ?? {}), actor_key: matched?.value })
+    setSelectedAction(actionId, { ...(selectedTarget ?? {}), actor_key: matched?.value })
   }
 
-  const requestedAllocation = buildRequestedAllocation(action, actionAllocation)
-  const cost = getResolvedCost(action, requestedAllocation)
-  const actionForecast = useMemo(
-    () =>
-      deriveActionForecast({
-        state,
-        content,
-        action,
-        target: resolvedTarget,
-        cost,
-      }),
-    [
-      action,
-      content,
-      cost,
-      resolvedTarget,
-      state,
-    ]
-  )
+  const requestedAllocation = action ? buildRequestedAllocation(action, actionAllocation) : null
+  const cost = action && requestedAllocation ? getResolvedCost(action, requestedAllocation) : null
+  const actionForecast =
+    action && cost && content
+      ? deriveActionForecast({
+          state,
+          content,
+          action,
+          target: resolvedTarget,
+          cost,
+        })
+      : null
   const allocationSpecs = ALLOCATION_RESOURCE_KEYS.map((key) => {
+    if (!action || !cost) {
+      return {
+        key,
+        label: RESOURCE_LABELS[key],
+        min: 0,
+        max: 0,
+        step: 1,
+        value: 0,
+        available: state.session.resources[key],
+        unavailable: true,
+        fixed: true,
+        rangeMax: 0,
+      }
+    }
     const range = action.costs[key]
     const available = state.session.resources[key]
     const cappedMax = Math.min(range.max, available)
@@ -4521,27 +5330,32 @@ function ActionConfigBody(): ReactNode {
   })
 
   let validationError: string | null = null
-  try {
-    validateAction(state, action, resolvedTarget, cost)
-  } catch (error: unknown) {
-    validationError = error instanceof GameError ? error.message : 'Action cannot be executed with current state.'
+  if (action && cost) {
+    try {
+      validateAction(state, action, resolvedTarget, cost)
+    } catch (error: unknown) {
+      validationError = error instanceof GameError ? error.message : 'Action cannot be executed with current state.'
+    }
   }
 
-  const reviewForecastTelemetryKey = [
-    state.session.turn,
-    action.action_id,
-    resolvedTarget.zone_id ?? '',
-    resolvedTarget.territory_key ?? '',
-    resolvedTarget.actor_key ?? '',
-    cost.budget,
-    cost.personnel,
-    cost.political_capital,
-    cost.intel_points,
-    cost.time_months,
-  ].join(':')
+  const reviewForecastTelemetryKey =
+    action && cost
+      ? [
+          state.session.turn,
+          action.action_id,
+          resolvedTarget.zone_id ?? '',
+          resolvedTarget.territory_key ?? '',
+          resolvedTarget.actor_key ?? '',
+          cost.budget,
+          cost.personnel,
+          cost.political_capital,
+          cost.intel_points,
+          cost.time_months,
+        ].join(':')
+      : ''
 
   useEffect(() => {
-    if (actionFlowStep !== 'review') {
+    if (!action || !actionForecast || actionFlowStep !== 'review') {
       reviewForecastTelemetryRef.current = null
       return
     }
@@ -4568,16 +5382,19 @@ function ActionConfigBody(): ReactNode {
       has_modeled_risk: actionForecast.hasModeledRisk,
     })
   }, [
-    action.action_id,
-    action.target_scope,
+    action,
     actionFlowStep,
-    actionForecast.confidence.score,
-    actionForecast.confidence.tier,
-    actionForecast.hasModeledRisk,
-    actionForecast.riskCount,
+    actionForecast,
     reviewForecastTelemetryKey,
     state.session.turn,
   ])
+
+  if (!content) {
+    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading action definitions...</p>
+  }
+  if (actions.length === 0 || !action || !activeCategory || !requestedAllocation || !cost || !actionForecast) {
+    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No actions available.</p>
+  }
 
   const handleCancelFromReview = (source: 'back_button'): void => {
     recordTelemetryEvent('action_cancelled_from_review', {
@@ -5175,19 +5992,86 @@ function TurnLoadingBody(): ReactNode {
 
 function OnboardingLoadingBody(): ReactNode {
   const LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
+  const RESUME_LOADING_REVEAL_MS = 2200
+  const AUDIO_FADE_DURATION_MS = 1800
   const closeModal = useUiStore((s) => s.closeModal)
+  const entryLaunchKind = useSessionStore((s) => s.entry_launch_kind)
+  const authMode = useSessionStore((s) => s.auth_mode)
+  const sessions = useSessionStore((s) => s.sessions)
+  const activeSessionId = useSessionStore((s) => s.active_session_id)
+  const sessionTurn = useGameStore((s) => s.state.session.turn)
+  const sessionMaxTurns = useGameStore((s) => s.state.session.max_turns)
   const [isReady, setIsReady] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const exitTimerRef = useRef<number | null>(null)
   const readyFallbackTimerRef = useRef<number | null>(null)
+  const completionFallbackTimerRef = useRef<number | null>(null)
   const exitStartedRef = useRef(false)
+  const isResumeLaunch = entryLaunchKind === 'resume'
+  const activeSession = useMemo(
+    () => (activeSessionId ? sessions.find((session) => session.session_id === activeSessionId) ?? null : null),
+    [activeSessionId, sessions]
+  )
+  const sessionLabel =
+    activeSession?.session_name && activeSession.session_name.trim().length > 0
+      ? activeSession.session_name
+      : `Mandate - Turn ${sessionTurn}`
+  const restoreLabel = authMode === 'authenticated' ? 'Cloud restore' : 'Browser restore'
 
   const markReady = useCallback(() => {
     setIsReady((current) => (current ? current : true))
   }, [])
 
+  const beginRevealExit = useCallback((): void => {
+    if (exitStartedRef.current) return
+    exitStartedRef.current = true
+
+    setIsExiting(true)
+    fadeOutSharedThemeAudio(AUDIO_FADE_DURATION_MS)
+    if (typeof window === 'undefined') {
+      closeModal()
+      return
+    }
+    if (exitTimerRef.current !== null) {
+      window.clearTimeout(exitTimerRef.current)
+    }
+    exitTimerRef.current = window.setTimeout(() => {
+      closeModal()
+      exitTimerRef.current = null
+    }, 220)
+  }, [AUDIO_FADE_DURATION_MS, closeModal])
+
   useEffect(() => {
+    if (isResumeLaunch) {
+      startSharedThemeAudio()
+
+      if (typeof window === 'undefined') {
+        markReady()
+        return undefined
+      }
+
+      readyFallbackTimerRef.current = window.setTimeout(markReady, 120)
+      completionFallbackTimerRef.current = window.setTimeout(() => {
+        beginRevealExit()
+      }, RESUME_LOADING_REVEAL_MS)
+
+      return () => {
+        if (exitTimerRef.current !== null) {
+          window.clearTimeout(exitTimerRef.current)
+          exitTimerRef.current = null
+        }
+        if (readyFallbackTimerRef.current !== null) {
+          window.clearTimeout(readyFallbackTimerRef.current)
+          readyFallbackTimerRef.current = null
+        }
+        if (completionFallbackTimerRef.current !== null) {
+          window.clearTimeout(completionFallbackTimerRef.current)
+          completionFallbackTimerRef.current = null
+        }
+      }
+    }
+
     const video = videoRef.current
     if (video && video.readyState >= 3 && !video.paused) {
       markReady()
@@ -5209,33 +6093,35 @@ function OnboardingLoadingBody(): ReactNode {
         window.clearTimeout(readyFallbackTimerRef.current)
         readyFallbackTimerRef.current = null
       }
+      if (completionFallbackTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(completionFallbackTimerRef.current)
+        completionFallbackTimerRef.current = null
+      }
     }
-  }, [markReady])
+  }, [beginRevealExit, isResumeLaunch, markReady, RESUME_LOADING_REVEAL_MS])
 
-  const beginRevealExit = useCallback((): void => {
-    if (exitStartedRef.current) return
-    exitStartedRef.current = true
-
-    setIsExiting(true)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('african-mandate:theme-fade-out', {
-          detail: { durationMs: 1800 },
-        })
-      )
-    }
-    if (typeof window === 'undefined') {
-      closeModal()
-      return
-    }
-    if (exitTimerRef.current !== null) {
-      window.clearTimeout(exitTimerRef.current)
-    }
-    exitTimerRef.current = window.setTimeout(() => {
-      closeModal()
-      exitTimerRef.current = null
-    }, 220)
-  }, [closeModal])
+  if (isResumeLaunch) {
+    return (
+      <div className={`onboarding-loading-shell is-resume-launch${isReady ? ' is-ready' : ''}${isExiting ? ' is-exiting' : ''}`}>
+        <div className="onboarding-loading-content" role="status" aria-live="polite">
+          <div className="onboarding-loading-kicker">Saved Session Restored</div>
+          <h2 className="onboarding-loading-title">Re-entering the mandate interface</h2>
+          <p className="onboarding-loading-subtitle">
+            Restoring the last saved theater state, actor dossiers, and intelligence channels for {sessionLabel}.
+          </p>
+          <div className="onboarding-loading-session-meta" aria-label="Restored session details">
+            <span>{restoreLabel}</span>
+            <span>{sessionLabel}</span>
+            <span>Turn {sessionTurn} / {sessionMaxTurns}</span>
+          </div>
+          <p className="onboarding-loading-theme-note">Theme track: Briefing Room Runway</p>
+          <div className="onboarding-loading-bar" aria-hidden="true">
+            <span />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`onboarding-loading-shell${isReady ? ' is-ready' : ''}${isExiting ? ' is-exiting' : ''}`}>
@@ -5511,8 +6397,8 @@ export function ModalRoot(): ReactNode {
   const revealFrameRef = useRef<number | null>(null)
   const [missionBriefRevealVisible, setMissionBriefRevealVisible] = useState(false)
   const [missionBriefFromLoading, setMissionBriefFromLoading] = useState(false)
-  const entryGateRequiresChoice = useSessionStore((s) => s.entry_gate_active && !s.entry_gate_confirmed)
-  const isBlockingEntryGate = modal === 'session_manager' && entryGateRequiresChoice
+  const entryGateBlocking = useSessionStore((s) => s.entry_gate_active && !s.entry_gate_confirmed)
+  const isBlockingEntryGate = modal === 'session_manager' && entryGateBlocking
   const isOnboardingLoadingModal = modal === 'onboarding_loading'
   const isTurnLoadingModal = modal === 'turn_loading'
   const isBlockingLoading = isOnboardingLoadingModal || isTurnLoadingModal
@@ -5525,6 +6411,8 @@ export function ModalRoot(): ReactNode {
   const isDossierModal = modal === 'dossier'
   const isDossierArticleModal = modal === 'dossier_article'
   const isIntelReportModal = modal === 'intel_report'
+  const isActorProfileModal = modal === 'actor_profile'
+  const isStatusReportModal = modal === 'status_report'
   const isDialogueModal = modal === 'dialogue'
   const isRelationshipMatrixModal = modal === 'relationship_matrix'
   const isZoneModal = isZoneListModal || isZoneDetailModal
@@ -5820,6 +6708,36 @@ export function ModalRoot(): ReactNode {
             overflow: 'hidden',
             padding: 0,
           }
+      : isActorProfileModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(980px, 95vw)',
+            maxHeight: '92vh',
+            overflow: 'hidden',
+            background: 'linear-gradient(180deg, rgba(14, 14, 14, 0.98), rgba(10, 10, 10, 0.98))',
+            border: '1px solid var(--border)',
+            padding: 0,
+          }
+      : isDialogueModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(980px, 95vw)',
+            maxHeight: '92vh',
+            overflow: 'hidden',
+            background: 'linear-gradient(180deg, rgba(14, 14, 14, 0.98), rgba(10, 10, 10, 0.98))',
+            border: '1px solid var(--border)',
+            padding: 0,
+          }
+      : isStatusReportModal
+        ? {
+            ...MODAL_STYLE,
+            width: 'min(1080px, 96vw)',
+            maxHeight: '92vh',
+            overflow: 'hidden',
+            background: 'linear-gradient(180deg, rgba(14, 14, 14, 0.98), rgba(10, 10, 10, 0.98))',
+            border: '1px solid var(--border)',
+            padding: 0,
+          }
       : isRelationshipMatrixModal
         ? {
             ...MODAL_STYLE,
@@ -5849,6 +6767,10 @@ export function ModalRoot(): ReactNode {
     isDossierModal ? ' modal-content-dossier' : ''
   }${isDossierArticleModal ? ' modal-content-dossier-article' : ''}${
     isIntelReportModal ? ' modal-content-intel-report' : ''
+  }${isActorProfileModal ? ' modal-content-actor-profile' : ''}${
+    isDialogueModal ? ' modal-content-dialogue-review' : ''
+  }${
+    isStatusReportModal ? ' modal-content-status-report' : ''
   }${
     isRelationshipMatrixModal ? ' modal-content-relationship-matrix' : ''
   }${
@@ -5856,7 +6778,7 @@ export function ModalRoot(): ReactNode {
   }${isMissionBriefModal && !missionBriefRevealVisible ? ' mission-brief-prep' : ''}${
     isMissionBriefModal && missionBriefRevealVisible ? ' mission-brief-visible' : ''
   }`
-  const heading = modal === 'session_manager' && entryGateRequiresChoice ? 'Secure Access' : modalTitle(modal)
+  const heading = modal === 'session_manager' && entryGateBlocking ? 'Mission Entry' : modalTitle(modal)
   const backdropClassName = `modal-backdrop${loadingEnteringFromEntryGate ? ' loading-entry-from-gate' : ''}`
 
   if (modal === 'none') return null
@@ -5908,7 +6830,10 @@ export function ModalRoot(): ReactNode {
           !isCutscenePlayerModal &&
           !isDossierModal &&
           !isDossierArticleModal &&
-          !isIntelReportModal && (
+          !isIntelReportModal &&
+          !isActorProfileModal &&
+          !isDialogueModal &&
+          !isStatusReportModal && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ margin: 0, color: 'var(--gold)', fontSize: '1.25rem', fontFamily: 'var(--font-sans)' }}>{heading}</h2>
             {!isBlockingModal && (

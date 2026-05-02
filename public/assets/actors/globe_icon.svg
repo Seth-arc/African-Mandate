@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Globe icon</title>
+  <desc id="desc">A stylized globe representing the international donor community.</desc>
+  <defs>
+    <linearGradient id="globe-bg" x1="18" y1="18" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#163245"/>
+      <stop offset="1" stop-color="#0f1117"/>
+    </linearGradient>
+    <linearGradient id="globe-stroke" x1="30" y1="24" x2="96" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f0d58a"/>
+      <stop offset="1" stop-color="#8fd3ff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="52" fill="url(#globe-bg)"/>
+  <circle cx="64" cy="64" r="51" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  <g fill="none" stroke="url(#globe-stroke)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+    <circle cx="64" cy="64" r="31"/>
+    <path d="M64 21c10 10 16 26 16 43s-6 33-16 43c-10-10-16-26-16-43s6-33 16-43Z"/>
+    <path d="M32 46c9 6 20 9 32 9s23-3 32-9"/>
+    <path d="M32 82c9-6 20-9 32-9s23 3 32 9"/>
+    <path d="M21 64h86"/>
+  </g>
+</svg>

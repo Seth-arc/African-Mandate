@@ -14,6 +14,7 @@ import { ActionBar } from './ActionBar'
 import { ModalRoot } from '../modals/ModalRoot'
 import { useSessionStore } from '../../state/sessionStore'
 import { useTour } from '../../tour/TourContext'
+import { UiTooltipLayer } from '../tooltips/UiTooltipLayer'
 
 function territoryFromState(
   territoryState: Record<TerritoryKey, TerritoryState> | undefined,
@@ -126,12 +127,6 @@ export function GameLayout(): ReactNode {
     }
   }, [menuOpen])
 
-  useEffect(() => {
-    if (authMode !== 'authenticated' && menuOpen) {
-      setMenuOpen(false)
-    }
-  }, [authMode, menuOpen])
-
   const handleSaveSession = async (): Promise<void> => {
     setMenuOpen(false)
     try {
@@ -176,56 +171,77 @@ export function GameLayout(): ReactNode {
             <div className="game-logo-title">African Mandate</div>
             <div className="game-logo-subtitle">Sahel Arena</div>
           </a>
+          <div className="game-header-badges">
+            <span className="game-demo-badge" data-ui-tooltip="shell.demo_mode">Demo Mode - Synthetic Data</span>
+            <span className="game-mode-status" data-ui-tooltip="shell.mode_status">
+              {authMode === 'authenticated' ? 'Cloud Mode' : 'Guest Mode'}
+            </span>
+          </div>
         </div>
         <nav className="game-header-nav">
-          <button type="button" className="game-nav-btn" id="btn-onboarding-tour" onClick={() => startTour()}>
+          <button
+            type="button"
+            className="game-nav-btn"
+            id="btn-onboarding-tour"
+            data-ui-tooltip="nav.onboarding"
+            onClick={() => startTour()}
+          >
             Onboarding
           </button>
-          <button type="button" className="game-nav-btn" id="btn-mission-brief" onClick={() => openModal('mission_brief')}>
+          <button
+            type="button"
+            className="game-nav-btn"
+            id="btn-mission-brief"
+            data-ui-tooltip="nav.mission_brief"
+            onClick={() => openModal('mission_brief')}
+          >
             Mission brief
           </button>
-          <button type="button" className="game-nav-btn" id="btn-status-report" onClick={() => openModal('status_report')}>
+          <button
+            type="button"
+            className="game-nav-btn"
+            id="btn-status-report"
+            data-ui-tooltip="nav.status_report"
+            onClick={() => openModal('status_report')}
+          >
             Status report
           </button>
-          {authMode === 'authenticated' ? (
-            <div className="game-menu" ref={menuRef}>
-              <button
-                type="button"
-                className="game-nav-btn game-menu-trigger"
-                id="btn-menu"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((current) => !current)}
-              >
-                Menu
-              </button>
-              {menuOpen && (
-                <div className="game-menu-dropdown" role="menu" aria-label="Account menu">
-                  <button type="button" className="game-menu-item" role="menuitem" onClick={() => void handleSaveSession()}>
-                    Save Session
-                  </button>
-                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleLoadSession}>
-                    Load Session
-                  </button>
-                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleSettings}>
-                    Settings
-                  </button>
-                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleTutorial}>
-                    Tutorial
-                  </button>
-                  <button type="button" className="game-menu-item" role="menuitem" onClick={handleCredits}>
-                    Credits
-                  </button>
-                  <div className="game-menu-divider" />
-                  <button type="button" className="game-menu-item danger" role="menuitem" onClick={handleExit}>
-                    Exit
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <span className="game-mode-status">Guest mode</span>
-          )}
+          <div className="game-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="game-nav-btn game-menu-trigger"
+              id="btn-menu"
+              data-ui-tooltip="nav.menu"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              Menu
+            </button>
+            {menuOpen && (
+              <div className="game-menu-dropdown" role="menu" aria-label="Session menu">
+                <button type="button" className="game-menu-item" role="menuitem" onClick={() => void handleSaveSession()}>
+                  Save Session
+                </button>
+                <button type="button" className="game-menu-item" role="menuitem" onClick={handleLoadSession}>
+                  Load Session
+                </button>
+                <button type="button" className="game-menu-item" role="menuitem" onClick={handleSettings}>
+                  Settings
+                </button>
+                <button type="button" className="game-menu-item" role="menuitem" onClick={handleTutorial}>
+                  Tutorial
+                </button>
+                <button type="button" className="game-menu-item" role="menuitem" onClick={handleCredits}>
+                  Credits
+                </button>
+                <div className="game-menu-divider" />
+                <button type="button" className="game-menu-item danger" role="menuitem" onClick={handleExit}>
+                  Exit
+                </button>
+              </div>
+            )}
+          </div>
         </nav>
       </header>
 
@@ -240,7 +256,7 @@ export function GameLayout(): ReactNode {
           <div className="game-map-wrap">
             <MapView />
           </div>
-          <section className="game-scenario-panel" id="scenario-panel">
+          <section className="game-scenario-panel" id="scenario-panel" data-ui-tooltip="panel.scenario">
             {endingType ? (
               <>
                 <div className="game-scenario-title" id="territory-info">
@@ -399,6 +415,7 @@ export function GameLayout(): ReactNode {
       </main>
 
       <ActionBar />
+      <UiTooltipLayer />
       <ModalRoot />
     </div>
   )

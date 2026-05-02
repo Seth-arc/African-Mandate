@@ -13,7 +13,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/diallo_portrait.png",
+      "portrait_url": "assets/actors/AU%20Commissioner.png",
       "notes": "Mission authority voice. No direct negotiation."
     },
     {
@@ -183,7 +183,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": 55,
       "relationship_tracked": true,
-      "portrait_url": "assets/actors/donors_logo.png",
+      "portrait_url": "assets/actors/globe_icon.svg",
       "notes": "Budget gatekeeper. Legitimacy-linked."
     },
     {
@@ -196,7 +196,7 @@
       "default_sentiment": "neutral",
       "default_relationship_score": null,
       "relationship_tracked": false,
-      "portrait_url": "assets/actors/AU Commissioner.png",
+      "portrait_url": "assets/actors/AU%20Commissioner.png",
       "notes": "Intel report generation. Internal institution."
     },
     {
