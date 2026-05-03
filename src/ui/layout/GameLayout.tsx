@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore } from '../../state/uiStore'
 import type { TerritoryKey, TerritoryState } from '../../state/types'
@@ -15,6 +15,7 @@ import { ModalRoot } from '../modals/ModalRoot'
 import { useSessionStore } from '../../state/sessionStore'
 import { useTour } from '../../tour/TourContext'
 import { UiTooltipLayer } from '../tooltips/UiTooltipLayer'
+import { recordTelemetryEvent } from '../../utils/telemetry'
 
 function territoryFromState(
   territoryState: Record<TerritoryKey, TerritoryState> | undefined,
@@ -89,9 +90,11 @@ export function GameLayout(): ReactNode {
   const selectedZoneId = useUiStore((s) => s.selectedZoneId)
   const authMode = useSessionStore((s) => s.auth_mode)
   const saveSessionState = useSessionStore((s) => s.saveState)
+  const entryGateConfirmed = useSessionStore((s) => s.entry_gate_confirmed)
   const { start: startTour } = useTour()
   const lastObservedTurnRef = useRef<number | null>(null)
   const shownOutcomeRef = useRef<boolean>(false)
+  const abandonmentRecordedRef = useRef<boolean>(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -109,6 +112,19 @@ export function GameLayout(): ReactNode {
     },
     null
   )
+
+  const recordCampaignAbandonment = useCallback((): void => {
+    if (abandonmentRecordedRef.current) return
+    const currentState = useGameStore.getState().state
+    if (currentState.ending_type) return
+    abandonmentRecordedRef.current = true
+    recordTelemetryEvent('campaign_abandoned', {
+      turn: currentState.session.turn,
+      actions_remaining: currentState.session.actions_remaining,
+      auth_mode: useSessionStore.getState().auth_mode,
+      ending_type: null,
+    })
+  }, [])
 
   useEffect(() => {
     const previousTurn = lastObservedTurnRef.current
@@ -134,6 +150,13 @@ export function GameLayout(): ReactNode {
 
   useEffect(() => {
     if (endingType && !shownOutcomeRef.current) {
+      recordTelemetryEvent('campaign_completed', {
+        ending_type: endingType,
+        fail_reason: failReason ?? null,
+        turn: session.turn,
+        final_metrics: session.metrics,
+        resources: session.resources,
+      })
       const endingCutscene = content?.cutscenes.cutscenes.find(
         (scene) => scene.cutscene_id === `cutscene_ending_${endingType}`
       )
@@ -149,7 +172,16 @@ export function GameLayout(): ReactNode {
     if (!endingType) {
       shownOutcomeRef.current = false
     }
-  }, [content, endingType, openModal, setPendingCutscene])
+  }, [content, endingType, failReason, openModal, session.metrics, session.resources, session.turn, setPendingCutscene])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !entryGateConfirmed) return undefined
+    const handlePageHide = (): void => recordCampaignAbandonment()
+    window.addEventListener('pagehide', handlePageHide)
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide)
+    }
+  }, [entryGateConfirmed, recordCampaignAbandonment])
 
   useEffect(() => {
     if (!menuOpen || typeof window === 'undefined') return
@@ -207,6 +239,7 @@ export function GameLayout(): ReactNode {
 
   const handleExit = (): void => {
     setMenuOpen(false)
+    recordCampaignAbandonment()
     if (typeof window !== 'undefined') {
       window.location.href = window.location.pathname
     }
@@ -221,7 +254,7 @@ export function GameLayout(): ReactNode {
             <div className="game-logo-subtitle">Sahel Arena</div>
           </a>
           <div className="game-header-badges">
-            <span className="game-demo-badge" data-ui-tooltip="shell.demo_mode">Demo Mode - Synthetic Data</span>
+            <span className="game-demo-badge" data-ui-tooltip="shell.demo_mode">Desktop Public Demo - Synthetic Data</span>
             <span className="game-mode-status" data-ui-tooltip="shell.mode_status">
               {authMode === 'authenticated' ? 'Cloud Mode' : 'Guest Mode'}
             </span>

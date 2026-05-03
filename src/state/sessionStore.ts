@@ -20,7 +20,7 @@ import {
   type SaveReason,
   type SessionSummary,
 } from '../services/saveService'
-import { setTelemetryEnabled } from '../utils/telemetry'
+import { recordTelemetryEvent, setTelemetryEnabled } from '../utils/telemetry'
 import { reconcileTerritoryStateFromZones } from './territoryStateRuntime'
 import {
   applySessionPreferencesToDocument,
@@ -346,6 +346,13 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
       await get().refreshSessions()
     } catch (error) {
       const message = messageFromError(error)
+      const state = get()
+      recordTelemetryEvent('save_failed', {
+        mode,
+        reason,
+        auth_mode: state.auth_mode,
+        message,
+      })
       set({
         error: message,
         save_error: message,
@@ -462,6 +469,10 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
         high_contrast_enabled: enabled,
       }
       applyPreferences(preferences)
+      recordTelemetryEvent('accessibility_mode_changed', {
+        setting: 'high_contrast_enabled',
+        enabled,
+      })
       return { preferences }
     })
   },
@@ -473,6 +484,10 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
         reduced_motion_enabled: enabled,
       }
       applyPreferences(preferences)
+      recordTelemetryEvent('accessibility_mode_changed', {
+        setting: 'reduced_motion_enabled',
+        enabled,
+      })
       return { preferences }
     })
   },
@@ -484,6 +499,10 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
         tooltips_enabled: enabled,
       }
       applyPreferences(preferences)
+      recordTelemetryEvent('accessibility_mode_changed', {
+        setting: 'tooltips_enabled',
+        enabled,
+      })
       return { preferences }
     })
   },

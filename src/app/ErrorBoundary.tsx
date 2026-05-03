@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { recordTelemetryEvent } from '../utils/telemetry'
 
 interface Props {
   children: ReactNode
@@ -19,6 +20,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('ErrorBoundary:', error, info.componentStack)
+    recordTelemetryEvent('e2e_critical_error', {
+      surface: 'error_boundary',
+      message: error.message,
+      component_stack: info.componentStack,
+    })
   }
 
   render(): ReactNode {

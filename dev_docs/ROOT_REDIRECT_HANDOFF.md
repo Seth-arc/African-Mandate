@@ -5,11 +5,11 @@ Purpose
 - Keep the redirect unapplied until explicit release sign-off.
 
 Current Status
-- `game/` is the first-playable source of truth.
-- Root `index.html` is still a legacy landing surface and has not been redirected.
+- The current release position is a desktop-only public demo served through the root landing page plus embedded React game.
+- Root `index.html` remains the public entry surface because it owns the desktop demo gate, cinematic entry, and mobile block copy.
 
 Activation Trigger
-- Apply this handoff only after explicit sign-off that Phase 5 is accepted for player-facing release.
+- Apply this handoff only after explicit sign-off that the production public game is accepted, including mobile/touch certification and durable telemetry.
 
 Handoff Steps (On Sign-Off)
 1. Build the React app:
@@ -31,7 +31,9 @@ Rollback Plan
 - Revert deployment target from React root to legacy root.
 
 Sign-Off Checklist
-- [ ] Product sign-off on first-playable quality.
+- [ ] Product sign-off on production public game quality.
 - [ ] Full regression commands green (`typecheck`, tests, build).
 - [ ] Manual smoke path confirmed on release environment.
+- [ ] Mobile/touch and accessibility certification complete.
+- [ ] Durable telemetry pipeline accepted or explicitly waived.
 - [ ] Redirect/root handoff applied in deployment config.

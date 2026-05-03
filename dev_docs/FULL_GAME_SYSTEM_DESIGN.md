@@ -77,11 +77,12 @@
 2) Pay costs (budget, political_capital, personnel, intel_points, time_months)
 3) Apply effects (metrics, actors, zones)
 4) Queue delayed_effects if delay_turns > 0 (store turn_due = current_turn + delay_turns)
-5) Resolve consequences (events, AI counter-moves)
-6) Log action and outcomes (including any queued delayed_effects metadata)
-7) Update UI, intel feed, and status report
+5) Log action and outcomes (including any queued delayed_effects metadata)
+6) Update UI, intel feed, and status report immediately
 Notes:
 - cooldowns and intel gates are per-action; if an action omits them, use game_config defaults
+- Runtime timing: player actions and dialogue choices resolve immediately on commit. Per-turn drift, delayed effects whose `turn_due` is reached, event triggers/penalties, and AI director counter-pressure resolve only when the player clicks End Turn.
+- Action log entries carry `resolution_timing`: `immediate_action`, `immediate_dialogue`, or `end_turn`.
 
 ## Territory Aggregation and Per-Turn Drift (Exact Formula)
 - Zone weight: use numeric zone population if present, otherwise weight = 1
@@ -145,9 +146,10 @@ Notes:
 - Flags reduce escalation severity by 50% and reduce recurrence chance by 25%
 
 ## Telemetry (Full Game Balancing)
-- Per turn: action choices, costs, metric deltas, crisis outcomes
-- Per act: success/fail causes, actor relationship shifts
-- Per campaign: ending distribution, time-to-stabilize, most used actions
+- Current public demo telemetry is local QA-only and opt-in; it is not durable production analytics.
+- Per turn: action choices, validation failures, costs, metric deltas, crisis outcomes, and reveal timing.
+- Per campaign: completion/abandonment, ending distribution, final metrics, save failures, accessibility mode use, and E2E-critical errors.
+- Production telemetry remains blocked until a durable collector, retention policy, and operator monitoring are implemented.
 
 ## Strategic Score (Leaderboard)
 - strategic_score = round((stability + global_legitimacy) / 2)

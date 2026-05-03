@@ -28,6 +28,9 @@ const METRIC_KEYS = [
 /** Critical bands: REQUIRED_KEYS_AND_CONSTRAINTS / WIN_LOSS_SCORING_SPEC */
 const CRITICAL_LOW = 24
 const CRITICAL_HIGH_INSURGENCY = 75
+const CATEGORY_COUNTERPRESSURE_DELTA = 10
+const CATEGORY_COUNTERPRESSURE_WINDOW_TURNS = 4
+const CATEGORY_COUNTERPRESSURE_THRESHOLD = 3
 
 function clampMetric(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)))
@@ -39,6 +42,18 @@ function clampResource(value: number): number {
 
 function clampAiState(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+export interface CategoryCounterpressureSignal {
+  category: string
+  count: number
+}
+
+function categoriesForCounterpressure(category: string): string[] {
+  if (category === 'community_mediation') {
+    return ['community_mediation', 'diplomacy', 'humanitarian']
+  }
+  return [category]
 }
 
 /** Derive act from turn (1-based). act = floor((turn - 1) / 4) + 1 */
@@ -213,11 +228,44 @@ export function applyDrift(state: GameState, metrics: Metrics): Metrics {
   }
 }
 
+export function detectRepeatedActionCategoryUse(
+  state: GameState,
+  turn: number = state.session.turn
+): CategoryCounterpressureSignal | null {
+  const actionDefinitions = state.content?.actions.actions
+  const actionLog = state.action_log ?? []
+  if (!actionDefinitions || actionDefinitions.length === 0 || actionLog.length === 0) {
+    return null
+  }
+
+  const actionCategoryById = new Map(
+    actionDefinitions.map((action) => [action.action_id, action.category] as const)
+  )
+  const counts = new Map<string, number>()
+  const windowStartTurn = turn - CATEGORY_COUNTERPRESSURE_WINDOW_TURNS + 1
+
+  for (const entry of actionLog) {
+    if (entry.turn < windowStartTurn || entry.turn > turn) continue
+    const category = actionCategoryById.get(entry.action_id)
+    if (!category) continue
+    for (const counterCategory of categoriesForCounterpressure(category)) {
+      counts.set(counterCategory, (counts.get(counterCategory) ?? 0) + 1)
+    }
+  }
+
+  const signals = Array.from(counts.entries())
+    .filter(([, count]) => count >= CATEGORY_COUNTERPRESSURE_THRESHOLD)
+    .sort(([categoryA, countA], [categoryB, countB]) => countB - countA || categoryA.localeCompare(categoryB))
+
+  const topSignal = signals[0]
+  return topSignal ? { category: topSignal[0], count: topSignal[1] } : null
+}
+
 /**
  * AI Director: add opposition_pressure based on metrics (FULL_GAME_SYSTEM_DESIGN).
  * If stability < 45 for 2 turns, AI increases pressure (+5).
  * If global_legitimacy < 45, +5. If civilian_support < 45, +5.
- * Category spam (+10) requires actions_log; skipped here.
+ * If the same action category appears at least 3 times in the last 4 turns, +10.
  */
 export function applyAiDirector(
   state: GameState,
@@ -236,6 +284,9 @@ export function applyAiDirector(
   }
   if (metrics.civilian_support < 45) {
     pressure += 5
+  }
+  if (detectRepeatedActionCategoryUse(state, turn)) {
+    pressure += CATEGORY_COUNTERPRESSURE_DELTA
   }
 
   return Math.min(100, pressure)

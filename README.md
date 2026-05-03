@@ -2,6 +2,10 @@
 
 Turn-based strategy game: you play the AU Special Envoy in the Sahel. This folder is the Vite + React + TypeScript application.
 
+## Launch scope
+
+Current positioning is a **desktop-only public demo**, not a fully certified production public game. Phone-sized touch devices are blocked by the landing-page mobile gate until the touch layout, performance, and accessibility pass are certified. Demo data is synthetic, and runtime telemetry is local QA-only behind the in-game telemetry opt-in.
+
 ## Quick start
 
 ```bash

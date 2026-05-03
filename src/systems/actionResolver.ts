@@ -569,6 +569,7 @@ export function executeActionWithLog(
     turn: state.session.turn,
     action_id: action.action_id,
     target: { ...target },
+    resolution_timing: 'immediate_action',
     costs: { ...cost },
     metric_deltas,
     resource_deltas,

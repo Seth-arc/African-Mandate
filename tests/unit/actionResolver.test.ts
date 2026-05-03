@@ -335,6 +335,7 @@ describe('actionResolver', () => {
       expect(result.state.action_log).toHaveLength(1)
       expect(result.logEntry.action_id).toBe('security_patrol_deployment')
       expect(result.logEntry.target.zone_id).toBe('mopti')
+      expect(result.logEntry.resolution_timing).toBe('immediate_action')
       expect(result.logEntry.costs.budget).toBe(1_000_000)
       expect(result.logEntry.metric_deltas.stability).toBe(2)
       expect(result.logEntry.metric_deltas.insurgency).toBe(-3)

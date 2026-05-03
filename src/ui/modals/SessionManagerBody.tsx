@@ -3,6 +3,7 @@ import { SESSION_NAME_MAX_LENGTH } from '../../services/saveService'
 import { useGameStore } from '../../state/gameStore'
 import { useSessionStore } from '../../state/sessionStore'
 import { useUiStore } from '../../state/uiStore'
+import { recordTelemetryEvent } from '../../utils/telemetry'
 
 function formatSessionLabel(name: string | null, turn: number): string {
   if (name && name.trim().length > 0) {
@@ -81,6 +82,15 @@ export function SessionManagerBody(): ReactNode {
   }
 
   const handleStartCampaign = (): void => {
+    recordTelemetryEvent('funnel_campaign_started', {
+      auth_mode: sessionStore.auth_mode,
+      difficulty_mode: sessionStore.preferences.difficulty_mode,
+      analytics_opt_in: sessionStore.preferences.analytics_opt_in,
+      high_contrast_enabled: sessionStore.preferences.high_contrast_enabled,
+      reduced_motion_enabled: sessionStore.preferences.reduced_motion_enabled,
+      tooltips_enabled: sessionStore.preferences.tooltips_enabled,
+      source: requiresEntryChoice ? 'entry_gate' : 'session_manager',
+    })
     sessionStore.startNewCampaign()
     resetGame(sessionStore.preferences.difficulty_mode)
     setStatusMessage(null)
@@ -100,6 +110,12 @@ export function SessionManagerBody(): ReactNode {
       const baseState = useGameStore.getState().state
       const restored = await sessionStore.loadState(sessionId, baseState)
       useGameStore.setState({ state: restored })
+      recordTelemetryEvent('funnel_campaign_resumed', {
+        auth_mode: sessionStore.auth_mode,
+        session_id: sessionId,
+        turn: restored.session.turn,
+        source: requiresEntryChoice ? 'entry_gate' : 'session_manager',
+      })
 
       if (requiresEntryChoice) {
         sessionStore.completeEntryGate('resume')
@@ -344,7 +360,7 @@ export function SessionManagerBody(): ReactNode {
                     checked={sessionStore.preferences.analytics_opt_in}
                     onChange={(event) => sessionStore.setAnalyticsOptIn(event.target.checked)}
                   />
-                  <span>Analytics opt-in</span>
+                  <span>Local QA telemetry opt-in</span>
                 </label>
                 <label className="session-preference-toggle">
                   <input

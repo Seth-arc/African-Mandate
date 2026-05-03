@@ -361,6 +361,7 @@ export function executeDialogueChoice(
     turn: state.session.turn,
     action_id: `dialogue:${dialogue.dialogue_id}:${choice.choice_id}`,
     target: { actor_key: dialogue.actor_key },
+    resolution_timing: 'immediate_dialogue',
     costs: dialogueCostSnapshot(choice),
     metric_deltas: metricDeltas,
     resource_deltas: resourceDeltas,

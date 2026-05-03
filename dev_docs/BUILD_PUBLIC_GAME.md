@@ -7,7 +7,7 @@ This document lays out a complete, end-to-end process for rebuilding and shippin
 - context_files/NEW_BUILD_ARENA_SAHEL_NARRATIVE_BOOK.md
 - context_files/NEW_FEATURES_DOCUMENTATION.md
 
-The goal is a production-quality web release that is maintainable, testable, and ready for public use.
+The current release stance is a **desktop-only public demo** that is maintainable, testable, and ready for public audience evaluation on desktop/laptop browsers. It is not yet a fully certified production public game because mobile play is blocked and telemetry is local QA-only rather than durable production analytics.
 
 ---
 
@@ -33,6 +33,8 @@ The goal is a production-quality web release that is maintainable, testable, and
 - Maintain focus on turn-based strategy, not real-time combat.
 - Expand depth through data, events, and narrative, not tech complexity.
 - Use the existing prototype as the primary reference for UI and flow.
+- Public demo launch blocks phone-sized touch devices until the mobile layout, touch flow, accessibility, and performance gates pass.
+- Production public game launch remains blocked until durable telemetry replaces the local QA-only browser queue.
 
 ---
 

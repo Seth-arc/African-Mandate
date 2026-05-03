@@ -3787,6 +3787,7 @@ function DialogueBody(): ReactNode {
   const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
   const autosaveState = useSessionStore((s) => s.autosaveState)
+  const [runtimeError, setRuntimeError] = useState<string | null>(null)
 
   const actor = content && selectedActorKey
     ? resolveActorData(content, selectedActorKey)
@@ -3800,6 +3801,10 @@ function DialogueBody(): ReactNode {
       setSelectedDialogueId(dialogueAvailability.dialogueId)
     }
   }, [dialogueAvailability, selectedDialogueId, setSelectedDialogueId])
+
+  useEffect(() => {
+    setRuntimeError(null)
+  }, [dialogueFlowStep, selectedActorKey, selectedDialogueId])
 
   if (!content) {
     return (
@@ -3924,16 +3929,26 @@ function DialogueBody(): ReactNode {
 
   const executeChoice = (choiceId: string): void => {
     try {
+      setRuntimeError(null)
       const result = executeDialogueChoice(state, dialogue.dialogue_id, choiceId)
       useGameStore.setState({ state: result.state })
       void autosaveState(result.state, 'dialogue').catch((error: unknown) => reportAutosaveFailure(error, 'dialogue'))
       setDialogueOutcome(result.outcomeTextKey, result.choice.choice_id)
     } catch (error: unknown) {
+      const message = error instanceof GameError
+        ? `Dialogue failed: ${error.message}`
+        : 'Dialogue failed due to an unexpected runtime error.'
+      setRuntimeError(message)
+      recordTelemetryEvent('e2e_critical_error', {
+        surface: 'dialogue_execute',
+        dialogue_id: dialogue.dialogue_id,
+        choice_id: choiceId,
+        code: error instanceof GameError ? error.code : 'UNEXPECTED_RUNTIME_ERROR',
+        message,
+      })
       if (error instanceof GameError) {
-        window.alert(`Dialogue failed: ${error.message}`)
         return
       }
-      window.alert('Dialogue failed due to an unexpected runtime error.')
     }
   }
 
@@ -4057,6 +4072,12 @@ function DialogueBody(): ReactNode {
               </div>
             )}
 
+            {runtimeError && (
+              <div className="action-config-validation" role="alert">
+                {runtimeError}
+              </div>
+            )}
+
             {dialogueAvailability.isAvailable && choices.length > 0 && (
               <div className="dialogue-choice-list">
                 {choices.map((choice) => {
@@ -4168,6 +4189,22 @@ function formatTargetLabel(content: ReturnType<typeof useGameStore.getState>['st
   if (target.territory_key) return resolveTerritoryName(content, target.territory_key)
   if (target.actor_key) return resolveActorName(content, target.actor_key)
   return 'N/A'
+}
+
+function targetScopeLabel(scope: ActionDefinition['target_scope']): string {
+  if (scope === 'zone') return 'Zone'
+  if (scope === 'territory') return 'Territory'
+  return 'Actor'
+}
+
+function targetScopeDescription(action: ActionDefinition, targetLabel: string): string {
+  if (action.target_scope === 'zone') {
+    return `Zone-scoped action. Immediate effects apply to ${targetLabel}; territory status then rolls up from zone state.`
+  }
+  if (action.target_scope === 'territory') {
+    return `Territory-scoped action. Immediate effects apply at ${targetLabel} level and may influence its mapped zones through authored effects.`
+  }
+  return `Actor-scoped action. Immediate effects apply to ${targetLabel}'s relationship and any authored mandate metrics.`
 }
 
 function formatCategoryLabel(category: string): string {
@@ -4991,14 +5028,14 @@ function ActionTransitionBody(): ReactNode {
         <div className={`action-transition-flash${flashActive ? ' is-active' : ''}`} aria-hidden="true" />
         <div className="action-transition-noise" aria-hidden="true" />
         <p className="action-transition-kicker">Action Confirmed</p>
-        <h3 className="action-transition-title">Synchronizing operational consequences...</h3>
+        <h3 className="action-transition-title">Applying immediate action consequences...</h3>
         <p className="action-transition-copy">
-          Rebuilding regional posture, diplomatic response vectors, and human terrain availability.
+          Costs, direct effects, and unlocked intel resolve now. End Turn resolves drift, events, and AI counter-pressure.
         </p>
         <div className="action-transition-diagnostics" aria-hidden="true">
-          <span>Compiling cross-theater impact matrix</span>
-          <span>Correlating stakeholder reaction vectors</span>
-          <span>Verifying AU command synchronization</span>
+          <span>Applying action cost ledger</span>
+          <span>Updating immediate metric and relationship deltas</span>
+          <span>Queueing turn-end systems for later resolution</span>
         </div>
         <div className="action-transition-loader" aria-hidden="true">
           <span />
@@ -5183,6 +5220,8 @@ function ActionConfigBody(): ReactNode {
   const openModal = useUiStore((s) => s.openModal)
   const closeModal = useUiStore((s) => s.closeModal)
   const reviewForecastTelemetryRef = useRef<string | null>(null)
+  const validationTelemetryRef = useRef<string | null>(null)
+  const [runtimeError, setRuntimeError] = useState<string | null>(null)
   const actions = content?.actions.actions ?? []
   const categories = Array.from(new Set(actions.map((item) => item.category)))
   const selectedAction = selectedActionId ? actions.find((item) => item.action_id === selectedActionId) : undefined
@@ -5202,6 +5241,7 @@ function ActionConfigBody(): ReactNode {
     setActionAllocation(buildDefaultAllocation(action))
     setActionFlowStep('configure')
     setActionOutcome(null)
+    setRuntimeError(null)
   }, [action, actionId, setActionAllocation, setActionFlowStep, setActionOutcome])
 
   const zoneState = state.zone_state ?? {}
@@ -5237,10 +5277,9 @@ function ActionConfigBody(): ReactNode {
     : territoryOptions[0]
 
   const zoneOptions: SelectOption<string>[] = allZones
-    .filter((zone) => (selectedTerritory ? zone.territory_key === selectedTerritory : true))
     .map((zone) => ({
       value: zone.zone_id,
-      label: resolveZoneName(content, zone.zone_id),
+      label: `${resolveZoneName(content, zone.zone_id)} - ${resolveTerritoryName(content, zone.territory_key)}`,
     }))
 
   const selectedZone = pickPreferredOption(selectedTarget?.zone_id ?? selectedZoneId, zoneOptions)
@@ -5280,36 +5319,26 @@ function ActionConfigBody(): ReactNode {
     if (!actionId) return
     const matched = territoryOptions.find((option) => option.value === value)
     if (!matched) {
-      setSelectedAction(actionId, { ...(selectedTarget ?? {}), territory_key: undefined, zone_id: undefined })
+      setSelectedAction(actionId, {})
       return
     }
-    const defaultZoneForTerritory = allZones.find((zone) => zone.territory_key === matched.value)?.zone_id
-    setSelectedAction(actionId, {
-      ...(selectedTarget ?? {}),
-      territory_key: matched.value,
-      zone_id: defaultZoneForTerritory,
-    })
+    setSelectedAction(actionId, { territory_key: matched.value })
   }
 
   const handleZoneChange = (value: string): void => {
     if (!actionId) return
     const matched = zoneOptions.find((option) => option.value === value)
     if (!matched) {
-      setSelectedAction(actionId, { ...(selectedTarget ?? {}), zone_id: undefined })
+      setSelectedAction(actionId, {})
       return
     }
-    const zone = zoneState[matched.value]
-    setSelectedAction(actionId, {
-      ...(selectedTarget ?? {}),
-      territory_key: zone?.territory_key ?? selectedTerritory,
-      zone_id: matched.value,
-    })
+    setSelectedAction(actionId, { zone_id: matched.value })
   }
 
   const handleActorChange = (value: string): void => {
     if (!actionId) return
     const matched = actorOptions.find((option) => option.value === value)
-    setSelectedAction(actionId, { ...(selectedTarget ?? {}), actor_key: matched?.value })
+    setSelectedAction(actionId, matched ? { actor_key: matched.value } : {})
   }
 
   const requestedAllocation = action ? buildRequestedAllocation(action, actionAllocation) : null
@@ -5368,6 +5397,10 @@ function ActionConfigBody(): ReactNode {
       validationError = error instanceof GameError ? error.message : 'Action cannot be executed with current state.'
     }
   }
+  const validationErrorId = 'action-config-validation-message'
+  const runtimeErrorId = 'action-config-runtime-error'
+  const targetLabel = formatTargetLabel(content, resolvedTarget)
+  const scopeDescription = action ? targetScopeDescription(action, targetLabel) : ''
 
   const reviewForecastTelemetryKey =
     action && cost
@@ -5420,6 +5453,37 @@ function ActionConfigBody(): ReactNode {
     state.session.turn,
   ])
 
+  useEffect(() => {
+    if (!action || !validationError) {
+      validationTelemetryRef.current = null
+      return
+    }
+    const telemetryKey = [
+      state.session.turn,
+      action.action_id,
+      action.target_scope,
+      validationError,
+      resolvedTarget.zone_id ?? '',
+      resolvedTarget.territory_key ?? '',
+      resolvedTarget.actor_key ?? '',
+    ].join(':')
+    if (validationTelemetryRef.current === telemetryKey) return
+    validationTelemetryRef.current = telemetryKey
+    recordTelemetryEvent('action_validation_failed', {
+      turn: state.session.turn,
+      action_id: action.action_id,
+      target_scope: action.target_scope,
+      reason: validationError,
+    })
+  }, [
+    action,
+    resolvedTarget.actor_key,
+    resolvedTarget.territory_key,
+    resolvedTarget.zone_id,
+    state.session.turn,
+    validationError,
+  ])
+
   if (!content) {
     return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading action definitions...</p>
   }
@@ -5437,6 +5501,18 @@ function ActionConfigBody(): ReactNode {
   }
 
   const executeAction = (): void => {
+    if (validationError) {
+      setRuntimeError(`Resolve validation first: ${validationError}`)
+      recordTelemetryEvent('action_validation_failed', {
+        turn: state.session.turn,
+        action_id: action.action_id,
+        target_scope: action.target_scope,
+        reason: validationError,
+        source: 'confirm_guard',
+      })
+      return
+    }
+    setRuntimeError(null)
     recordTelemetryEvent('action_confirmed_from_review', {
       turn: state.session.turn,
       action_id: action.action_id,
@@ -5457,11 +5533,15 @@ function ActionConfigBody(): ReactNode {
       })
       openModal('action_transition')
     } catch (error: unknown) {
-      if (error instanceof GameError) {
-        window.alert(`Action failed: ${error.message}`)
-        return
-      }
-      window.alert('Action failed due to an unexpected runtime error.')
+      const message = error instanceof GameError
+        ? `Action failed: ${error.message}`
+        : 'Action failed due to an unexpected runtime error.'
+      setRuntimeError(message)
+      recordTelemetryEvent('e2e_critical_error', {
+        surface: 'action_execute',
+        action_id: action.action_id,
+        message,
+      })
     }
   }
 
@@ -5479,13 +5559,17 @@ function ActionConfigBody(): ReactNode {
           </div>
           <div className="action-config-review-row">
             <span>Target</span>
-            <strong>{formatTargetLabel(content, resolvedTarget)}</strong>
+            <strong>{targetLabel}</strong>
           </div>
-          {resolvedTarget.zone_id && (
-            <div className="action-config-review-row">
-              <span>Territory</span>
-              <strong>{resolvedTargetTerritoryLabel ?? 'N/A'}</strong>
-            </div>
+          <div className="action-config-review-row">
+            <span>Target scope</span>
+            <strong>{targetScopeLabel(action.target_scope)}</strong>
+          </div>
+          <p className="action-config-target-note">{scopeDescription}</p>
+          {resolvedTarget.zone_id && resolvedTargetTerritoryLabel && (
+            <p className="action-config-target-note">
+              Parent territory for context: {resolvedTargetTerritoryLabel}.
+            </p>
           )}
           {allocationSpecs.map((spec) => (
             <div className="action-config-review-row" key={spec.key}>
@@ -5544,8 +5628,14 @@ function ActionConfigBody(): ReactNode {
         </section>
 
         {validationError && (
-          <div className="action-config-validation">
+          <div className="action-config-validation" id={validationErrorId} role="alert">
             {validationError}
+          </div>
+        )}
+
+        {runtimeError && (
+          <div className="action-config-validation" id={runtimeErrorId} role="alert">
+            {runtimeError}
           </div>
         )}
 
@@ -5562,6 +5652,7 @@ function ActionConfigBody(): ReactNode {
             className="action-config-confirm"
             onClick={executeAction}
             disabled={validationError !== null}
+            aria-describedby={runtimeError ? runtimeErrorId : validationError ? validationErrorId : undefined}
           >
             Confirm action
           </button>
@@ -5668,77 +5759,81 @@ function ActionConfigBody(): ReactNode {
         </label>
       </div>
 
-      <label className="action-config-field">
-        <span>Territory</span>
-        {territoryOptions.length === 0 ? (
-          <div className="action-config-territory-trigger is-disabled">
-            <span className="action-config-territory-name">No valid targets available</span>
-          </div>
-        ) : (
-          <details className="action-config-territory-select">
-            <summary className="action-config-territory-trigger">
-              <span className="action-config-territory-option">
-                <TerritoryFlagBadge
-                  territoryName={selectedTerritoryOption?.label ?? 'Territory'}
-                  flagSrc={selectedTerritoryOption?.flagSrc ?? null}
-                  fallbackFlag={selectedTerritoryOption?.fallbackFlag ?? null}
-                />
-                <span className="action-config-territory-name">
-                  {selectedTerritoryOption?.label ?? 'Select territory'}
-                </span>
-              </span>
-              <span className="action-config-territory-chevron">Select</span>
-            </summary>
-            <div className="action-config-territory-menu" role="listbox" aria-label="Territory options">
-              {territoryOptions.map((option) => (
-                <button
-                  type="button"
-                  key={option.value}
-                  className={`action-config-territory-item${option.value === selectedTerritory ? ' is-selected' : ''}`}
-                  role="option"
-                  aria-selected={option.value === selectedTerritory}
-                  onClick={(event) => {
-                    handleTerritoryChange(option.value)
-                    const detailsElement = event.currentTarget.closest('details')
-                    if (detailsElement instanceof HTMLDetailsElement) {
-                      detailsElement.open = false
-                    }
-                  }}
-                >
-                  <span className="action-config-territory-option">
-                    <TerritoryFlagBadge
-                      territoryName={option.label}
-                      flagSrc={option.flagSrc}
-                      fallbackFlag={option.fallbackFlag}
-                    />
-                    <span className="action-config-territory-name">{option.label}</span>
-                  </span>
-                </button>
-              ))}
+      {action.target_scope === 'territory' && (
+        <label className="action-config-field">
+          <span>Territory</span>
+          {territoryOptions.length === 0 ? (
+            <div className="action-config-territory-trigger is-disabled">
+              <span className="action-config-territory-name">No valid territories available</span>
             </div>
-          </details>
-        )}
-      </label>
-
-      <label className="action-config-field">
-        <span>Zone</span>
-        <select
-          className="action-config-select"
-          value={selectedZone ?? ''}
-          disabled={zoneOptions.length === 0}
-          onChange={(event) => handleZoneChange(event.target.value)}
-        >
-          {zoneOptions.length === 0 ? (
-            <option value="">No zones in selected territory</option>
           ) : (
-            zoneOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))
+            <details className="action-config-territory-select">
+              <summary className="action-config-territory-trigger">
+                <span className="action-config-territory-option">
+                  <TerritoryFlagBadge
+                    territoryName={selectedTerritoryOption?.label ?? 'Territory'}
+                    flagSrc={selectedTerritoryOption?.flagSrc ?? null}
+                    fallbackFlag={selectedTerritoryOption?.fallbackFlag ?? null}
+                  />
+                  <span className="action-config-territory-name">
+                    {selectedTerritoryOption?.label ?? 'Select territory'}
+                  </span>
+                </span>
+                <span className="action-config-territory-chevron">Select</span>
+              </summary>
+              <div className="action-config-territory-menu" role="listbox" aria-label="Territory options">
+                {territoryOptions.map((option) => (
+                  <button
+                    type="button"
+                    key={option.value}
+                    className={`action-config-territory-item${option.value === selectedTerritory ? ' is-selected' : ''}`}
+                    role="option"
+                    aria-selected={option.value === selectedTerritory}
+                    onClick={(event) => {
+                      handleTerritoryChange(option.value)
+                      const detailsElement = event.currentTarget.closest('details')
+                      if (detailsElement instanceof HTMLDetailsElement) {
+                        detailsElement.open = false
+                      }
+                    }}
+                  >
+                    <span className="action-config-territory-option">
+                      <TerritoryFlagBadge
+                        territoryName={option.label}
+                        flagSrc={option.flagSrc}
+                        fallbackFlag={option.fallbackFlag}
+                      />
+                      <span className="action-config-territory-name">{option.label}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </details>
           )}
-        </select>
-      </label>
+        </label>
+      )}
+
+      {action.target_scope === 'zone' && (
+        <label className="action-config-field">
+          <span>Zone</span>
+          <select
+            className="action-config-select"
+            value={selectedZone ?? ''}
+            disabled={zoneOptions.length === 0}
+            onChange={(event) => handleZoneChange(event.target.value)}
+          >
+            {zoneOptions.length === 0 ? (
+              <option value="">No valid zones available</option>
+            ) : (
+              zoneOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))
+            )}
+          </select>
+        </label>
+      )}
 
       {action.target_scope === 'actor' && (
         <label className="action-config-field">
@@ -5801,6 +5896,10 @@ function ActionConfigBody(): ReactNode {
         {resolveActionDescription(content, action.action_id)}
       </p>
 
+      <p className="action-config-target-note">
+        {scopeDescription}
+      </p>
+
       <div className="action-config-meta">
         <span className="action-config-chip">Budget -{cost.budget.toLocaleString()}</span>
         <span className="action-config-chip">Personnel -{cost.personnel.toLocaleString()}</span>
@@ -5810,15 +5909,30 @@ function ActionConfigBody(): ReactNode {
       </div>
 
       {validationError && (
-        <div className="action-config-validation">
+        <div className="action-config-validation" id={validationErrorId} role="alert">
           {validationError}
+        </div>
+      )}
+
+      {runtimeError && (
+        <div className="action-config-validation" id={runtimeErrorId} role="alert">
+          {runtimeError}
         </div>
       )}
 
       <button
         type="button"
         className="action-config-confirm"
-        onClick={() => setActionFlowStep('review')}
+        onClick={() => {
+          if (validationError) {
+            setRuntimeError(`Resolve validation first: ${validationError}`)
+            return
+          }
+          setRuntimeError(null)
+          setActionFlowStep('review')
+        }}
+        disabled={validationError !== null}
+        aria-describedby={runtimeError ? runtimeErrorId : validationError ? validationErrorId : undefined}
       >
         Review action
       </button>
@@ -6024,6 +6138,9 @@ function TurnLoadingBody(): ReactNode {
 function OnboardingLoadingBody(): ReactNode {
   const LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
   const RESUME_LOADING_REVEAL_MS = 2200
+  const NEW_LOADING_READY_FALLBACK_MS = 900
+  const NEW_LOADING_TIMEOUT_MS = 6800
+  const MEDIA_RECOVERY_EXIT_MS = 900
   const AUDIO_FADE_DURATION_MS = 1800
   const closeModal = useUiStore((s) => s.closeModal)
   const entryLaunchKind = useSessionStore((s) => s.entry_launch_kind)
@@ -6034,6 +6151,7 @@ function OnboardingLoadingBody(): ReactNode {
   const sessionMaxTurns = useGameStore((s) => s.state.session.max_turns)
   const [isReady, setIsReady] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
+  const [mediaIssueMessage, setMediaIssueMessage] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const exitTimerRef = useRef<number | null>(null)
   const readyFallbackTimerRef = useRef<number | null>(null)
@@ -6073,7 +6191,27 @@ function OnboardingLoadingBody(): ReactNode {
     }, 220)
   }, [AUDIO_FADE_DURATION_MS, closeModal])
 
+  const recoverFromMediaIssue = useCallback(
+    (message: string): void => {
+      setMediaIssueMessage(message)
+      markReady()
+      if (typeof window === 'undefined') {
+        beginRevealExit()
+        return
+      }
+      if (completionFallbackTimerRef.current !== null) {
+        window.clearTimeout(completionFallbackTimerRef.current)
+      }
+      completionFallbackTimerRef.current = window.setTimeout(() => {
+        beginRevealExit()
+      }, MEDIA_RECOVERY_EXIT_MS)
+    },
+    [beginRevealExit, markReady, MEDIA_RECOVERY_EXIT_MS]
+  )
+
   useEffect(() => {
+    setMediaIssueMessage(null)
+
     if (isResumeLaunch) {
       startSharedThemeAudio()
 
@@ -6104,15 +6242,25 @@ function OnboardingLoadingBody(): ReactNode {
     }
 
     const video = videoRef.current
+    if (typeof window === 'undefined') {
+      markReady()
+      beginRevealExit()
+      return undefined
+    }
+
+    readyFallbackTimerRef.current = window.setTimeout(markReady, NEW_LOADING_READY_FALLBACK_MS)
+    completionFallbackTimerRef.current = window.setTimeout(() => {
+      beginRevealExit()
+    }, NEW_LOADING_TIMEOUT_MS)
+
     if (video && video.readyState >= 3 && !video.paused) {
       markReady()
-    } else if (video && video.readyState >= 2 && typeof window !== 'undefined') {
-      // Avoid hanging on a black shell if autoplay stalls momentarily.
-      readyFallbackTimerRef.current = window.setTimeout(markReady, 420)
     }
 
     if (video) {
-      void video.play().catch(() => undefined)
+      void video.play().catch(() => {
+        recoverFromMediaIssue('Cinematic media could not start. Continuing with text fallback.')
+      })
     }
 
     return () => {
@@ -6129,7 +6277,15 @@ function OnboardingLoadingBody(): ReactNode {
         completionFallbackTimerRef.current = null
       }
     }
-  }, [beginRevealExit, isResumeLaunch, markReady, RESUME_LOADING_REVEAL_MS])
+  }, [
+    beginRevealExit,
+    isResumeLaunch,
+    markReady,
+    recoverFromMediaIssue,
+    RESUME_LOADING_REVEAL_MS,
+    NEW_LOADING_READY_FALLBACK_MS,
+    NEW_LOADING_TIMEOUT_MS,
+  ])
 
   if (isResumeLaunch) {
     return (
@@ -6164,6 +6320,7 @@ function OnboardingLoadingBody(): ReactNode {
         muted
         playsInline
         preload="auto"
+        aria-hidden="true"
         onPlaying={markReady}
         onLoadedData={markReady}
         onCanPlay={() => {
@@ -6172,8 +6329,28 @@ function OnboardingLoadingBody(): ReactNode {
           }
         }}
         onEnded={beginRevealExit}
-        onError={beginRevealExit}
+        onError={() => recoverFromMediaIssue('Cinematic media failed. Continuing with text fallback.')}
+        onStalled={() => recoverFromMediaIssue('Cinematic media stalled. Continuing with text fallback.')}
+        onAbort={() => recoverFromMediaIssue('Cinematic media stopped. Continuing with text fallback.')}
       />
+      <div className="onboarding-loading-content" role="status" aria-live="polite">
+        <div className="onboarding-loading-kicker">New Campaign Initializing</div>
+        <h2 className="onboarding-loading-title">Building the situation room</h2>
+        <p className="onboarding-loading-subtitle">
+          Loading map data, campaign state, and onboarding cues for Turn 1.
+        </p>
+        <div className="onboarding-loading-session-meta" aria-label="New campaign loading details">
+          <span>Desktop public demo</span>
+          <span>Turn {sessionTurn} / {sessionMaxTurns}</span>
+          <span>Local QA telemetry only</span>
+        </div>
+        {mediaIssueMessage && (
+          <p className="onboarding-loading-fallback-note">{mediaIssueMessage}</p>
+        )}
+        <div className="onboarding-loading-bar" aria-hidden="true">
+          <span />
+        </div>
+      </div>
     </div>
   )
 }

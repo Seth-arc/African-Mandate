@@ -100,7 +100,7 @@ Negative loops:
 - Triage tradeoffs: prevent next catastrophe vs stabilize current hotspot
 - Uncertainty: fog of war without intel actions
 - Opportunity cost: every action slot has a measurable alternative benefit
-- Delayed outcomes: governance/economic actions resolve after 2 turns
+- Delayed outcomes: queued delayed effects resolve during End Turn when their `turn_due` is reached; immediate action costs/effects resolve on commit
 
 ## Act-Level Gameplay Focus
 - Act 1: Immediate stabilization, intel building, credibility test

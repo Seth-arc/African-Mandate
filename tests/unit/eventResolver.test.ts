@@ -87,7 +87,9 @@ describe('eventResolver', () => {
     expect(result.state.narrative_flags?.intel_briefing_climate_shock_warning).toBe(true)
     expect(feedItem?.occurred_at).toBe(8)
     expect(feedItem?.is_read).toBe(false)
-    expect(result.state.action_log?.some((entry) => entry.action_id === 'event:intel_briefing_climate_shock_warning')).toBe(true)
+    const eventLog = result.state.action_log?.find((entry) => entry.action_id === 'event:intel_briefing_climate_shock_warning')
+    expect(eventLog).toBeDefined()
+    expect(eventLog?.resolution_timing).toBe('end_turn')
   })
 
   it('applies crisis metric effects from events.yaml outcomes', () => {
@@ -109,7 +111,9 @@ describe('eventResolver', () => {
     expect(result.state.session.metrics.civilian_support).toBe(37)
     expect(result.state.session.metrics.stability).toBe(58)
     expect(result.state.session.metrics.global_legitimacy).toBe(53)
-    expect(result.state.action_log?.some((entry) => entry.action_id === 'event:security_unrest_spike')).toBe(true)
+    const eventLog = result.state.action_log?.find((entry) => entry.action_id === 'event:security_unrest_spike')
+    expect(eventLog).toBeDefined()
+    expect(eventLog?.resolution_timing).toBe('end_turn')
   })
 
   it('applies deadline penalties and returns fail reason for failure_on_deadline events', () => {
@@ -132,6 +136,8 @@ describe('eventResolver', () => {
 
     expect(result.deadlineFailReason).toBe('failure_on_deadline:external_donor_funding_freeze')
     expect(activeEvent?.status).toBe('expired')
-    expect(result.state.action_log?.some((entry) => entry.action_id === 'event_penalty:external_donor_funding_freeze')).toBe(true)
+    const penaltyLog = result.state.action_log?.find((entry) => entry.action_id === 'event_penalty:external_donor_funding_freeze')
+    expect(penaltyLog).toBeDefined()
+    expect(penaltyLog?.resolution_timing).toBe('end_turn')
   })
 })

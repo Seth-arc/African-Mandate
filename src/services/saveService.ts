@@ -298,6 +298,7 @@ function actionLogRows(state: GameState, sessionId: string): ActionLogInsert[] {
     targets: toJsonValue(structuredClone(entry.target)),
     costs: toJsonValue(structuredClone(entry.costs)),
     effects: toJsonValue({
+      resolution_timing: entry.resolution_timing ?? 'immediate_action',
       metric_deltas: structuredClone(entry.metric_deltas),
       resource_deltas: structuredClone(entry.resource_deltas),
       flag_additions: structuredClone(entry.flag_additions),

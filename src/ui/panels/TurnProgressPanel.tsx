@@ -43,6 +43,12 @@ function metricDeltaSummary(previous: Metrics, current: Metrics): string[] {
   return entries
 }
 
+function resolutionTimingLabel(timing: string | undefined): string {
+  if (timing === 'immediate_dialogue') return 'Dialogue resolved immediately'
+  if (timing === 'end_turn') return 'Resolved during end turn'
+  return 'Action resolved immediately'
+}
+
 export function TurnProgressPanel(): ReactNode {
   const state = useGameStore((s) => s.state)
   const content = state.content
@@ -130,7 +136,7 @@ export function TurnProgressPanel(): ReactNode {
 
       {!hasAnyProgress && (
         <p className="turn-progress-empty">
-          Execute an action and end turn to see progression deltas.
+          Execute an action to see immediate deltas. End turn resolves drift, events, and AI pressure.
         </p>
       )}
 
@@ -148,6 +154,10 @@ export function TurnProgressPanel(): ReactNode {
           <div className="turn-progress-line turn-progress-line--stacked">
             <span className="turn-progress-line-key">Target</span>
             <span className="turn-progress-line-value">{renderTargetLabel(content, latestAction.target)}</span>
+          </div>
+          <div className="turn-progress-line turn-progress-line--stacked">
+            <span className="turn-progress-line-key">Timing</span>
+            <span className="turn-progress-line-value">{resolutionTimingLabel(latestAction.resolution_timing)}</span>
           </div>
         </div>
       )}

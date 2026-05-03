@@ -2887,6 +2887,17 @@
   line-height: 1.45;
 }
 
+.action-config-target-note {
+  margin: 0;
+  padding: 0.48rem 0.58rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .action-config-meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
@@ -2919,11 +2930,12 @@
 }
 
 .action-config-validation {
-  color: #ffb3b3;
+  color: var(--text);
   font-size: 0.82rem;
-  border: 1px solid #a83232;
+  border: 1px solid var(--alert);
   border-radius: 6px;
   padding: 0.45rem 0.55rem;
+  background: rgba(168, 50, 50, 0.16);
 }
 
 .action-config-review {
@@ -5751,7 +5763,18 @@
   text-transform: uppercase;
 }
 
-.onboarding-loading-shell.is-resume-launch.is-exiting .onboarding-loading-content {
+.onboarding-loading-fallback-note {
+  margin: 0;
+  padding: 0.42rem 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgba(168, 50, 50, 0.16);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.36;
+}
+
+.onboarding-loading-shell.is-exiting .onboarding-loading-content {
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.2s ease, transform 0.2s ease;

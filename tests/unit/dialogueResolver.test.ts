@@ -102,6 +102,7 @@ describe('dialogueResolver', () => {
     const latestLog = result.state.action_log?.[result.state.action_log.length - 1]
     expect(latestLog).toBeDefined()
     expect(latestLog?.action_id).toBe('dialogue:dialogue_junta_negotiation:conditional_support')
+    expect(latestLog?.resolution_timing).toBe('immediate_dialogue')
     expect(latestLog?.target.actor_key).toBe('junta_burkina_traore')
     expect(latestLog?.metric_deltas.global_legitimacy).toBe(5)
     expect(latestLog?.resource_deltas.political_capital).toBe(-5)

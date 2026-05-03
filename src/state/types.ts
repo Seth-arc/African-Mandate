@@ -470,11 +470,15 @@ export interface ActionRiskOutcome {
   media_event_key: string | null
 }
 
+export type ActionResolutionTiming = 'immediate_action' | 'immediate_dialogue' | 'end_turn'
+
 /** Per-session action execution log entry for status reporting. */
 export interface ActionLogEntry {
   turn: number
   action_id: string
   target: ActionTarget
+  /** When this entry's effects are applied in the runtime loop. */
+  resolution_timing?: ActionResolutionTiming
   costs: Resources
   resource_deltas: Partial<Resources>
   metric_deltas: Partial<Metrics>

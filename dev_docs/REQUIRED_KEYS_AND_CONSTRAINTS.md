@@ -70,10 +70,10 @@ Action Log (Canonical)
 - session_id, turn
 - action_id, action_name, action_category
 - targets: { territories, zones, actors }
+- resolution_timing: immediate_action | immediate_dialogue | end_turn
 - costs: { budget, personnel, political_capital, intel_points, time_months }
 - effects
 
 Localization
 - All canonical content text must be stored as localization keys (runtime may cache resolved text)
 - UTF-8 encoding for all text assets
-

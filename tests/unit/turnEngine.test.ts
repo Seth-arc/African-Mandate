@@ -7,19 +7,22 @@ import {
   advanceTurn,
   getActFromTurn,
   evaluateEnding,
+  applyAiDirector,
+  detectRepeatedActionCategoryUse,
   checkEarlyFail,
   isActTransition,
   describeFailReason,
   describeEndingOutcome,
 } from '../../src/systems/turnEngine'
 import { createInitialState } from '../../src/state/initState'
-import type { GameState, GameConfig, Metrics } from '../../src/state/types'
+import type { GameState, GameConfig, GameContent, Metrics } from '../../src/state/types'
 
 import gameConfigJson from '../../src/data/game_config.json'
+import actionsJson from '../../src/data/actions.json'
 
 const config = gameConfigJson.game_config as GameConfig
 
-function makeState(overrides?: Partial<GameState['session']> & { metric_history?: GameState['metric_history']; metric_snapshot_turn_19?: GameState['metric_snapshot_turn_19']; zone_threat_snapshot_turn_19?: GameState['zone_threat_snapshot_turn_19']; zone_state?: GameState['zone_state'] }): GameState {
+function makeState(overrides?: Partial<GameState['session']> & { metric_history?: GameState['metric_history']; metric_snapshot_turn_19?: GameState['metric_snapshot_turn_19']; zone_threat_snapshot_turn_19?: GameState['zone_threat_snapshot_turn_19']; zone_state?: GameState['zone_state']; action_log?: GameState['action_log']; content?: GameState['content'] }): GameState {
   const state = createInitialState(config)
   const sessionKeys: (keyof GameState['session'])[] = [
     'turn', 'actions_remaining', 'max_turns', 'resources', 'metrics', 'ai_state', 'action_last_used_turn',
@@ -41,6 +44,8 @@ function makeState(overrides?: Partial<GameState['session']> & { metric_history?
     metric_snapshot_turn_19: overrides?.metric_snapshot_turn_19,
     zone_threat_snapshot_turn_19: overrides?.zone_threat_snapshot_turn_19,
     zone_state: overrides?.zone_state,
+    action_log: overrides?.action_log ?? state.action_log,
+    content: overrides?.content ?? state.content,
   }
 }
 
@@ -141,6 +146,59 @@ describe('turnEngine', () => {
       const next = advanceTurn(state)
       expect(next.ending_type).toBe('mandate_revoked')
       expect(next.fail_reason).toBe('critical_streak_stability')
+    })
+  })
+
+  describe('AI director category counterpressure', () => {
+    it('adds +10 opposition pressure when one action category is used 3 times in the last 4 turns', () => {
+      const content = { actions: actionsJson as GameContent['actions'] } as GameContent
+      const state = makeState({
+        turn: 4,
+        ai_state: {
+          ...config.starting_ai_state,
+          opposition_pressure: 20,
+        },
+        content,
+        action_log: [1, 2, 4].map((turn) => ({
+          turn,
+          action_id: 'security_patrol_deployment',
+          target: { zone_id: 'mopti' },
+          resolution_timing: 'immediate_action' as const,
+          costs: { ...config.starting_resources },
+          resource_deltas: {},
+          metric_deltas: {},
+          flag_additions: [],
+        })),
+      })
+
+      expect(detectRepeatedActionCategoryUse(state)).toEqual({ category: 'security', count: 3 })
+      expect(applyAiDirector(state, state.session.metrics, undefined)).toBe(30)
+    })
+
+    it('counts community mediation toward diplomacy and humanitarian category pressure aliases', () => {
+      const content = { actions: actionsJson as GameContent['actions'] } as GameContent
+      const state = makeState({
+        turn: 4,
+        content,
+        action_log: [
+          'diplomacy_junta_engagement',
+          'diplomacy_ecowas_coordination',
+          'community_led_mediation',
+        ].map((action_id, index) => ({
+          turn: index + 1,
+          action_id,
+          target: action_id === 'community_led_mediation'
+            ? { zone_id: 'mopti' }
+            : { actor_key: 'regional_ecowas' },
+          resolution_timing: 'immediate_action' as const,
+          costs: { ...config.starting_resources },
+          resource_deltas: {},
+          metric_deltas: {},
+          flag_additions: [],
+        })),
+      })
+
+      expect(detectRepeatedActionCategoryUse(state)).toEqual({ category: 'diplomacy', count: 3 })
     })
   })
 

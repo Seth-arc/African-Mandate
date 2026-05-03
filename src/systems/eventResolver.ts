@@ -1029,6 +1029,7 @@ function withEventLogs(
     turn,
     action_id: source === 'trigger' ? `event:${event.event_id}` : `event_penalty:${event.event_id}`,
     target: {},
+    resolution_timing: 'end_turn',
     costs: {
       budget: 0,
       political_capital: 0,

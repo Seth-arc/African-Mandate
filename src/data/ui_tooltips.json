@@ -5,8 +5,8 @@
   "tooltips": [
     {
       "id": "shell.demo_mode",
-      "title": "Demo mode",
-      "description": "This build runs on synthetic training data so learners can explore flows without touching live operational records."
+      "title": "Desktop public demo",
+      "description": "This build is a desktop-only public demo using synthetic data and local QA-only telemetry."
     },
     {
       "id": "shell.mode_status",

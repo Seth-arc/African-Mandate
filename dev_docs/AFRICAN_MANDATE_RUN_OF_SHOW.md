@@ -5,10 +5,11 @@
 **Conditional Variations:**  
 - If `{session_id}` exists, show "Continue Mandate" with last played timestamp; clicking opens a resume picker if multiple sessions exist.  
 - If multiple sessions exist, show a session list sorted by `{last_played_at}` (most recent first) with "Resume" and "Start New Campaign" options.  
+- If a phone-sized touch device is detected, block game entry with the desktop-only public demo gate and keep the React game root hidden.  
 **UI Elements:**  
 - Full-bleed cinematic hero with GSAP parallax, text masking, and grain overlay.  
 - Prestige headline in Playfair Display; subhead in Inter.  
-- Primary CTA: "Enter Situation Room" (routes to Phase 2).  
+- Primary CTA: "Play Desktop Demo" or "Continue Mandate" (routes to Phase 2).  
 - Secondary CTA: "View Mandate Briefing" (opens read-only briefing overlay, then routes to Phase 2).  
 **Player Experience Summary:** Player sees the AU-led mandate framing and enters the tactical situation room.  
 **System Notes:** No runtime state yet; landing assets referenced via `{assets}` pack. Base landing behavior maps to `index.html`; 
@@ -18,11 +19,11 @@
 **Conditional Variations:**  
 - If authenticated: resume `{session_id}` and load `{session.state}`.  
 - If guest: create `{session_id}` with `{user_id: null}`.  
-- If analytics opt-in: enable telemetry; otherwise disable. `{notification_settings}`.  
+- If Local QA telemetry opt-in is enabled: write events to the local browser QA queue only; otherwise disable telemetry. `{notification_settings}`.  
 **UI Elements:**  
 - Modal or full-screen panel for "New Campaign" vs "Continue".  
 - Session picker list when multiple sessions exist (last played time, act/turn, and summary status).  
-- Preferences toggles: `{difficulty_mode}` (Narrative/Standard/Expert), accessibility options (high contrast, reduced motion).  
+- Preferences toggles: `{difficulty_mode}` (Narrative/Standard/Expert), accessibility options (high contrast, reduced motion), and Local QA telemetry opt-in.  
 - Tooltip copy for data privacy (opt-in).  
 **Player Experience Summary:** Player chooses a campaign start mode and adjusts difficulty/accessibility.  
 **System Notes:**  
@@ -106,8 +107,10 @@
 - `requirements.condition` and `corruption_risk.condition` use the restricted action-condition DSL; unsupported authored expressions fail content load rather than silently evaluating at runtime.
 - Default `cooldown_turns = 1` per action (from `game_config.default_action_cooldown_turns`).  
 - Default `intel_gate = 10` per action (from `game_config.default_intel_gate`).  
+- Target controls are semantic: show only the selector required by `action.target_scope` (`zone`, `territory`, or `actor`) and explain the target scope in review.
+- If validation fails, the Review action button is disabled and the exact reason remains visible in the modal.
 - Targeting effects: zone actions apply full effect; territory actions apply 50% effect across 2-3 zones in the territory.  
-- Governance/Economic actions resolve after 2 turns (queued effects shown in Status Report).  
+- Action costs and immediate effects resolve on commit. Delayed effects resolve when their `turn_due` is reached during End Turn resolution.  
 - When rendering UI labels, map `Governance/Economic` → `governance_economic` and `Community Mediation` → `community_mediation` so analytics/category-spam logic receives canonical keys even though the user-facing labels include spaces and slashes.  
 - On commit: deduct allocated `{costs.*}` (as configured by sliders), apply immediate `{effects}`, append to `{actions_log}`.  
 - On commit: resolve `effects.risks` deterministically. A fired civilian-harm risk applies its metric deltas, appends `civilian_harm_incident`, records `risk_outcomes`, and feeds the media civilian-harm event path.
@@ -124,7 +127,7 @@
 - Status report panel entry appended in "Status Report."  
 **Player Experience Summary:** Player sees outcomes, AI reactions, and updated crisis landscape.  
 **System Notes:**  
-- Apply AI Director rules: category spam, low stability, low legitimacy, low support trigger escalations.  
+- Apply AI Director rules: category spam adds `+10` opposition_pressure; low stability, low legitimacy, and low support trigger additional pressure paths/events.  
 - Resolve events, apply per-turn drift formula, clamp metrics to 0-100.  
 - Update `{opposition_pressure}`, `{intel_confidence}`, `{zone_state}`, `{territory_state}`.  
 - Decrement `{time_months}` by turn duration + action costs; if `<= 0` pre-turn 20, immediate failure.
@@ -162,7 +165,7 @@
   - Stalemate: 1-2 thresholds missed.  
   - Regional Setback: more than 2 thresholds missed OR Critical zone persists (turns 19-20).  
   - Mandate Revoked: early fail condition triggered (including a 3-turn streak completing on Turn 20).  
-- Record per-campaign telemetry `{ending_type}`, `{final_metrics}`, `{most_used_actions}`, `{most_impacted_zones}`.  
+- Record local QA-only per-campaign telemetry `{ending_type}`, `{final_metrics}`, completion/abandonment, save failures, and E2E-critical errors when telemetry opt-in is enabled.  
 - Strategic score: `strategic_score = round((stability + global_legitimacy) / 2)`.  
 - Leaderboard overlay only if telemetry opt-in is true.
 

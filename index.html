@@ -1022,7 +1022,7 @@
                 <p>A signature in Addis Ababa cannot stop the dust.</p>
 
                 <div class="button-group">
-                    <button class="cta-btn primary" id="enterArenaBtn">Play</button>
+                    <button class="cta-btn primary" id="enterArenaBtn">Play Desktop Demo</button>
                     <button class="cta-btn secondary" id="aboutBtn">About</button>
                 </div>
                 <p class="cta-meta" id="enterArenaStatus" aria-live="polite"></p>
@@ -1067,7 +1067,7 @@
                 <section class="about-section">
                     <h4 class="about-section-title">Powered by Reality</h4>
                     <p class="about-section-text">
-                        Browser-based with React mapping, AI-driven insurgents, and narrative acts that immerse without illusions. Play as guest or authenticated for saves; experience the asymmetry where partial success is the true win.
+                        Desktop-only public demo with React mapping, AI-driven insurgents, and narrative acts that immerse without illusions. Play as guest or authenticated for saves; experience the asymmetry where partial success is the true win.
                     </p>
                 </section>
 
@@ -1090,18 +1090,17 @@
     <div class="mobile-gate-overlay" id="mobileGateModal" aria-hidden="true">
         <div class="mobile-gate-panel">
             <button class="mobile-gate-close" id="mobileGateClose" aria-label="Close Mobile Notice"></button>
-            <span class="mobile-gate-kicker">Operational Etiquette Notice</span>
-            <h3 class="mobile-gate-title">You Can't Do That Here</h3>
+            <span class="mobile-gate-kicker">Desktop-only public demo</span>
+            <h3 class="mobile-gate-title">Use a desktop or laptop</h3>
             <p class="mobile-gate-text">
-                Admirable ambition, envoy. This theater simulation was engineered for a command desk,
-                not a diplomatic postage stamp.
+                African Mandate is currently a desktop-only public demo. The command map, action review,
+                and save flows require a wider viewport and keyboard-friendly controls.
             </p>
             <p class="mobile-gate-text">
-                Put plainly: running <strong>African Mandate</strong> on a phone is like convening a
-                regional security summit in an elevator. Please return with a desktop or laptop so
-                the mission has room to breathe.
+                Mobile play is blocked until the production public game layout is certified for touch,
+                accessibility, and performance.
             </p>
-            <button type="button" class="mobile-gate-ack" id="mobileGateAcknowledge">I Shall Return Properly Equipped</button>
+            <button type="button" class="mobile-gate-ack" id="mobileGateAcknowledge">Return on desktop</button>
         </div>
     </div>
     </div>
@@ -1267,7 +1266,7 @@
         let gameThemeFadeToken = 0;
         let introCompleted = false;
         let introTransitionInProgress = false;
-        let enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Enter the Arena';
+        let enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Play Desktop Demo';
 
         function getGameThemeAudio() {
             if (gameThemeAudio) return gameThemeAudio;
@@ -1369,13 +1368,13 @@
             const lastPlayedAt = typeof detail?.last_played_at === 'string' ? detail.last_played_at : null;
             const turn = Number.isFinite(Number(detail?.turn)) ? Number(detail.turn) : null;
 
-            enterArenaDefaultLabel = hasSessions ? 'Continue Mandate' : 'Play';
+            enterArenaDefaultLabel = hasSessions ? 'Continue Mandate' : 'Play Desktop Demo';
             if (!enterArenaBtn.classList.contains('is-loading')) {
                 enterArenaBtn.textContent = enterArenaDefaultLabel;
             }
 
             if (!hasSessions) {
-                enterArenaStatus.textContent = 'Start a fresh campaign from Turn 1.';
+                enterArenaStatus.textContent = 'Start a fresh desktop demo campaign from Turn 1.';
                 enterArenaBtn.removeAttribute('title');
                 return;
             }

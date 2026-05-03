@@ -4,10 +4,10 @@ This plan only tracks implementation that is still needed to make `game/` deploy
 Baseline first-playable work (runtime data, map loop, actions, intel, dialogue, mission context, act transitions, endings, responsive polish) is treated as complete per `progress.md`.
 
 ## Target Outcome
-- Publicly deployed React game as the primary entrypoint.
+- Desktop-only public demo through the current root landing page until production public game sign-off.
 - Authenticated player sessions with save/resume.
 - Stable, test-backed, accessible, and performance-acceptable gameplay loop.
-- Release operations and legal/privacy requirements in place.
+- Release operations and legal/privacy requirements in place before production public game positioning.
 
 ## Remaining Scope (In)
 - Supabase auth and persistent session storage.
@@ -117,5 +117,5 @@ For release-candidate slices:
 ## Open Decisions Still Needed
 - Auth mode for launch: guest-only + optional sign-in, or mandatory sign-in.
 - Save policy for launch: autosave-only, manual save, or both.
-- Telemetry posture at launch: default off vs explicit opt-in prompt.
+- Telemetry posture at launch: local QA-only, default off, explicit opt-in in the session preferences.
 - Public root behavior timing: immediate redirect vs staged rollout.

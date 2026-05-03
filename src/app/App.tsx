@@ -6,6 +6,7 @@ import { useGameStore } from '../state/gameStore'
 import { useTour } from '../tour/TourContext'
 import { useSessionStore } from '../state/sessionStore'
 import { useUiStore } from '../state/uiStore'
+import { recordTelemetryEvent } from '../utils/telemetry'
 
 type AppReadyWindow = Window & { __africanMandateAppReady?: boolean }
 
@@ -42,6 +43,9 @@ function App(): ReactNode {
     window.dispatchEvent(new Event('african-mandate:app-ready'))
 
     const handleStartFlow = (): void => {
+      recordTelemetryEvent('funnel_entry_started', {
+        source: 'landing_start_flow',
+      })
       if (autoTourTimerRef.current && typeof window !== 'undefined') {
         window.clearTimeout(autoTourTimerRef.current)
         autoTourTimerRef.current = null
@@ -72,6 +76,9 @@ function App(): ReactNode {
   useEffect(() => {
     if (!entryFlowPending) return
     if (modal !== 'onboarding_loading') return
+    recordTelemetryEvent('funnel_onboarding_loading_started', {
+      launch_kind: entryLaunchKind ?? 'unknown',
+    })
     if (typeof window === 'undefined') {
       setEntryFlowPending(false)
       return
@@ -82,7 +89,7 @@ function App(): ReactNode {
     return () => {
       window.cancelAnimationFrame(frame)
     }
-  }, [entryFlowPending, modal])
+  }, [entryFlowPending, entryLaunchKind, modal])
 
   const preEntryFlowVeilActive =
     typeof document !== 'undefined' &&

@@ -1,4 +1,10 @@
 export type TelemetryEventName =
+  | 'funnel_entry_started'
+  | 'funnel_campaign_started'
+  | 'funnel_campaign_resumed'
+  | 'funnel_onboarding_loading_started'
+  | 'campaign_completed'
+  | 'campaign_abandoned'
   | 'turn_loop_started'
   | 'turn_loop_completed'
   | 'turn_loop_duration_ms'
@@ -14,9 +20,17 @@ export type TelemetryEventName =
   | 'forecast_risk_rendered'
   | 'action_confirmed_from_review'
   | 'action_cancelled_from_review'
+  | 'action_validation_failed'
+  | 'save_failed'
+  | 'autosave_failed'
+  | 'accessibility_mode_changed'
+  | 'e2e_critical_error'
+
+export const TELEMETRY_MODE = 'local_qa_only'
 
 export interface TelemetryRecord {
   name: TelemetryEventName
+  mode: typeof TELEMETRY_MODE
   occurredAtMs: number
   payload: Record<string, unknown>
 }
@@ -52,6 +66,7 @@ export function recordTelemetryEvent(
 
   const record: TelemetryRecord = {
     name,
+    mode: TELEMETRY_MODE,
     occurredAtMs: Date.now(),
     payload,
   }

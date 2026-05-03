@@ -4,6 +4,14 @@ This document provides a comprehensive technical and design specification for th
 
 ---
 
+## 0. Current Release Positioning
+
+The current public-facing launch is a **desktop-only public demo**. The landing page blocks phone-sized touch devices with explicit copy and does not mount the React game interface on mobile. Production public game positioning is blocked until touch layout, mobile performance, accessibility, and durable telemetry are certified.
+
+Telemetry copy must say **local QA-only** until the browser queue is replaced by a durable production analytics pipeline.
+
+---
+
 ## 1. Visual Language & Core Aesthetic
 The interface is designed as a **Tactical Situation Room**, emphasizing high-stakes decision-making and real-time monitoring.
 
@@ -70,8 +78,12 @@ The interface follows a **Fixed-Fluid-Fixed** three-column structure to maximize
 ### 3.2 Take Action Engine
 A multi-step modal decision system:
 1.  **Context Injection**: Injects the currently selected region's data.
-2.  **Resource Configuration**: HTML5 range sliders allow granular allocation of budget and political_capital.
-3.  **Real-Time Summation**: Calculates the "Operation Cost" as the user adjusts sliders.
+2.  **Semantic Targeting**: Shows only the selector required by the selected action's target scope: Territory, Zone, or Actor.
+3.  **Resource Configuration**: HTML5 range sliders allow granular allocation of budget and political_capital.
+4.  **Real-Time Summation**: Calculates the "Operation Cost" as the user adjusts sliders.
+5.  **Review Gate**: Disables Review action while validation fails, keeps the reason visible, and explains target scope before confirmation.
+
+Action and dialogue effects resolve immediately on commit. End Turn resolves delayed effects, per-turn drift, events, and AI director counter-pressure.
 
 ### 3.3 Strategic Leaderboard
 A premium data visualization for player rankings:
