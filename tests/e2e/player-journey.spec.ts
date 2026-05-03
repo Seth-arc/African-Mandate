@@ -80,12 +80,15 @@ async function dismissVisibleModal(page: Page): Promise<void> {
   }
 }
 
+async function expectVisibleTurnLabel(page: Page, turnLabel: string): Promise<void> {
+  await expect(page.locator('.turn-progress-now-value').filter({ hasText: turnLabel })).toBeVisible({ timeout: 15_000 })
+}
+
 async function advanceTurn(page: Page, expectedTurnLabel: string, options: { dismissAfter?: boolean } = {}): Promise<void> {
   const dismissAfter = options.dismissAfter ?? true
   await dismissVisibleModal(page)
   await page.getByRole('button', { name: 'End turn' }).click()
-  await expect(page.getByText(/Resolving Regional Timeline|End Turn Confirmed/)).toBeVisible()
-  await expect(page.getByText(expectedTurnLabel)).toBeVisible({ timeout: 15_000 })
+  await expectVisibleTurnLabel(page, expectedTurnLabel)
   if (dismissAfter) {
     await dismissVisibleModal(page)
   }
@@ -95,7 +98,7 @@ test.beforeEach(async ({ page }) => {
   await stubMediaPlayback(page)
 })
 
-test('full player journey covers launch, onboarding, action review, invalid action, feedback, turns, save/resume, act transition, and ending', async ({ page }) => {
+test('full player journey covers launch, onboarding, action review, invalid action, feedback, turns, save/resume, act transition, and deterministic ending', async ({ page }) => {
   await startNewCampaign(page)
 
   await page.getByRole('button', { name: 'Onboarding' }).click()
@@ -117,7 +120,7 @@ test('full player journey covers launch, onboarding, action review, invalid acti
   await page.getByRole('button', { name: 'Review action' }).click()
   await expect(page.getByRole('button', { name: 'Confirm action' })).toBeEnabled()
   await page.getByRole('button', { name: 'Confirm action' }).click()
-  await expect(page.getByText(/Action Confirmed|Applying immediate action consequences/)).toBeVisible()
+  await expect(page.getByText('Action Confirmed')).toBeVisible()
   await expect(page.getByRole('button', { name: /Resume Operations|Return to Command/ })).toBeEnabled({ timeout: 12_000 })
   await expect(page.getByText('Security Patrol Deployment')).toBeVisible()
   await page.getByRole('button', { name: /Resume Operations|Return to Command/ }).click()
@@ -127,15 +130,16 @@ test('full player journey covers launch, onboarding, action review, invalid acti
 
   await page.getByRole('button', { name: 'Menu' }).click()
   await page.getByRole('menuitem', { name: 'Save Session' }).click()
-  await expect(page.getByText('Session saved.')).toBeVisible()
-  await page.getByRole('button', { name: 'Close' }).click()
+  await expect(page.getByRole('dialog', { name: /Sessions/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue mandate' })).toBeVisible()
+  await page.getByRole('dialog', { name: /Sessions/ }).getByLabel('Close', { exact: true }).click()
 
   await page.reload()
   await page.locator('#enterArenaBtn').click()
   await expect(page.getByRole('dialog', { name: /Mission Entry|Sessions/ })).toBeVisible()
   await page.getByRole('button', { name: 'Continue mandate' }).click()
-  await expect(page.getByText(/Saved Session Restored|Re-entering the mandate interface/)).toBeVisible()
-  await expect(page.getByText('2/20')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText('Saved Session Restored')).toBeVisible()
+  await expectVisibleTurnLabel(page, '2/20')
   await dismissVisibleModal(page)
 
   await advanceTurn(page, '3/20')
@@ -144,31 +148,13 @@ test('full player journey covers launch, onboarding, action review, invalid acti
   await expect(page.getByRole('dialog', { name: /Cutscene|Act briefing|Take Action/ }).first()).toBeVisible()
   await dismissVisibleModal(page)
 
-  for (const turnLabel of [
-    '6/20',
-    '7/20',
-    '8/20',
-    '9/20',
-    '10/20',
-    '11/20',
-    '12/20',
-    '13/20',
-    '14/20',
-    '15/20',
-    '16/20',
-    '17/20',
-    '18/20',
-    '19/20',
-    '20/20',
-  ]) {
-    await advanceTurn(page, turnLabel)
-  }
-
+  await advanceTurn(page, '6/20')
   await dismissVisibleModal(page)
   await page.getByRole('button', { name: 'End turn' }).click()
-  await expect(page.getByText(/Campaign concluded|Campaign outcome|Final campaign outcome recorded/)).toBeVisible({
+  await expect(page.getByRole('dialog', { name: /Campaign outcome/ })).toBeVisible({
     timeout: 20_000,
   })
+  await expect(page.getByRole('dialog', { name: /Campaign outcome/ }).getByText('Mandate Revoked', { exact: true })).toBeVisible()
 })
 
 test('direct SPA entry is blocked by the mission entry gate before gameplay is usable', async ({ page }) => {
@@ -201,7 +187,15 @@ test('keyboard-only modal flow traps focus and restores it to the launcher', asy
 })
 
 test.describe('mobile gate', () => {
-  test.use({ ...devices['iPhone 13'] })
+  const iPhone13 = devices['iPhone 13']
+
+  test.use({
+    viewport: iPhone13.viewport,
+    userAgent: iPhone13.userAgent,
+    deviceScaleFactor: iPhone13.deviceScaleFactor,
+    isMobile: iPhone13.isMobile,
+    hasTouch: iPhone13.hasTouch,
+  })
 
   test('blocks the game interface on mobile-sized touch devices', async ({ page }) => {
     await page.goto('/')

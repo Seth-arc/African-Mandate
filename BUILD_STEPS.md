@@ -1,18 +1,17 @@
 # African Mandate: Sahel Arena — Step-by-step build
 
-This folder is the **actual game build**: Vite + React 18 + TypeScript + Zustand. The repo root holds the landing page (`index.html`), design docs, and content data. This guide walks you through the build from where you are now.
+This repo is the **actual game build**: Vite + React 19 + TypeScript + Zustand. The repo root holds the landing page (`index.html`), design docs, and content data. This guide walks you through the build from where you are now.
 
 ---
 
 ## Step 1 — Prerequisites
 
 - **Node.js** v18+ (v22 recommended) and npm.
-- Terminal in the project root or in `game/`.
+- Terminal in the project root.
 
 From the repo root:
 
 ```bash
-cd game
 npm install
 ```
 
@@ -116,7 +115,7 @@ Keep UI state (modals, selections) in a separate `uiStore`, not in `gameStore`.
 
 ## Step 8 — Persistence (Phase 6)
 
-1. Add Supabase: set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` (see `.env.example`).
+1. Add Supabase: set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` (see `.env.example`). The anon key is intentionally public browser demo infrastructure; never place service-role or backend credentials in `VITE_*`.
 2. Implement `src/services/saveService.ts` for save/load using the schema in `context_files/`.
 3. Use `context_files/supabase.sql` for schema and RLS.
 
@@ -170,6 +169,7 @@ game/
 | `npm run lint` | ESLint on `src`                      |
 | `npm run format` | Prettier on `src`                  |
 | `npm test`     | Vitest unit tests                    |
+| `npm run validate:assets` | Static asset reference validation |
 | `npm run test:e2e` | Playwright E2E (configure as needed) |
 
 ---

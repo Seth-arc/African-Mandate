@@ -41,7 +41,7 @@ The current release stance is a **desktop-only public demo** that is maintainabl
 ## 2) Technical architecture (recommended)
 
 ### 2.1 Frontend stack
-- Vite + React + TypeScript
+- Vite + React 19 + TypeScript
 - Zustand for game state (simple, fast, scalable)
 - React-Leaflet for map
 - CSS Modules or styled components (choose one and be consistent)
@@ -171,7 +171,7 @@ Docs and ops
 - `SECURITY.md` - Disclosure policy (recommended for public release).
 - `LICENSE` - OSS or custom license terms.
 - `CODE_OF_CONDUCT.md` - Contributor guidelines (if open source).
-- `.github/workflows/ci.yml` - CI for lint, test, build, and deploy.
+- `.github/workflows/ci.yml` - CI for static asset validation, lint, test, build, and e2e gates.
 
 ---
 

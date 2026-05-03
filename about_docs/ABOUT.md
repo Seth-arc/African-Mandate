@@ -210,7 +210,7 @@ The intent is to place the player in a position of genuine responsibility for a 
 
 | Layer | Technology |
 |---|---|
-| Frontend Framework | React 18 + TypeScript |
+| Frontend Framework | React 19 + TypeScript |
 | State Management | Zustand |
 | Map Rendering | Leaflet.js |
 | Landing Animations | GSAP + ScrollTrigger + Lenis |

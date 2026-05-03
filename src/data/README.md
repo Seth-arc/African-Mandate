@@ -6,4 +6,6 @@
 
 - **zone_runtime_seed.json** - Authored session-start seeds for zone-scoped runtime fields that are not present in `zones.json` itself, such as `displaced`, `threats`, `incidents`, and `actors_present`.
 
+Content contracts are pinned by `tests/unit/contentContracts.test.ts`; update tests and docs with any schema or reference change.
+
 All values must come from these files; see root `AGENTS.md` and `REQUIRED_KEYS_AND_CONSTRAINTS.md`.

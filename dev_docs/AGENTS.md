@@ -1,7 +1,7 @@
 # African Mandate: Sahel Arena — Agent Instructions
 
 ## Project Overview
-A turn-based strategy game where you play the AU Special Envoy in the Sahel. Built with Vite + React 18 + TypeScript (strict) + Zustand + React-Leaflet + Supabase + Zod.
+A turn-based strategy game where you play the AU Special Envoy in the Sahel. Built with Vite + React 19 + TypeScript (strict) + Zustand + React-Leaflet + Supabase + Zod.
 
 ## Critical Constraints
 
@@ -64,4 +64,4 @@ npm run validate     # Validate JSON data schemas
 If a task breaks something from a prior task, do NOT patch forward. Stop, identify the root cause, report which prior task introduced the issue, and propose a fix before continuing.
 
 ## Approved Dependencies
-Vite, React 18, TypeScript 5, Zustand, React-Leaflet, Supabase, Zod, Vitest, Playwright, ESLint, Prettier. No additional runtime dependencies without explicit approval.
+Vite, React 19, TypeScript 5, Zustand, React-Leaflet, Supabase, Zod, Vitest, Playwright, ESLint, Prettier. No additional runtime dependencies without explicit approval.

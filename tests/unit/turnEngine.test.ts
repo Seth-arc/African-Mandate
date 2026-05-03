@@ -158,6 +158,12 @@ describe('turnEngine', () => {
           ...config.starting_ai_state,
           opposition_pressure: 20,
         },
+        metrics: {
+          ...config.starting_metrics,
+          stability: 50,
+          civilian_support: 50,
+          global_legitimacy: 50,
+        },
         content,
         action_log: [1, 2, 4].map((turn) => ({
           turn,
