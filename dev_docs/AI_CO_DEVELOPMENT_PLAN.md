@@ -4,10 +4,10 @@ This plan only tracks implementation that is still needed to make `game/` deploy
 Baseline first-playable work (runtime data, map loop, actions, intel, dialogue, mission context, act transitions, endings, responsive polish) is treated as complete per `progress.md`.
 
 ## Target Outcome
-- Desktop-only public demo through the current root landing page until production public game sign-off.
+- v0.1 public web release through the current root landing page, bounded by the canonical support contract in `PRODUCTION_READINESS.md`.
 - Authenticated player sessions with save/resume.
 - Stable, test-backed, accessible, and performance-acceptable gameplay loop.
-- Release operations and legal/privacy requirements in place before production public game positioning.
+- Release operations and legal/privacy requirements in place before expanding the production support surface.
 
 ## Remaining Scope (In)
 - Supabase auth and persistent session storage.
@@ -52,7 +52,7 @@ Review gate:
 [ ] Add Playwright E2E coverage: act briefing display.  
 [ ] Add Playwright E2E coverage: campaign outcome and restart.  
 [ ] Add Playwright E2E coverage: save/resume round-trip.  
-[ ] Add cross-browser smoke matrix (Chromium, Firefox, WebKit/Safari-targeted).  
+[ ] Add browser/device smoke coverage required by `PRODUCTION_READINESS.md`; update the canonical support contract before adding non-Chromium production support.
 [ ] Add regression checklist for manual QA and require it at release candidate time.  
 [ ] Add CI step for test tiers (unit, integration, e2e smoke).
 

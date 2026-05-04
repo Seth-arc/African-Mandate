@@ -47,6 +47,20 @@ async function startNewCampaign(page: Page): Promise<void> {
   await expect(page.getByRole('dialog')).toHaveCount(0)
 }
 
+async function enterArenaToMissionEntry(page: Page): Promise<void> {
+  await page.goto('/')
+  await page.locator('#enterArenaBtn').click()
+  await expect(page.locator('body')).toHaveClass(/game-active/)
+  await expect(page.getByRole('dialog', { name: /Mission Entry|Sessions/ })).toBeVisible()
+}
+
+async function expectReleaseSupportGate(page: Page, reasonText: RegExp): Promise<void> {
+  await expect(page.getByRole('dialog', { name: /Unsupported setup/i })).toBeVisible()
+  await expect(page.getByText(reasonText)).toBeVisible()
+  await expect(page.locator('body')).not.toHaveClass(/game-active/)
+  await expect(page.locator('#root')).not.toBeVisible()
+}
+
 async function dismissVisibleModal(page: Page): Promise<void> {
   for (let attempt = 0; attempt < 6; attempt += 1) {
     if ((await page.getByRole('dialog').count()) === 0) return
@@ -186,22 +200,101 @@ test('keyboard-only modal flow traps focus and restores it to the launcher', asy
   await expect(missionBriefButton).toBeFocused()
 })
 
-test.describe('mobile gate', () => {
-  const iPhone13 = devices['iPhone 13']
-
-  test.use({
-    viewport: iPhone13.viewport,
-    userAgent: iPhone13.userAgent,
-    deviceScaleFactor: iPhone13.deviceScaleFactor,
-    isMobile: iPhone13.isMobile,
-    hasTouch: iPhone13.hasTouch,
+test.describe('release support gate', () => {
+  test('allows the supported desktop/laptop class at the minimum supported viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 })
+    await enterArenaToMissionEntry(page)
   })
 
-  test('blocks the game interface on mobile-sized touch devices', async ({ page }) => {
+  test('allows the supported desktop/laptop class at the standard production viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await enterArenaToMissionEntry(page)
+  })
+
+  test('blocks undersized desktop windows before the game interface starts', async ({ page }) => {
+    await page.setViewportSize({ width: 1279, height: 720 })
     await page.goto('/')
     await page.locator('#enterArenaBtn').click()
-    await expect(page.getByText('Use a desktop or laptop')).toBeVisible()
-    await expect(page.locator('body')).not.toHaveClass(/game-active/)
-    await expect(page.locator('#root')).not.toBeVisible()
+    await expectReleaseSupportGate(page, /viewport at least 1280 x 720/i)
+  })
+
+  test('blocks unsupported direct auth callback entry before the game interface starts', async ({ page }) => {
+    await page.setViewportSize({ width: 1279, height: 720 })
+    await page.goto('/?code=e2e-unsupported-entry')
+    await expectReleaseSupportGate(page, /viewport at least 1280 x 720/i)
+  })
+
+  test.describe('phone touch device', () => {
+    const iPhone13 = devices['iPhone 13']
+
+    test.use({
+      viewport: iPhone13.viewport,
+      userAgent: iPhone13.userAgent,
+      deviceScaleFactor: iPhone13.deviceScaleFactor,
+      isMobile: iPhone13.isMobile,
+      hasTouch: iPhone13.hasTouch,
+    })
+
+    test('blocks phones before the game interface starts', async ({ page }) => {
+      await page.goto('/')
+      await page.locator('#enterArenaBtn').click()
+      await expectReleaseSupportGate(page, /phones, tablets, and touch-only devices/i)
+    })
+  })
+
+  test.describe('tablet touch-only device', () => {
+    test.use({
+      viewport: { width: 1366, height: 1024 },
+      userAgent:
+        'Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    })
+
+    test('blocks tablets before the game interface starts', async ({ page }) => {
+      await page.goto('/')
+      await page.locator('#enterArenaBtn').click()
+      await expectReleaseSupportGate(page, /phones, tablets, and touch-only devices/i)
+    })
+  })
+
+  test.describe('unsupported browser family', () => {
+    test.use({
+      viewport: { width: 1440, height: 1000 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
+    })
+
+    test('blocks non-Chromium desktop browsers before the game interface starts', async ({ page }) => {
+      await page.goto('/')
+      await page.locator('#enterArenaBtn').click()
+      await expectReleaseSupportGate(page, /Use current stable Chrome or Edge/i)
+    })
+  })
+
+  test('blocks storage-disabled browsers before the game interface starts', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        get() {
+          throw new Error('local storage disabled')
+        },
+      })
+    })
+
+    await page.goto('/')
+    await page.locator('#enterArenaBtn').click()
+    await expectReleaseSupportGate(page, /Enable browser local storage/i)
+  })
+
+  test('blocks offline entry before the game interface starts', async ({ page }) => {
+    await page.goto('/')
+    await page.context().setOffline(true)
+    try {
+      await page.locator('#enterArenaBtn').click()
+      await expectReleaseSupportGate(page, /Reconnect to the internet/i)
+    } finally {
+      await page.context().setOffline(false)
+    }
   })
 })

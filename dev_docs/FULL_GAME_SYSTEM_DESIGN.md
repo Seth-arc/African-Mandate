@@ -146,7 +146,7 @@ Notes:
 - Flags reduce escalation severity by 50% and reduce recurrence chance by 25%
 
 ## Telemetry (Full Game Balancing)
-- Current public demo telemetry is local QA-only and opt-in; it is not durable production analytics.
+- v0.1 release telemetry is local QA-only and opt-in; it is not durable production analytics. The production support contract lives in `dev_docs/PRODUCTION_READINESS.md`.
 - Per turn: action choices, validation failures, costs, metric deltas, crisis outcomes, and reveal timing.
 - Per campaign: completion/abandonment, ending distribution, final metrics, save failures, accessibility mode use, and E2E-critical errors.
 - Production telemetry remains blocked until a durable collector, retention policy, and operator monitoring are implemented.

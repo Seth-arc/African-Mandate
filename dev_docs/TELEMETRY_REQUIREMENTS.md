@@ -2,7 +2,7 @@
 
 ## Current Mode
 
-Telemetry is **local QA-only** for the desktop public demo. It is not durable production analytics, is not sent to a remote collector, and is stored only in the browser runtime queue `window.__africanMandateTelemetry` when the player enables Local QA telemetry opt-in.
+Telemetry is **local QA-only** for the v0.1 public web release. It is not durable production analytics, is not sent to a remote collector, and is stored only in the browser runtime queue `window.__africanMandateTelemetry` when the player enables Local QA telemetry opt-in.
 
 Every emitted record includes `mode: "local_qa_only"`.
 

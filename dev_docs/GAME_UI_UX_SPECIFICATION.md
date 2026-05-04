@@ -4,11 +4,13 @@ This document provides a comprehensive technical and design specification for th
 
 ---
 
-## 0. Current Release Positioning
+## 0. Release Positioning
 
-The current public-facing launch is a **desktop-only public demo**. The landing page blocks phone-sized touch devices with explicit copy and does not mount the React game interface on mobile. Production public game positioning is blocked until touch layout, mobile performance, accessibility, and durable telemetry are certified.
+The current public-facing launch is the v0.1 public web release for desktop and laptop browsers. Production browser, device, storage, media, and network support is defined only in [Production Readiness](./PRODUCTION_READINESS.md#release-support-matrix).
 
-Telemetry copy must say **local QA-only** until the browser queue is replaced by a durable production analytics pipeline.
+The landing page must run the [unsupported user gate](./PRODUCTION_READINESS.md#unsupported-user-gate) before the React game shell opens the session manager. Unsupported users must see the blocker before a new or resumed campaign can start.
+
+Telemetry copy must say **local QA-only** until the browser queue is replaced by a durable production analytics pipeline and the canonical support contract is updated.
 
 ---
 
@@ -118,7 +120,7 @@ The production `index.html` (single entry point in the repo) includes the cinema
 
 ## 5. Accessibility & DOM Specification
 
-> **Note**: The DOM specification below applies to the **game interface** (`game.html`, to be implemented separately). The current `index.html` serves as the **landing page only** and does not include game UI elements. When the "Enter the Arena" button is clicked, it should navigate to `game.html` which implements this specification.
+> **Note**: The current `index.html` is the single public entry point. It owns the landing page, release-support gate, cinematic transition, and React game mount. When the entry preflight passes, the React app opens the session manager inside the same page.
 
 ### 5.1 DOM IDs and Classes
 
@@ -289,6 +291,8 @@ Tooltips use a data-attribute based system:
 
 ### 5.5 Responsive Breakpoints
 
+The breakpoints below describe layout behavior, not production support. The production-supported device classes are defined only in [Production Readiness](./PRODUCTION_READINESS.md#release-support-matrix).
+
 | Breakpoint | Width | Layout Changes |
 |------------|-------|----------------|
 | Desktop (default) | ≥1440px | Full three-column layout |
@@ -336,7 +340,7 @@ Tooltips use a data-attribute based system:
 }
 ```
 
-**Touch Targets**: All interactive elements maintain minimum 44x44px touch target on mobile.
+**Touch Targets**: All interactive elements should maintain minimum 44x44px touch target where touch layouts are later certified. Touch-only play is not production-supported in v0.1.
 
 ---
 

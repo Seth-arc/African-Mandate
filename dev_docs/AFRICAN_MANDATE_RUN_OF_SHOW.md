@@ -5,11 +5,11 @@
 **Conditional Variations:**  
 - If `{session_id}` exists, show "Continue Mandate" with last played timestamp; clicking opens a resume picker if multiple sessions exist.  
 - If multiple sessions exist, show a session list sorted by `{last_played_at}` (most recent first) with "Resume" and "Start New Campaign" options.  
-- If a phone-sized touch device is detected, block game entry with the desktop-only public demo gate and keep the React game root hidden.  
+- If the release-support preflight fails, block game entry with the unsupported setup gate and keep the React game root hidden. The canonical support contract lives in `dev_docs/PRODUCTION_READINESS.md`.
 **UI Elements:**  
 - Full-bleed cinematic hero with GSAP parallax, text masking, and grain overlay.  
 - Prestige headline in Playfair Display; subhead in Inter.  
-- Primary CTA: "Play Desktop Demo" or "Continue Mandate" (routes to Phase 2).  
+- Primary CTA: "Play Public Release" or "Continue Mandate" (routes to Phase 2).
 - Secondary CTA: "View Mandate Briefing" (opens read-only briefing overlay, then routes to Phase 2).  
 **Player Experience Summary:** Player sees the AU-led mandate framing and enters the tactical situation room.  
 **System Notes:** No runtime state yet; landing assets referenced via `{assets}` pack. Base landing behavior maps to `index.html`; 

@@ -5,11 +5,11 @@ Purpose
 - Keep the redirect unapplied until explicit release sign-off.
 
 Current Status
-- The current release position is a desktop-only public demo served through the root landing page plus embedded React game.
-- Root `index.html` remains the public entry surface because it owns the desktop demo gate, cinematic entry, and mobile block copy.
+- The current release position is the v0.1 public web release for desktop and laptop browsers, served through the root landing page plus embedded React game.
+- Root `index.html` remains the public entry surface because it owns the release-support gate, cinematic entry, and React game mount.
 
 Activation Trigger
-- Apply this handoff only after explicit sign-off that the production public game is accepted, including mobile/touch certification and durable telemetry.
+- Apply this handoff only after explicit sign-off that a different production entry surface is accepted and the canonical support contract in `dev_docs/PRODUCTION_READINESS.md` is updated with passing evidence.
 
 Handoff Steps (On Sign-Off)
 1. Build the React app:
@@ -34,6 +34,7 @@ Sign-Off Checklist
 - [ ] Product sign-off on production public game quality.
 - [ ] Full regression commands green (`typecheck`, tests, build).
 - [ ] Manual smoke path confirmed on release environment.
-- [ ] Mobile/touch and accessibility certification complete.
-- [ ] Durable telemetry pipeline accepted or explicitly waived.
+- [ ] Release-support matrix updated for the new entry surface.
+- [ ] Accessibility certification complete.
+- [ ] Durable telemetry pipeline accepted or explicitly waived if the new surface changes telemetry support.
 - [ ] Redirect/root handoff applied in deployment config.

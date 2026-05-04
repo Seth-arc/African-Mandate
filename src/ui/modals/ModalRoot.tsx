@@ -6340,7 +6340,7 @@ function OnboardingLoadingBody(): ReactNode {
           Loading map data, campaign state, and onboarding cues for Turn 1.
         </p>
         <div className="onboarding-loading-session-meta" aria-label="New campaign loading details">
-          <span>Desktop public demo</span>
+          <span>Public web release</span>
           <span>Turn {sessionTurn} / {sessionMaxTurns}</span>
           <span>Local QA telemetry only</span>
         </div>

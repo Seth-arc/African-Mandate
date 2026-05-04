@@ -5,8 +5,8 @@
   "tooltips": [
     {
       "id": "shell.demo_mode",
-      "title": "Desktop public demo",
-      "description": "This build is a desktop-only public demo using synthetic data and local QA-only telemetry."
+      "title": "Public web release",
+      "description": "This v0.1 release is production-supported for the desktop and laptop browser surface defined in Production Readiness, using synthetic data and local QA-only telemetry."
     },
     {
       "id": "shell.mode_status",

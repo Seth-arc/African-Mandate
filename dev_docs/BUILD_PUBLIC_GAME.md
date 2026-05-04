@@ -7,7 +7,7 @@ This document lays out a complete, end-to-end process for rebuilding and shippin
 - context_files/NEW_BUILD_ARENA_SAHEL_NARRATIVE_BOOK.md
 - context_files/NEW_FEATURES_DOCUMENTATION.md
 
-The current release stance is a **desktop-only public demo** that is maintainable, testable, and ready for public audience evaluation on desktop/laptop browsers. It is not yet a fully certified production public game because mobile play is blocked and telemetry is local QA-only rather than durable production analytics.
+The current release stance is the **v0.1 public web release for desktop and laptop browsers**. The supported production surface is defined only in [Production Readiness](./PRODUCTION_READINESS.md#release-support-matrix); this build guide must not redefine browser, device, storage, media, or network support.
 
 ---
 
@@ -33,8 +33,8 @@ The current release stance is a **desktop-only public demo** that is maintainabl
 - Maintain focus on turn-based strategy, not real-time combat.
 - Expand depth through data, events, and narrative, not tech complexity.
 - Use the existing prototype as the primary reference for UI and flow.
-- Public demo launch blocks phone-sized touch devices until the mobile layout, touch flow, accessibility, and performance gates pass.
-- Production public game launch remains blocked until durable telemetry replaces the local QA-only browser queue.
+- v0.1 launch must enforce the release-support preflight from [Production Readiness](./PRODUCTION_READINESS.md#unsupported-user-gate) before campaign start.
+- Mobile, tablet, touch-only, non-Chromium, and durable-analytics expansion remain post-v0.1 scope until the canonical support contract is updated with passing evidence.
 
 ---
 
@@ -320,7 +320,7 @@ Exit criteria:
 - Integration tests for action flows
 - Playwright flows for critical paths
 - Manual QA for balance and UX
-- Cross-browser checks (Chromium, Firefox, Safari)
+- Browser and device checks required by the canonical release-support matrix
 
 Deliverables:
 - Test coverage report
@@ -503,9 +503,7 @@ This game uses real-world conflicts. Treat content responsibly.
 
 ## 11) Analytics and telemetry
 
-- Track only anonymous, minimal events
-- Respect privacy laws (GDPR/CCPA)
-- Provide opt-out if tracking is used
+Telemetry for v0.1 is local QA-only and opt-in. Do not add remote analytics, player monitoring, retention tracking, or payment analytics until [Production Readiness](./PRODUCTION_READINESS.md#release-support-matrix) and [Telemetry Requirements](./TELEMETRY_REQUIREMENTS.md) are updated with a durable, privacy-reviewed production pipeline.
 
 ---
 

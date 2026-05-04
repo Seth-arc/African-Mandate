@@ -717,7 +717,7 @@
             border-bottom-color: #f0d98f;
         }
 
-        /* MOBILE GATE */
+        /* RELEASE SUPPORT GATE */
         .mobile-gate-overlay {
             position: fixed;
             top: 0;
@@ -768,6 +768,12 @@
 
         .mobile-gate-close:hover {
             border-color: var(--gold);
+        }
+
+        .mobile-gate-close:focus-visible {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22);
         }
 
         .mobile-gate-close::before,
@@ -835,6 +841,34 @@
             font-weight: 600;
         }
 
+        .mobile-gate-reasons {
+            margin: 0.35rem 0 0.95rem;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .mobile-gate-reason {
+            position: relative;
+            padding-left: 1.05rem;
+            color: #dfd6bd;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .mobile-gate-reason::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--gold);
+        }
+
         .mobile-gate-ack {
             margin-top: 0.7rem;
             width: 100%;
@@ -855,6 +889,12 @@
             border-color: var(--gold);
             background: rgba(212, 175, 55, 0.16);
             color: #ffe6a0;
+        }
+
+        .mobile-gate-ack:focus-visible {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22);
         }
 
         @media (max-width: 768px) {
@@ -1022,7 +1062,7 @@
                 <p>A signature in Addis Ababa cannot stop the dust.</p>
 
                 <div class="button-group">
-                    <button class="cta-btn primary" id="enterArenaBtn">Play Desktop Demo</button>
+                    <button class="cta-btn primary" id="enterArenaBtn">Play Public Release</button>
                     <button class="cta-btn secondary" id="aboutBtn">About</button>
                 </div>
                 <p class="cta-meta" id="enterArenaStatus" aria-live="polite"></p>
@@ -1067,7 +1107,7 @@
                 <section class="about-section">
                     <h4 class="about-section-title">Powered by Reality</h4>
                     <p class="about-section-text">
-                        Desktop-only public demo with React mapping, AI-driven insurgents, and narrative acts that immerse without illusions. Play as guest or authenticated for saves; experience the asymmetry where partial success is the true win.
+                        Public web release for supported desktop and laptop browsers, with React mapping, AI-driven insurgents, and narrative acts that immerse without illusions. Play as guest or authenticated for saves; experience the asymmetry where partial success is the true win.
                     </p>
                 </section>
 
@@ -1087,20 +1127,21 @@
             </div>
         </div>
     </div>
-    <div class="mobile-gate-overlay" id="mobileGateModal" aria-hidden="true">
+    <div class="mobile-gate-overlay" id="mobileGateModal" role="dialog" aria-modal="true" aria-labelledby="releaseSupportGateTitle" aria-describedby="releaseSupportGateBody" aria-hidden="true">
         <div class="mobile-gate-panel">
-            <button class="mobile-gate-close" id="mobileGateClose" aria-label="Close Mobile Notice"></button>
-            <span class="mobile-gate-kicker">Desktop-only public demo</span>
-            <h3 class="mobile-gate-title">Use a desktop or laptop</h3>
-            <p class="mobile-gate-text">
-                African Mandate is currently a desktop-only public demo. The command map, action review,
-                and save flows require a wider viewport and keyboard-friendly controls.
+            <button class="mobile-gate-close" id="mobileGateClose" aria-label="Close release support notice"></button>
+            <span class="mobile-gate-kicker">Release support gate</span>
+            <h3 class="mobile-gate-title" id="releaseSupportGateTitle">Unsupported setup</h3>
+            <p class="mobile-gate-text" id="releaseSupportGateBody">
+                African Mandate v0.1 is supported for current stable Chrome or Edge on desktop and laptop
+                browsers with a keyboard, fine pointer, local storage, MP4 media support, and a viewport of
+                at least 1280 x 720.
             </p>
             <p class="mobile-gate-text">
-                Mobile play is blocked until the production public game layout is certified for touch,
-                accessibility, and performance.
+                This setup was blocked before session start because:
             </p>
-            <button type="button" class="mobile-gate-ack" id="mobileGateAcknowledge">Return on desktop</button>
+            <ul class="mobile-gate-reasons" id="releaseSupportReasons" aria-live="polite"></ul>
+            <button type="button" class="mobile-gate-ack" id="mobileGateAcknowledge">Return with supported setup</button>
         </div>
     </div>
     </div>
@@ -1251,11 +1292,23 @@
         const mobileGateModal = document.getElementById('mobileGateModal');
         const mobileGateClose = document.getElementById('mobileGateClose');
         const mobileGateAcknowledge = document.getElementById('mobileGateAcknowledge');
+        const releaseSupportReasons = document.getElementById('releaseSupportReasons');
         const landingShell = document.getElementById('landingShell');
         const heroImage = document.getElementById('heroImage');
         const introVideoOverlay = document.getElementById('introVideoOverlay');
         const introVideo = document.getElementById('introVideo');
         const introVideoLoading = document.getElementById('introVideoLoading');
+        const RELEASE_SUPPORT_MIN_WIDTH = 1280;
+        const RELEASE_SUPPORT_MIN_HEIGHT = 720;
+        const RELEASE_SUPPORT_REASON_COPY = {
+            browser: 'Use current stable Chrome or Edge. Firefox, Safari, legacy browsers, and embedded webviews are outside the v0.1 production support contract.',
+            viewport: 'Use a viewport at least 1280 x 720 CSS pixels so the command map, sidebars, action review, and session controls remain visible.',
+            input: 'Use a setup with a physical keyboard and fine pointer such as a mouse or trackpad. Phones, tablets, and touch-only devices are not supported for v0.1.',
+            storage: 'Enable browser local storage. Guest saves and session preferences require writable storage before campaign start.',
+            media: 'Use a browser with HTML5 MP4 video support. The production entry flow depends on the shipped intro media and fallback path.',
+            network: 'Reconnect to the internet before starting. Offline entry is not a supported production start path.',
+            unknown: 'This setup does not match the v0.1 release support contract.',
+        };
         const GLOBAL_MEDIA_VOLUME_SCALE = 0;
         const PRE_INTERFACE_LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4';
         const GAME_THEME_AUDIO_SRC = '/assets/audio/music/Briefing%20Room%20Runway.mp3';
@@ -1266,7 +1319,7 @@
         let gameThemeFadeToken = 0;
         let introCompleted = false;
         let introTransitionInProgress = false;
-        let enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Play Desktop Demo';
+        let enterArenaDefaultLabel = enterArenaBtn?.textContent ?? 'Play Public Release';
 
         function getGameThemeAudio() {
             if (gameThemeAudio) return gameThemeAudio;
@@ -1368,13 +1421,13 @@
             const lastPlayedAt = typeof detail?.last_played_at === 'string' ? detail.last_played_at : null;
             const turn = Number.isFinite(Number(detail?.turn)) ? Number(detail.turn) : null;
 
-            enterArenaDefaultLabel = hasSessions ? 'Continue Mandate' : 'Play Desktop Demo';
+            enterArenaDefaultLabel = hasSessions ? 'Continue Mandate' : 'Play Public Release';
             if (!enterArenaBtn.classList.contains('is-loading')) {
                 enterArenaBtn.textContent = enterArenaDefaultLabel;
             }
 
             if (!hasSessions) {
-                enterArenaStatus.textContent = 'Start a fresh desktop demo campaign from Turn 1.';
+                enterArenaStatus.textContent = 'Start a fresh supported desktop or laptop campaign from Turn 1.';
                 enterArenaBtn.removeAttribute('title');
                 return;
             }
@@ -1406,13 +1459,63 @@
             document.documentElement.classList.toggle('intro-playing', isLocked);
         }
 
-        function isPhoneDevice() {
+        function mediaMatches(query) {
+            try {
+                return Boolean(window.matchMedia && window.matchMedia(query).matches);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function isLocalStorageWritable() {
+            try {
+                const key = '__african_mandate_release_support__';
+                window.localStorage.setItem(key, '1');
+                window.localStorage.removeItem(key);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function supportsMp4Video() {
+            try {
+                const video = document.createElement('video');
+                if (!video || typeof video.canPlayType !== 'function') return false;
+                return video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') !== '' || video.canPlayType('video/mp4') !== '';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function getReleaseSupportStatus() {
+            const reasons = [];
             const userAgent = navigator.userAgent || navigator.vendor || '';
-            const phoneUserAgent = /Android.+Mobile|iPhone|iPod|Windows Phone|IEMobile|Opera Mini|BlackBerry/i.test(userAgent);
-            const coarsePointerNarrowViewport =
-                window.matchMedia('(max-width: 900px)').matches &&
-                window.matchMedia('(pointer: coarse)').matches;
-            return phoneUserAgent || coarsePointerNarrowViewport;
+            const chromiumBrowser = /\b(?:Chrome|Chromium|HeadlessChrome|Edg)\//i.test(userAgent);
+            const unsupportedBrowser =
+                !chromiumBrowser ||
+                /\b(?:Firefox|FxiOS|OPR|Opera|SamsungBrowser)\//i.test(userAgent) ||
+                /\bVersion\/[\d.]+ Safari\//i.test(userAgent) ||
+                /\bwv\)|; wv\b|FBAN|FBAV|Instagram|Line\//i.test(userAgent);
+            const phoneOrTabletUserAgent =
+                /Android.+Mobile|iPhone|iPod|iPad|Windows Phone|IEMobile|Opera Mini|BlackBerry|Tablet|Mobile Safari/i.test(userAgent);
+            const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+            const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+            const hasFinePointer = mediaMatches('(any-pointer: fine)') || mediaMatches('(pointer: fine)');
+            const coarsePointerOnly =
+                (mediaMatches('(pointer: coarse)') || mediaMatches('(any-pointer: coarse)')) && !hasFinePointer;
+
+            if (unsupportedBrowser) reasons.push('browser');
+            if (viewportWidth < RELEASE_SUPPORT_MIN_WIDTH || viewportHeight < RELEASE_SUPPORT_MIN_HEIGHT) reasons.push('viewport');
+            if (phoneOrTabletUserAgent || coarsePointerOnly || !hasFinePointer) reasons.push('input');
+            if (!isLocalStorageWritable()) reasons.push('storage');
+            if (!supportsMp4Video()) reasons.push('media');
+            if (navigator.onLine === false) reasons.push('network');
+
+            return {
+                supported: reasons.length === 0,
+                reasons: reasons.length > 0 ? reasons : ['unknown'],
+            };
         }
 
         function syncLandingModalLock() {
@@ -1434,11 +1537,32 @@
             }
         }
 
-        function openMobileGateModal() {
+        function renderReleaseSupportReasons(status) {
+            if (!releaseSupportReasons) return;
+            releaseSupportReasons.replaceChildren();
+            const reasons = Array.isArray(status?.reasons) && status.reasons.length > 0 ? status.reasons : ['unknown'];
+
+            for (const reason of reasons) {
+                const item = document.createElement('li');
+                item.className = 'mobile-gate-reason';
+                item.textContent = RELEASE_SUPPORT_REASON_COPY[reason] || RELEASE_SUPPORT_REASON_COPY.unknown;
+                releaseSupportReasons.appendChild(item);
+            }
+        }
+
+        function openMobileGateModal(status) {
             if (!mobileGateModal) return;
+            renderReleaseSupportReasons(status);
             mobileGateModal.classList.add('active');
             mobileGateModal.setAttribute('aria-hidden', 'false');
             syncLandingModalLock();
+            window.setTimeout(() => {
+                if (mobileGateAcknowledge) {
+                    mobileGateAcknowledge.focus({ preventScroll: true });
+                } else if (mobileGateClose) {
+                    mobileGateClose.focus({ preventScroll: true });
+                }
+            }, 0);
         }
 
         function closeMobileGateModal() {
@@ -1446,6 +1570,9 @@
             mobileGateModal.classList.remove('active');
             mobileGateModal.setAttribute('aria-hidden', 'true');
             syncLandingModalLock();
+            if (enterArenaBtn) {
+                enterArenaBtn.focus({ preventScroll: true });
+            }
         }
 
         function warmIntroVideoBuffer() {
@@ -1593,8 +1720,9 @@
 
         async function beginArenaEntry() {
             if (introCompleted || introTransitionInProgress) return;
-            if (isPhoneDevice()) {
-                openMobileGateModal();
+            const releaseSupportStatus = getReleaseSupportStatus();
+            if (!releaseSupportStatus.supported) {
+                openMobileGateModal(releaseSupportStatus);
                 return;
             }
             startGameThemeAudio();
@@ -1704,8 +1832,9 @@
             hashParams.has('refresh_token');
 
         if (hasSupabaseAuthCallback) {
-            if (isPhoneDevice()) {
-                openMobileGateModal();
+            const releaseSupportStatus = getReleaseSupportStatus();
+            if (!releaseSupportStatus.supported) {
+                openMobileGateModal(releaseSupportStatus);
             } else {
                 introCompleted = true;
                 activateGameInterface();

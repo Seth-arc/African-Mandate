@@ -4,7 +4,9 @@ Turn-based strategy game: you play the AU Special Envoy in the Sahel. This repo 
 
 ## Launch scope
 
-Current positioning is a **desktop-only public demo**, not a fully certified production public game. Phone-sized touch devices are blocked by the landing-page mobile gate until the touch layout, performance, and accessibility pass are certified. Demo data is synthetic, and runtime telemetry is local QA-only behind the in-game telemetry opt-in.
+The supported release target is the **v0.1 public web release for desktop and laptop browsers**. The production support contract, including supported browsers, device classes, storage, media, and network assumptions, lives in **[Production Readiness](./dev_docs/PRODUCTION_READINESS.md#release-support-matrix)** and is the single source of truth.
+
+Phone, tablet, touch-only, undersized-window, unsupported-browser, offline, and storage-disabled journeys are gated before a campaign can start. Runtime telemetry remains local QA-only behind the in-game telemetry opt-in.
 
 ## Quick start
 
@@ -27,7 +29,7 @@ See **[Production Readiness](./dev_docs/PRODUCTION_READINESS.md)** for launch sc
 - `npm run typecheck` — TypeScript check
 - `npm run validate:assets` — Static asset reference validation
 - `npm test` — Unit tests
-- `npm run test:e2e` — Playwright E2E player journey and mobile gate suite
+- `npm run test:e2e` — Playwright E2E player journey and release-support gate suite
 
 ## Project root
 
