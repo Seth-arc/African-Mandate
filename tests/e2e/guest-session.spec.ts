@@ -44,7 +44,7 @@ test('guest is the supported default and saves, renames, refreshes, and resumes 
   await expect(sessionDialog.getByText('Session name updated.')).toBeVisible()
   await sessionDialog.getByLabel('Close', { exact: true }).click()
 
-  await page.reload()
+  await page.reload({ waitUntil: 'domcontentloaded' })
   await page.locator('#enterArenaBtn').click()
   const entryDialog = page.getByRole('dialog', { name: /Mission Entry|Sessions/ })
   await expect(

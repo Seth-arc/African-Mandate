@@ -188,7 +188,7 @@ export async function saveAndResumeGuestCampaign(page: Page, expectedTurn: numbe
   await expect(sessionDialog.getByRole('button', { name: 'Continue mandate' })).toBeEnabled()
   await sessionDialog.getByLabel('Close', { exact: true }).click()
 
-  await page.reload()
+  await page.reload({ waitUntil: 'domcontentloaded' })
   await page.locator('#enterArenaBtn').click()
   const entryDialog = page.getByRole('dialog', { name: /Mission Entry|Sessions/ })
   await expect(entryDialog).toBeVisible()
