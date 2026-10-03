@@ -28,8 +28,22 @@ See **[Production Readiness](./dev_docs/PRODUCTION_READINESS.md)** for launch sc
 - `npm run build` — Production build
 - `npm run typecheck` — TypeScript check
 - `npm run validate:assets` — Static asset reference validation
+- `npm run validate:pages` — GitHub Pages deployment contract validation
 - `npm test` — Unit tests
 - `npm run test:e2e` — Playwright E2E player journey and release-support gate suite
+
+## GitHub Pages deployment
+
+The [`Deploy to GitHub Pages`](./.github/workflows/pages.yml) workflow builds the Vite application on every push to `main`, uploads only `dist/`, and deploys that artifact to the `github-pages` environment. The Vite base is `/` because the supported public URL is the custom domain `https://africanmandate.org/`.
+
+Repository administrators must configure these settings once in **Settings → Pages**:
+
+1. Set **Build and deployment → Source** to **GitHub Actions**.
+2. Set **Custom domain** to `africanmandate.org`, save it, and enable **Enforce HTTPS** when GitHub makes that option available.
+
+GitHub ignores repository `CNAME` files for custom Actions workflows; the custom domain must remain configured in the Pages settings. Do not switch the Vite base to `/African-Mandate/` while source files use root-relative `/assets/...` and `/img/...` URLs.
+
+Use `npm run validate:pages` to verify the repository-side deployment contract before pushing.
 
 ## Project root
 

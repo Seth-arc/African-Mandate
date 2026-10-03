@@ -56,14 +56,29 @@ Closing the gate may return the user to the landing page, but it must not start 
 - Cloud saves depend on Supabase availability and correct environment configuration.
 - Guest saves are browser-local and cannot be recovered after local storage deletion.
 
+## Demo Bundle Budget
+
+The v0.1 controlled desktop demo owns an initial JavaScript budget of **1,300,000 minified bytes** and **350,000 gzip bytes**. The release owner for this budget is the controlled desktop demo maintainer. Increasing either ceiling requires a fresh candidate-build measurement, a documented explanation of the added payload, and release-owner approval.
+
+The measurement baseline captured on 2026-09-03 from the available local production-build entry `dist/assets/index-BzO44cLC.js` was **1,227,487 minified bytes** and **319,311 gzip bytes**. This leaves 72,513 raw bytes (5.9%) and 30,689 gzip bytes (9.6%) of headroom. These figures record the baseline used to approve the budget; they are not a substitute for running the gate against the candidate commit.
+
+Vite's `build.chunkSizeWarningLimit` is set to 1,300 kB to match the raw-byte ceiling. `npm run build` then runs `scripts/validate-demo-bundle.mjs`, which reads the initial module referenced by the generated `dist/index.html`, records raw and gzip sizes, and fails if either ceiling is exceeded. A successful candidate build prints `Demo bundle budget passed: <raw> raw bytes / <gzip> gzip bytes (budgets: 1300000 / 350000).` The full game shell is intentionally delivered as the controlled demo's initial module for v0.1; this bounded budget avoids introducing a late-loading gameplay boundary immediately before mission entry.
+
+## GitHub Pages Deployment
+
+The production site is deployed by `.github/workflows/pages.yml`. A push to `main` installs the locked dependencies, runs the production build, uploads only `dist/`, and deploys that artifact to the protected `github-pages` environment. `vite.config.ts` uses the root base `/` because `https://africanmandate.org/` is the supported public URL and the shipped content uses root-relative asset paths.
+
+Repository administrators must keep **Settings → Pages → Source** set to **GitHub Actions** and **Custom domain** set to `africanmandate.org`. A repository `CNAME` file is ignored by custom Actions publishing and is not deployment evidence. `npm run validate:pages` fails when the Vite base, Pages permissions, production build, `dist/` artifact path, or deployment action drifts from this contract.
+
 ## Recovery Steps
 
 - Release-support gate shown to a supported desktop/laptop user: confirm Chrome or Edge stable, viewport at least 1280 x 720, local storage enabled, online status, and MP4 media support. Reproduce with `npm run test:e2e` before changing the gate.
 - Missing or empty static asset: run `npm run validate:assets`, restore the referenced file under `public/`, or update the source/content reference to a shipped asset.
-- Broken content reference: run `npm test -- --run tests/unit/contentContracts.test.ts` and update the JSON, localization key, actor/action/dialogue reference, or test contract together.
+- Broken content reference: run `npm run test:run -- tests/unit/contentContracts.test.ts` and update the JSON, localization key, actor/action/dialogue reference, or test contract together.
 - Supabase auth or cloud save failure: confirm `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, verify Supabase project health, verify Auth providers, and retry the save from the in-game banner.
 - Guest save issue: keep the tab open, retry manual save, and avoid clearing site data. If local storage was cleared, the guest save cannot be restored.
-- Failed deployment smoke: run `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build`, and `npm run test:e2e`; redeploy only after the failing gate is fixed.
+- README or Jekyll content appears at the public URL: confirm Pages Source is **GitHub Actions**, confirm the custom domain is `africanmandate.org`, run `npm run validate:pages`, and inspect the latest `Deploy to GitHub Pages` workflow before retrying deployment.
+- Failed deployment smoke: run `npm run verify:demo`; redeploy only after the failing gate is fixed. The script runs typecheck, zero-warning lint, non-watch unit tests, static asset validation plus the production build and bundle-budget check, then the retry-free Playwright suite.
 - Bad release: roll back to the previous known-good deployment artifact and keep the current failing build out of production until the gate failure is reproduced and fixed.
 
 ## Release Gate
@@ -71,11 +86,10 @@ Closing the gate may return the user to the landing page, but it must not start 
 Before launch or redeploy, run:
 
 ```bash
-npm run typecheck
-npm run lint
-npm test -- --run
-npm run build
-npm run test:e2e
+npm ci
+npm audit
+npm audit --omit=dev
+npm run verify:demo
 ```
 
-`npm run build` includes `npm run validate:assets`, and CI also runs the asset validator as an explicit pre-build gate.
+For an individually inspectable gate, `npm run test:run` is the non-watch unit command, and `npm run lint -- --max-warnings=0` fails on any warning. `npm run build` includes static asset validation, the Pages deployment contract, typecheck, the Vite production build, and the raw/gzip bundle-budget validator. Playwright is configured with zero retries and writes reports and test artifacts under ignored `tmp/` paths, so verification does not rewrite tracked evidence files. CI installs Chromium, runs both audits, and invokes the same `npm run verify:demo` command.

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useTour } from '../../tour/TourContext'
 
 interface FocusBox {
@@ -20,6 +20,21 @@ function idleWaveScale(index: number): number {
   return 0.32 + band * 0.08
 }
 
+function formatAudioTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00'
+  const totalSeconds = Math.floor(seconds)
+  const minutes = Math.floor(totalSeconds / 60)
+  const remainder = totalSeconds % 60
+  return `${minutes}:${String(remainder).padStart(2, '0')}`
+}
+
+function shouldReduceWaveformMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  const configuredMotion = document.documentElement.dataset.motion
+  if (configuredMotion) return configuredMotion === 'reduced'
+  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 export function DemoTourOverlay(): ReactNode {
   const { isOpen, step, steps, currentStep, prev, next, skip } = useTour()
   const [focusBox, setFocusBox] = useState<FocusBox | null>(null)
@@ -36,9 +51,10 @@ export function DemoTourOverlay(): ReactNode {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
   const analyserDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null)
+  const isMountedRef = useRef(true)
   const shouldFloatDialog = step > 0 && focusBox !== null
 
-  const applyWaveScales = (scales: number[]): void => {
+  const applyWaveScales = useCallback((scales: number[]): void => {
     for (let index = 0; index < WAVEFORM_BARS.length; index += 1) {
       const bar = waveformBarRefs.current[index]
       if (!bar) continue
@@ -48,22 +64,22 @@ export function DemoTourOverlay(): ReactNode {
       bar.style.setProperty('--wave-scale', clampedScale.toFixed(3))
       bar.style.setProperty('--wave-opacity', opacity.toFixed(3))
     }
-  }
+  }, [])
 
-  const resetWaveformBars = (): void => {
+  const resetWaveformBars = useCallback((): void => {
     const idleScales = WAVEFORM_BARS.map((index) => idleWaveScale(index))
     waveformScaleCacheRef.current = idleScales
     applyWaveScales(idleScales)
-  }
+  }, [applyWaveScales])
 
-  const stopWaveformLoop = (): void => {
+  const stopWaveformLoop = useCallback((): void => {
     if (typeof window === 'undefined') return
     if (waveformFrameRef.current === null) return
     window.cancelAnimationFrame(waveformFrameRef.current)
     waveformFrameRef.current = null
-  }
+  }, [])
 
-  const ensureAnalyser = (audioElement: HTMLAudioElement): boolean => {
+  const ensureAnalyser = useCallback((audioElement: HTMLAudioElement): boolean => {
     if (typeof window === 'undefined') return false
     const AudioContextCtor =
       window.AudioContext ??
@@ -100,9 +116,9 @@ export function DemoTourOverlay(): ReactNode {
     }
 
     return true
-  }
+  }, [])
 
-  const renderWaveformFrame = (): void => {
+  const renderWaveformFrame = useCallback(function renderFrame(): void {
     if (typeof window === 'undefined') return
 
     const audioElement = audioRef.current
@@ -135,22 +151,14 @@ export function DemoTourOverlay(): ReactNode {
     }
 
     applyWaveScales(scales)
-    waveformFrameRef.current = window.requestAnimationFrame(renderWaveformFrame)
-  }
+    waveformFrameRef.current = window.requestAnimationFrame(renderFrame)
+  }, [applyWaveScales, resetWaveformBars, stopWaveformLoop])
 
-  const startWaveformLoop = (): void => {
+  const startWaveformLoop = useCallback((): void => {
     if (typeof window === 'undefined') return
     if (waveformFrameRef.current !== null) return
     waveformFrameRef.current = window.requestAnimationFrame(renderWaveformFrame)
-  }
-
-  const formatAudioTime = (seconds: number): string => {
-    if (!Number.isFinite(seconds) || seconds <= 0) return '0:00'
-    const totalSeconds = Math.floor(seconds)
-    const minutes = Math.floor(totalSeconds / 60)
-    const remainder = totalSeconds % 60
-    return `${minutes}:${String(remainder).padStart(2, '0')}`
-  }
+  }, [renderWaveformFrame])
 
   useEffect(() => {
     if (!isOpen) return
@@ -301,10 +309,12 @@ export function DemoTourOverlay(): ReactNode {
       audioElement.pause()
       audioElement.currentTime = 0
     }
-  }, [isOpen, step])
+  }, [isOpen, resetWaveformBars, step, stopWaveformLoop])
 
   useEffect(() => {
+    isMountedRef.current = true
     return () => {
+      isMountedRef.current = false
       stopWaveformLoop()
       sourceNodeRef.current?.disconnect()
       analyserRef.current?.disconnect()
@@ -312,21 +322,23 @@ export function DemoTourOverlay(): ReactNode {
         void audioContextRef.current.close().catch(() => undefined)
       }
     }
-  }, [])
+  }, [stopWaveformLoop])
 
-  const toggleAudioPlayback = (): void => {
+  const toggleAudioPlayback = useCallback((): void => {
     const audioElement = audioRef.current
     if (!audioElement) return
     if (audioElement.paused) {
       audioElement.play().catch(() => {
-        setAudioIsPlaying(false)
+        if (isMountedRef.current) {
+          setAudioIsPlaying(false)
+        }
       })
       return
     }
     audioElement.pause()
-  }
+  }, [])
 
-  const handleSeek = (event: ChangeEvent<HTMLInputElement>): void => {
+  const handleSeek = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
     const audioElement = audioRef.current
     const nextTime = Number(event.target.value)
     if (!Number.isFinite(nextTime)) return
@@ -334,24 +346,29 @@ export function DemoTourOverlay(): ReactNode {
     if (audioElement) {
       audioElement.currentTime = nextTime
     }
-  }
+  }, [])
 
-  const handleAudioPlay = (): void => {
+  const handleAudioPlay = useCallback((): void => {
     setAudioIsPlaying(true)
     const audioElement = audioRef.current
     if (!audioElement) return
+    if (shouldReduceWaveformMotion()) {
+      stopWaveformLoop()
+      resetWaveformBars()
+      return
+    }
     if (!ensureAnalyser(audioElement)) return
     if (audioContextRef.current?.state === 'suspended') {
       void audioContextRef.current.resume().catch(() => undefined)
     }
     startWaveformLoop()
-  }
+  }, [ensureAnalyser, resetWaveformBars, startWaveformLoop, stopWaveformLoop])
 
-  const handleAudioPause = (): void => {
+  const handleAudioPause = useCallback((): void => {
     setAudioIsPlaying(false)
     stopWaveformLoop()
     resetWaveformBars()
-  }
+  }, [resetWaveformBars, stopWaveformLoop])
 
   if (!isOpen || !currentStep) return null
 

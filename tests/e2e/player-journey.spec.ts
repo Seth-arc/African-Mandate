@@ -2,6 +2,7 @@ import { expect, test, devices, type Page } from '@playwright/test'
 
 async function stubMediaPlayback(page: Page): Promise<void> {
   await page.addInitScript(() => {
+    const playingMedia = new WeakSet<HTMLMediaElement>()
     const dispatchMediaEvent = (element: HTMLMediaElement, eventName: string): void => {
       element.dispatchEvent(new Event(eventName))
     }
@@ -10,13 +11,18 @@ async function stubMediaPlayback(page: Page): Promise<void> {
       configurable: true,
       value() {
         const element = this as HTMLMediaElement
+        playingMedia.add(element)
         window.setTimeout(() => {
           dispatchMediaEvent(element, 'loadedmetadata')
           dispatchMediaEvent(element, 'loadeddata')
           dispatchMediaEvent(element, 'canplay')
+          dispatchMediaEvent(element, 'play')
           dispatchMediaEvent(element, 'playing')
-          if (!element.loop) {
-            window.setTimeout(() => dispatchMediaEvent(element, 'ended'), 80)
+          if (!element.loop && !element.classList.contains('demo-tour-audio-native')) {
+            window.setTimeout(() => {
+              playingMedia.delete(element)
+              dispatchMediaEvent(element, 'ended')
+            }, 80)
           }
         }, 0)
         return Promise.resolve()
@@ -25,7 +31,15 @@ async function stubMediaPlayback(page: Page): Promise<void> {
     Object.defineProperty(HTMLMediaElement.prototype, 'pause', {
       configurable: true,
       value() {
-        dispatchMediaEvent(this as HTMLMediaElement, 'pause')
+        const element = this as HTMLMediaElement
+        playingMedia.delete(element)
+        dispatchMediaEvent(element, 'pause')
+      },
+    })
+    Object.defineProperty(HTMLMediaElement.prototype, 'paused', {
+      configurable: true,
+      get() {
+        return !playingMedia.has(this as HTMLMediaElement)
       },
     })
     Object.defineProperty(HTMLMediaElement.prototype, 'duration', {
@@ -117,8 +131,20 @@ test('full player journey covers launch, onboarding, action review, invalid acti
 
   await page.getByRole('button', { name: 'Onboarding' }).click()
   await expect(page.getByRole('dialog', { name: /Opening Brief/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Play' }).click()
+  await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible()
   await page.getByRole('button', { name: 'Next' }).click()
   await expect(page.getByRole('dialog', { name: /Command Rail/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(page.getByRole('dialog', { name: /Opening Brief/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Play' })).toBeVisible()
+  await expect(page.locator('.demo-tour-audio-native')).toHaveJSProperty('currentTime', 0)
+  expect(
+    await page.locator('.demo-tour-waveform span').first().evaluate((bar) =>
+      (bar as HTMLElement).style.getPropertyValue('--wave-scale')
+    )
+  ).toBe('0.320')
+  await page.getByRole('button', { name: 'Next' }).click()
   await page.getByRole('button', { name: 'Skip' }).click()
 
   await page.getByRole('button', { name: 'Take action' }).click()
