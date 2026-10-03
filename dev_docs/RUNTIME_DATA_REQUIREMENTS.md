@@ -106,7 +106,9 @@ Events and Logs
   - trigger_turn
   - deadline_turn
   - failure_on_deadline (bool; derived from content data)
-  - status
+  - status (active | resolved | expired)
+  - Turn-resolution order is deterministic: evaluate authored resolution_conditions for active events, mark matches resolved, then expire and penalize only events that remain active past deadline_turn.
+  - Resolved events retain their persisted deadline and trigger metadata for save/resume and audit display; they never receive their penalty_bundle.
 - actions_log:
   - session_id
   - turn
@@ -168,7 +170,7 @@ Canonical Accessor Paths (For Trigger Evaluation)
   - zone.<zone_id>.<metric> → (explicit access) zone_state where zone_id = <zone_id>, return <metric> (stability, insurgency, civilian_support, threat_level)
   - zone.<zone_id>.multi_ethnic → zones where zone_id = <zone_id>, return multi_ethnic (static content)
   - territory.<territory_key>.<metric> → territory_state where territory_key = <territory_key>, return <metric>
-  - active_events contains <event_id> → active_events where event_id = <event_id> and status != 'resolved'
+  - active_events.<event_id>.status → active_events where event_id = <event_id>, returning active | resolved | expired | none
   - rng → deterministic float 0.0-1.0 seeded per event/turn (see game_config.rng_config)
 
   Derived Signals (Computed at Runtime)
@@ -179,7 +181,7 @@ Canonical Accessor Paths (For Trigger Evaluation)
   - humanitarian_aid_spend_high: Boolean flag when humanitarian spend exceeds configured threshold in last 2 turns
     - Formula: sum(actions_log.costs.budget WHERE action_category == 'humanitarian' AND turn >= current_turn - 1) > 3000000
   - security_actions_without_oversight: Count of security actions taken while oversight_level.level == 'none' in last 3 turns
-    - Formula: count(actions_log WHERE action_category == 'security' AND turn >= current_turn - 2 AND oversight_level_at_turn == 'none')
+    - Formula: 0 while formal oversight_level is not 'none' or `anti_corruption_monitoring_active` is true; otherwise count(actions_log WHERE action_category == 'security' AND turn >= current_turn - 2)
   - civilian_harm_incidents: Count of civilian harm incidents recorded in last 2 turns
     - Formula: count(actions_log WHERE flag_additions contains 'civilian_harm_incident' AND turn >= current_turn - 1)
   - intel_report_age_turns: Integer age of current featured intel report

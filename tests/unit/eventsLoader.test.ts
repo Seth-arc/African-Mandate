@@ -23,4 +23,16 @@ describe('eventsLoader', () => {
     expect(intercommunal?.trigger_conditions).toContain('zone.multi_ethnic == true')
     expect(intercommunal?.trigger_conditions).toContain('zone.insurgency > 60')
   })
+
+  it('loads authored crisis resolution conditions', () => {
+    const parsed = parseEventsYaml(eventsYamlRaw)
+    const intercommunal = parsed.events.find((event) => event.event_id === 'security_intercommunal_violence')
+    const governance = parsed.events.find((event) => event.event_id === 'governance_crisis')
+    const corridorFailure = parsed.events.find((event) => event.event_id === 'humanitarian_corridor_failure')
+
+    expect(intercommunal?.resolution_conditions).toBe('mediation_action_success == true')
+    expect(governance?.resolution_conditions).toContain('anti_corruption_monitoring_active == true')
+    expect(governance?.resolution_conditions).toContain('audit_status.status == pending')
+    expect(corridorFailure?.resolution_conditions).toContain('humanitarian_corridor_open == true')
+  })
 })

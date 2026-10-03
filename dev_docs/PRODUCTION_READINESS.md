@@ -37,6 +37,12 @@ The gate is required for:
 
 Closing the gate may return the user to the landing page, but it must not start a campaign or mount the active game interface for an unsupported environment.
 
+## Landing Motion Degradation
+
+GSAP, ScrollTrigger, and Lenis enhance the landing page but do not own launch. Their pinned CDN scripts are requested only after the initial document load, each request has a four-second timeout, and a missing, blocked, or incomplete dependency leaves the page in a static readable state. The mission-entry controls, release-support preflight, and React game shell must remain usable in that fallback state. The document exposes `data-landing-motion="static|loading|ready|fallback|reduced"` for bounded diagnostics and E2E assertions; it is not a release verdict.
+
+When `prefers-reduced-motion: reduce` is active, the page keeps the static presentation and does not request the three motion libraries. The no-CDN E2E case in `tests/e2e/player-journey.spec.ts` must pass before promotion. Vendoring the motion libraries remains the preferred supply-chain closure; the fallback prevents their availability from becoming a launch dependency but does not make third-party delivery first-party.
+
 ## Save Behavior
 
 - Guest play stores saves in the current browser through local storage. Clearing site data, private browsing cleanup, or changing browsers can remove guest saves.
@@ -75,6 +81,7 @@ Repository administrators must keep **Settings → Pages → Source** set to **G
 - Release-support gate shown to a supported desktop/laptop user: confirm Chrome or Edge stable, viewport at least 1280 x 720, local storage enabled, online status, and MP4 media support. Reproduce with `npm run test:e2e` before changing the gate.
 - Missing or empty static asset: run `npm run validate:assets`, restore the referenced file under `public/`, or update the source/content reference to a shipped asset.
 - Browser reports an ignored CSS `@import` or a failed `/assets/index-*.css` request: run `npm run build` and require the stylesheet-reference check to pass, then inspect the generated `dist/index.html` CSS URL and confirm that exact file exists under `dist/`. Redeploy the complete `dist/` artifact; do not upload `index.html` separately. After deployment, verify the generated CSS URL returns HTTP 200 with a `text/css` content type before treating the release as healthy.
+- Landing page reports `data-landing-motion="fallback"`: verify access to `cdnjs.cloudflare.com` and `cdn.jsdelivr.net` if the animated presentation is required. Do not block mission entry; confirm the static copy and controls remain visible, run the focused no-CDN E2E case, and keep production promotion blocked if the fallback itself fails.
 - Broken content reference: run `npm run test:run -- tests/unit/contentContracts.test.ts` and update the JSON, localization key, actor/action/dialogue reference, or test contract together.
 - Experimental Supabase auth or cloud save failure: return to guest mode for the supported demo path. Operators may confirm `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, project health, Auth providers, and RLS in a non-production test environment, but must not promote cloud support without the staged evidence gate.
 - Guest save issue: keep the tab open, retry manual save, and avoid clearing site data. If local storage was cleared, the guest save cannot be restored.
@@ -99,4 +106,4 @@ For an individually inspectable gate, `npm run test:run` is the non-watch unit c
 
 Automated success is necessary but not sufficient. Promotion also requires signed human records from the same candidate commit for the security-heavy, diplomacy-heavy, and balanced scripts in `dev_docs/STRATEGY_PLAYTHROUGH_RUNBOOK.md`, the guest save/resume/recovery journey, and the complete stakeholder journey in stable Chrome and Edge. Evidence belongs under `dev_docs/demo_evidence/<YYYY-MM-DD>/` only after the operator has performed the run.
 
-Current release blocker (2026-10-03): candidate `0eb47d7` reproduced Mandate Revoked at Turn 6 for all three strategy scripts because stability remained critical for three consecutive turns. The required Turn 20 and Turn 10 save/resume gates therefore did not run to completion. See `dev_docs/STRATEGY_PLAYTHROUGH_RUNBOOK.md` and the failed evidence records in `dev_docs/demo_evidence/2026-10-03/`. Production promotion remains blocked; these records must not be treated as signed completion evidence.
+Current release blocker (2026-10-03): the supplied candidate build passed static asset validation, Pages validation, typecheck, Vite production build, and the bundle budget at **1,231,203 raw bytes / 320,980 gzip bytes**. The focused no-CDN landing-motion fallback passed in Chromium, and the security-heavy, diplomacy-heavy, and balanced Chromium strategies all reached and resolved Turn 20 with deterministic guest resume. Stable Chrome and Edge production-preview runs and three fresh signed human Turn 20 runs from the same committed candidate are still required. See `dev_docs/STRATEGY_PLAYTHROUGH_RUNBOOK.md` and the historical failed evidence records in `dev_docs/demo_evidence/2026-10-03/`. Production promotion remains blocked; Chromium automation alone is not cross-browser or signed human evidence.

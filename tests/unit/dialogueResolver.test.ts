@@ -108,6 +108,20 @@ describe('dialogueResolver', () => {
     expect(latestLog?.resource_deltas.political_capital).toBe(-5)
   })
 
+  it('makes the community-mediation unlock reachable inside the early crisis response window', () => {
+    const state = makeState({
+      session: { turn: 2 },
+      narrative_flags: { civil_society_partnership_active: true },
+    })
+
+    const availability = getActorDialogueAvailability(state, 'civil_society_konate')
+    expect(availability?.isAvailable).toBe(true)
+
+    const result = executeDialogueChoice(state, 'dialogue_civil_society_partnership', 'full_partnership')
+    expect(result.state.narrative_flags?.community_mediation_unlocked).toBe(true)
+    expect(result.state.narrative_flags?.anti_corruption_monitoring_active).toBe(true)
+  })
+
   it('throws INSUFFICIENT_BUDGET when dialogue choice cost exceeds available budget', () => {
     const state = makeState({
       session: {

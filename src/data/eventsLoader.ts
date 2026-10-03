@@ -326,6 +326,9 @@ function asEventData(value: YamlValue, path: string): EventData {
     category: asString(value.category, `${path}.category`),
     priority: asNumber(value.priority, `${path}.priority`),
     trigger_conditions: asString(value.trigger_conditions, `${path}.trigger_conditions`),
+    resolution_conditions: value.resolution_conditions === undefined
+      ? undefined
+      : asString(value.resolution_conditions, `${path}.resolution_conditions`),
     trigger_turn: asNumber(value.trigger_turn, `${path}.trigger_turn`),
     deadline_turn: asNumberOrNull(value.deadline_turn, `${path}.deadline_turn`),
     deadline_offset: asNumberOrNull(value.deadline_offset, `${path}.deadline_offset`),

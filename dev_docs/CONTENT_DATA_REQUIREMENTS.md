@@ -118,6 +118,7 @@ Note: starting_metrics are the authoritative campaign-start values and supersede
   - category (security | corruption | humanitarian | coalition | external | climate | governance | narrative | system | ui)
   - priority (1-100; lower processed first)
   - trigger_conditions
+  - resolution_conditions (optional; restricted expression DSL evaluated for active events before deadline expiry)
   - trigger_turn
   - deadline_turn
   - deadline_offset (optional; turns after trigger to compute deadline when trigger_turn = 0)
@@ -125,6 +126,9 @@ Note: starting_metrics are the authoritative campaign-start values and supersede
   - narrative_text_key
   - outcomes (effects, followup events, flags)
   - note: if trigger_turn = 0 and deadline_offset is provided, runtime computes deadline_turn = trigger_turn + deadline_offset at trigger time
+  - note: when resolution_conditions evaluates true, runtime changes the active event status to resolved before checking expiry; the penalty bundle must not run for that event
+  - note: failure follow-up events may add narrative flags and copy, but must not repeat metric/resource damage already owned by the parent event penalty_bundle
+  - note: IDP surge and humanitarian corridor failure are resolved only by an authored corridor-success flag before their deadlines; the fatal corridor deadline remains fail-closed
 - cutscenes:
   - cutscene_id (unique)
   - act
@@ -138,6 +142,7 @@ Note: starting_metrics are the authoritative campaign-start values and supersede
   - actor_key (FK)
   - node_graph
   - choices (each with effects and flags)
+  - note: the civil-society Full Partnership choice establishes `anti_corruption_monitoring_active`; corruption and governance triggers treat this as community oversight alongside formal oversight_level state
 
 9) Intel Reports
 - intel_reports:

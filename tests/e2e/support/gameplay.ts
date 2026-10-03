@@ -6,6 +6,10 @@ export interface ScriptedAction {
   turn: number
   actionId: string
   category: string
+  dialogueAfter?: {
+    actorKey: string
+    choiceName: string
+  }
 }
 
 export async function installMediaHarness(page: Page): Promise<void> {
@@ -110,6 +114,12 @@ export async function dismissPostTurnOverlays(page: Page): Promise<void> {
   for (let step = 0; step < 4; step += 1) {
     if ((await page.getByRole('dialog').count()) === 0) return
 
+    const turnTransition = page.getByRole('dialog', { name: 'Turn Transition', exact: true })
+    if (await turnTransition.isVisible().catch(() => false)) {
+      await expect(turnTransition).toBeHidden({ timeout: 5_000 })
+      continue
+    }
+
     const skip = page.getByRole('button', { name: 'Skip', exact: true })
     if (await skip.isVisible().catch(() => false)) {
       await skip.click()
@@ -124,11 +134,37 @@ export async function dismissPostTurnOverlays(page: Page): Promise<void> {
 
     const actBriefing = page.getByRole('dialog', { name: /Act briefing/i })
     if (await actBriefing.isVisible().catch(() => false)) {
-      await actBriefing.getByLabel('Close', { exact: true }).click()
+      const continueToOperations = actBriefing.getByRole('button', {
+        name: 'Continue to operations',
+        exact: true,
+      })
+      if (await continueToOperations.isVisible().catch(() => false)) {
+        await continueToOperations.click()
+        const takeActionDialog = page.getByRole('dialog', { name: 'Take Action', exact: true })
+        await expect(takeActionDialog).toBeVisible()
+        await takeActionDialog.getByLabel('Close', { exact: true }).click()
+      } else {
+        await actBriefing.getByLabel('Close', { exact: true }).click()
+      }
       continue
     }
 
-    throw new Error('Unexpected post-turn modal; refusing to conceal the state with a generic Escape action.')
+    const dialogSummary = await page.getByRole('dialog').evaluateAll((dialogs) =>
+      dialogs
+        .map((dialog) => {
+          const labelledBy = dialog.getAttribute('aria-labelledby')
+          const accessibleName =
+            dialog.getAttribute('aria-label') ??
+            (labelledBy ? document.getElementById(labelledBy)?.textContent?.trim() : null) ??
+            'unnamed dialog'
+          const text = (dialog.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 240)
+          return `${accessibleName}: ${text}`
+        })
+        .join(' | ')
+    )
+    throw new Error(
+      `Unexpected post-turn modal; refusing to conceal the state with a generic Escape action. Visible dialog: ${dialogSummary}`
+    )
   }
 
   await waitForNoDialog(page)
@@ -180,6 +216,25 @@ export async function performAction(page: Page, scriptedAction: ScriptedAction):
   await expect(transitionDialog).toBeHidden({ timeout: 15_000 })
 }
 
+export async function performDialogueChoice(
+  page: Page,
+  actorKey: string,
+  choiceName: string
+): Promise<void> {
+  const actorCard = page.locator(`[data-actor-key="${actorKey}"]`)
+  await expect(actorCard).toBeVisible()
+  await actorCard.getByRole('button', { name: 'Engage', exact: true }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'Dialogue' })
+  await expect(dialog).toBeVisible()
+  const choice = dialog.getByRole('button', { name: new RegExp(`^${choiceName}\\b`, 'i') })
+  await expect(choice).toBeEnabled()
+  await choice.click()
+  await expect(dialog.getByText('Dialogue outcome')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Close', exact: true }).last().click()
+  await waitForNoDialog(page)
+}
+
 export async function saveAndResumeGuestCampaign(page: Page, expectedTurn: number): Promise<void> {
   await page.getByRole('button', { name: 'Menu' }).click()
   await page.getByRole('menuitem', { name: 'Save Session' }).click()
@@ -194,7 +249,7 @@ export async function saveAndResumeGuestCampaign(page: Page, expectedTurn: numbe
   await expect(entryDialog).toBeVisible()
   await entryDialog.getByRole('button', { name: 'Continue mandate' }).click()
   await expectTurn(page, expectedTurn)
-  await waitForNoDialog(page)
+  await dismissPostTurnOverlays(page)
 }
 
 export function collectUnexpectedErrors(page: Page): string[] {

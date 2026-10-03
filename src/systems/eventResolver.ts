@@ -591,6 +591,10 @@ function resolveVariable(path: string[], ctx: EvalContext): string | number | bo
     return ctx.state.oversight_level?.level ?? DEFAULT_OVERSIGHT
   }
 
+  if (root === 'active_events' && second && third === 'status') {
+    return ctx.state.active_events?.find((event) => event.event_id === second)?.status ?? 'none'
+  }
+
   if (path.length === 1) {
     if (STRING_KEYWORDS.has(root)) {
       return root
@@ -760,7 +764,10 @@ function computeDerivedSignals(
     .filter(({ category, entry }) => category === 'humanitarian' && entry.turn >= turn - 1)
     .reduce((sum, { entry }) => sum + entry.costs.budget, 0) > 3_000_000
 
-  const security_actions_without_oversight = (state.oversight_level?.level ?? DEFAULT_OVERSIGHT) === 'none'
+  const hasActiveOversight =
+    (state.oversight_level?.level ?? DEFAULT_OVERSIGHT) !== 'none' ||
+    state.narrative_flags?.anti_corruption_monitoring_active === true
+  const security_actions_without_oversight = !hasActiveOversight
     ? actionCategoryEntries.filter(
       ({ category, entry }) => category === 'security' && entry.turn >= turn - 2
     ).length
@@ -872,6 +879,8 @@ function computeDerivedSignals(
     intel_report_upgrade: runtimeSignals.intel_report_upgrade,
     corruption_flags_count_act,
     corruption_unresolved,
+    anti_corruption_monitoring_active:
+      state.narrative_flags?.anti_corruption_monitoring_active === true,
     any_junta_relationship,
     junta_allied_count,
     turns_since_phase1,
@@ -891,23 +900,20 @@ function computeDerivedSignals(
   }
 }
 
-function evaluateTriggerForEvent(
+function evaluateEventCondition(
   state: GameState,
   event: EventData,
+  condition: string,
+  fieldName: 'trigger_conditions' | 'resolution_conditions',
   derived: Record<string, string | number | boolean>,
   turn: number
 ): boolean {
-  const condition = event.trigger_conditions?.trim()
-  if (!condition) {
-    return false
-  }
-
   let ast: ConditionNode
   try {
     ast = parseTriggerCondition(condition)
   } catch (error: unknown) {
     const details = error instanceof Error ? error.message : 'unknown parser failure'
-    throw new Error(`Invalid trigger_conditions for event ${event.event_id}: ${details}`)
+    throw new Error(`Invalid ${fieldName} for event ${event.event_id}: ${details}`)
   }
 
   const eventFrequencyMultiplier = state.config.event_frequency_multiplier ?? 1
@@ -939,6 +945,19 @@ function evaluateTriggerForEvent(
     rng,
   }
   return evaluateCondition(ast, ctx)
+}
+
+function evaluateTriggerForEvent(
+  state: GameState,
+  event: EventData,
+  derived: Record<string, string | number | boolean>,
+  turn: number
+): boolean {
+  const condition = event.trigger_conditions?.trim()
+  if (!condition) {
+    return false
+  }
+  return evaluateEventCondition(state, event, condition, 'trigger_conditions', derived, turn)
 }
 
 function applyMetricBundle(current: Metrics, deltas: Record<string, number>): Metrics {
@@ -1147,6 +1166,50 @@ function withTriggeredActiveEvent(state: GameState, event: EventData, turn: numb
   }
 }
 
+function processResolvedActiveEvents(
+  state: GameState,
+  turn: number,
+  runtimeSignals: RuntimeSignals
+): GameState {
+  const activeEvents = state.active_events ?? []
+  if (activeEvents.length === 0) {
+    return state
+  }
+
+  const eventById = new Map((state.content?.events.events ?? []).map((event) => [event.event_id, event] as const))
+  const derivedSignals = computeDerivedSignals(state, turn, runtimeSignals)
+  let changed = false
+  const updated = activeEvents.map((item) => {
+    if (item.status !== 'active') {
+      return item
+    }
+    if (item.deadline_turn !== null && turn > item.deadline_turn) {
+      return item
+    }
+    const event = eventById.get(item.event_id)
+    const condition = event?.resolution_conditions?.trim()
+    if (!event || !condition) {
+      return item
+    }
+    if (!evaluateEventCondition(state, event, condition, 'resolution_conditions', derivedSignals, turn)) {
+      return item
+    }
+    changed = true
+    return {
+      ...item,
+      status: 'resolved' as const,
+    }
+  })
+
+  if (!changed) {
+    return state
+  }
+  return {
+    ...state,
+    active_events: updated,
+  }
+}
+
 function processExpiredActiveEvents(state: GameState, turn: number): EventResolutionResult {
   const active_events = [...(state.active_events ?? [])]
   if (active_events.length === 0) {
@@ -1208,7 +1271,13 @@ export function resolveRuntimeEvents(state: GameState): EventResolutionResult {
   const turn = state.session.turn
   const sortedEvents = [...events].sort((a, b) => a.priority - b.priority)
 
-  const expired = processExpiredActiveEvents(state, turn)
+  const runtimeSignals: RuntimeSignals = {
+    intel_report_generated: false,
+    intel_report_upgrade: false,
+  }
+
+  const resolved = processResolvedActiveEvents(state, turn, runtimeSignals)
+  const expired = processExpiredActiveEvents(resolved, turn)
   let workingState = expired.state
   let deadlineFailReason = expired.deadlineFailReason
 
@@ -1218,16 +1287,12 @@ export function resolveRuntimeEvents(state: GameState): EventResolutionResult {
       .map((entry) => entry.event_id)
   )
 
-  const runtimeSignals: RuntimeSignals = {
-    intel_report_generated: false,
-    intel_report_upgrade: false,
-  }
-
   let iteration = 0
   let progressed = true
   while (progressed && iteration < 6) {
     progressed = false
     iteration += 1
+    workingState = processResolvedActiveEvents(workingState, turn, runtimeSignals)
     const derivedSignals = computeDerivedSignals(workingState, turn, runtimeSignals)
 
     for (const event of sortedEvents) {
@@ -1256,6 +1321,8 @@ export function resolveRuntimeEvents(state: GameState): EventResolutionResult {
       progressed = true
     }
   }
+
+  workingState = processResolvedActiveEvents(workingState, turn, runtimeSignals)
 
   return {
     state: workingState,

@@ -5,6 +5,7 @@ import {
   expectTurn,
   installMediaHarness,
   performAction,
+  performDialogueChoice,
   saveAndResumeGuestCampaign,
   startGuestCampaign,
   type ScriptedAction,
@@ -22,40 +23,48 @@ const STRATEGIES: StrategyScript[] = [
     name: 'security-heavy',
     actions: [
       { turn: 1, actionId: 'security_patrol_deployment', category: 'security' },
+      {
+        turn: 1,
+        actionId: 'civil_society_partnership',
+        category: 'diplomacy',
+        dialogueAfter: { actorKey: 'civil_society_konate', choiceName: 'Full Partnership' },
+      },
+      { turn: 2, actionId: 'community_led_mediation', category: 'community_mediation' },
       { turn: 2, actionId: 'intelligence_threat_assessment', category: 'intelligence' },
-      { turn: 3, actionId: 'humanitarian_aid_distribution', category: 'humanitarian' },
+      { turn: 3, actionId: 'humanitarian_corridor_establishment', category: 'humanitarian' },
       { turn: 4, actionId: 'security_patrol_deployment', category: 'security' },
       { turn: 5, actionId: 'intelligence_network_cultivation', category: 'intelligence' },
-      { turn: 7, actionId: 'security_patrol_deployment', category: 'security' },
-      { turn: 9, actionId: 'intelligence_threat_assessment', category: 'intelligence' },
-      { turn: 11, actionId: 'humanitarian_aid_distribution', category: 'humanitarian' },
-      { turn: 13, actionId: 'security_patrol_deployment', category: 'security' },
-      { turn: 15, actionId: 'governance_audit_request', category: 'governance_economic' },
     ],
   },
   {
     name: 'diplomacy-heavy',
     actions: [
       { turn: 1, actionId: 'diplomacy_international_outreach', category: 'diplomacy' },
-      { turn: 2, actionId: 'civil_society_partnership', category: 'diplomacy' },
-      { turn: 3, actionId: 'humanitarian_aid_distribution', category: 'humanitarian' },
-      { turn: 4, actionId: 'diplomacy_international_outreach', category: 'diplomacy' },
+      {
+        turn: 1,
+        actionId: 'civil_society_partnership',
+        category: 'diplomacy',
+        dialogueAfter: { actorKey: 'civil_society_konate', choiceName: 'Full Partnership' },
+      },
+      { turn: 2, actionId: 'community_led_mediation', category: 'community_mediation' },
+      { turn: 3, actionId: 'humanitarian_corridor_establishment', category: 'humanitarian' },
       { turn: 5, actionId: 'security_patrol_deployment', category: 'security' },
-      { turn: 6, actionId: 'civil_society_partnership', category: 'diplomacy' },
-      { turn: 8, actionId: 'diplomacy_ecowas_coordination', category: 'diplomacy' },
     ],
   },
   {
     name: 'balanced',
     actions: [
       { turn: 1, actionId: 'security_patrol_deployment', category: 'security' },
-      { turn: 2, actionId: 'civil_society_partnership', category: 'diplomacy' },
-      { turn: 3, actionId: 'humanitarian_aid_distribution', category: 'humanitarian' },
-      { turn: 4, actionId: 'governance_audit_request', category: 'governance_economic' },
+      {
+        turn: 1,
+        actionId: 'civil_society_partnership',
+        category: 'diplomacy',
+        dialogueAfter: { actorKey: 'civil_society_konate', choiceName: 'Full Partnership' },
+      },
+      { turn: 2, actionId: 'community_led_mediation', category: 'community_mediation' },
+      { turn: 3, actionId: 'humanitarian_corridor_establishment', category: 'humanitarian' },
       { turn: 5, actionId: 'climate_drought_resilience', category: 'climate' },
       { turn: 6, actionId: 'intelligence_threat_assessment', category: 'intelligence' },
-      { turn: 9, actionId: 'security_patrol_deployment', category: 'security' },
-      { turn: 12, actionId: 'diplomacy_international_outreach', category: 'diplomacy' },
     ],
   },
 ]
@@ -92,11 +101,11 @@ function assertStrategyClassification(strategy: StrategyScript): void {
   expect(largestCount / totalActions).toBeLessThanOrEqual(0.35)
 }
 
-async function captureTurnSnapshot(page: Page, turn: number, action: ScriptedAction | null) {
+async function captureTurnSnapshot(page: Page, turn: number, actions: ScriptedAction[]) {
   return {
     turn,
-    actionId: action?.actionId ?? null,
-    category: action?.category ?? null,
+    actionIds: actions.map((action) => action.actionId),
+    categories: actions.map((action) => action.category),
     resources: await page.locator('#resource-panel .resource-item').allTextContents(),
     metrics: await page.locator('#metrics-panel [role="progressbar"]').evaluateAll((nodes) =>
       nodes.map((node) => ({
@@ -144,12 +153,19 @@ for (const strategy of STRATEGIES) {
 
     for (let turn = 1; turn <= 20; turn += 1) {
       await expectTurn(page, turn)
-      const action = strategy.actions.find((candidate) => candidate.turn === turn) ?? null
-      if (action) {
+      const actions = strategy.actions.filter((candidate) => candidate.turn === turn)
+      for (const action of actions) {
         await performAction(page, action)
+        if (action.dialogueAfter) {
+          await performDialogueChoice(
+            page,
+            action.dialogueAfter.actorKey,
+            action.dialogueAfter.choiceName
+          )
+        }
       }
 
-      snapshots.push(await captureTurnSnapshot(page, turn, action))
+      snapshots.push(await captureTurnSnapshot(page, turn, actions))
 
       if (turn === 10) {
         await saveAndResumeGuestCampaign(page, turn)

@@ -212,6 +212,18 @@ test('direct SPA entry is blocked by the mission entry gate before gameplay is u
   await expect(page.locator('.game-action-bar')).toHaveAttribute('inert', '')
 })
 
+test('blocked landing motion CDNs fall back without blocking mission entry', async ({ page }) => {
+  await page.route(/(?:cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net)/i, (route) => route.abort())
+
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('data-landing-motion', 'fallback')
+  await expect(page.locator('#enterArenaBtn')).toBeVisible()
+  await page.locator('#enterArenaBtn').click()
+
+  await expect(page.locator('body')).toHaveClass(/game-active/)
+  await expect(page.getByRole('dialog', { name: /Mission Entry|Sessions/ })).toBeVisible()
+})
+
 test('keyboard-only modal flow traps focus and restores it to the launcher', async ({ page }) => {
   await startNewCampaign(page)
 

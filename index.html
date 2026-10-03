@@ -7,10 +7,6 @@
     <title>African Mandate</title>
     <link rel="icon" type="image/png" href="/assets/logos/Alliance_of_Sahel_States_Logo.png">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="image" href="/img/hero.png">
@@ -362,18 +358,27 @@
 
         .mask-inner {
             display: block;
+            transform: none;
+        }
+
+        .landing-motion-ready .mask-inner {
             transform: translateY(110%);
         }
 
         .section p {
             font-size: 1.4rem;
             line-height: 1.6;
-            opacity: 0;
-            transform: translateY(20px);
+            opacity: 1;
+            transform: none;
             color: #ffffff;
             font-weight: 300;
             margin: 0;
             max-width: 550px;
+        }
+
+        .landing-motion-ready .section p {
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .section p strong {
@@ -428,9 +433,14 @@
             display: flex;
             gap: 1.5rem;
             margin-top: 3.5rem;
+            opacity: 1;
+            transform: none;
+            justify-content: inherit;
+        }
+
+        .landing-motion-ready .button-group {
             opacity: 0;
             transform: translateY(20px);
-            justify-content: inherit;
         }
 
         .cta-btn {
@@ -1170,117 +1180,197 @@
         window.addEventListener('load', resetLandingScrollPosition);
         window.addEventListener('pageshow', resetLandingScrollPosition);
 
-        gsap.registerPlugin(ScrollTrigger);
-
-        // 1. SCROLL SMOOTHING
-        const lenis = new Lenis({
-            duration: 1.8,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            smooth: true
+        const LANDING_MOTION_SCRIPTS = [
+            'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js',
+            'https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js',
+        ];
+        const staticScrollController = Object.freeze({
+            start() {},
+            stop() {},
         });
-        function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
+        let landingScrollController = staticScrollController;
+
+        function setLandingMotionStatus(status) {
+            document.documentElement.dataset.landingMotion = status;
         }
-        requestAnimationFrame(raf);
 
+        function loadLandingMotionScript(src, timeoutMs = 4000) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                let settled = false;
+                const finish = (error) => {
+                    if (settled) return;
+                    settled = true;
+                    window.clearTimeout(timeoutId);
+                    script.onload = null;
+                    script.onerror = null;
+                    if (error) {
+                        script.remove();
+                        reject(error);
+                        return;
+                    }
+                    resolve();
+                };
+                const timeoutId = window.setTimeout(
+                    () => finish(new Error('Landing motion dependency timed out.')),
+                    timeoutMs
+                );
 
-        // 2. CAMERA RIG (OPTIMIZED with MatchMedia)
-        // [FIX] Using MatchMedia ensures the image movement makes sense on both Mobile and Desktop
-        const cam = document.getElementById('cam');
-        let mm = gsap.matchMedia();
-
-        mm.add("(min-width: 800px)", () => {
-            // DESKTOP ANIMATION: explicit shot list by section.
-            // Beat 1: right shoulder/upper back, tight and high.
-            gsap.set(cam, { scale: 1.7, xPercent: -15, yPercent: -20 });
-
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: ".track",
-                    start: "top top",
-                    end: "bottom bottom",
-                    scrub: 2.1,
-                }
+                script.src = src;
+                script.async = true;
+                script.referrerPolicy = 'no-referrer';
+                script.onload = () => finish();
+                script.onerror = () => finish(new Error('Landing motion dependency failed to load.'));
+                document.head.appendChild(script);
             });
+        }
 
-            tl
-                // Beat 2: central striped-cap figure.
-                .to(cam, { scale: 1.66, xPercent: -2, yPercent: -4, duration: 0.95, ease: "sine.inOut" }, "players")
-                // Transition: arc toward left envoy (avoids hard direction flip).
-                .to(cam, { scale: 1.62, xPercent: 4, yPercent: -7, duration: 0.55, ease: "sine.inOut" })
-                // Beat 3: left envoy face and hat details.
-                .to(cam, { scale: 1.58, xPercent: 9, yPercent: -8, duration: 0.75, ease: "sine.inOut" }, "stakes")
-                // Transition: descend gradually before the lower-corridor beat.
-                .to(cam, { scale: 1.56, xPercent: 7, yPercent: 6, duration: 0.55, ease: "sine.inOut" })
-                // Beat 4: lower corridor toward arms/handshake zone.
-                .to(cam, { scale: 1.54, xPercent: 4, yPercent: 24, duration: 0.9, ease: "sine.inOut" }, "strategy")
-                // Transition: lift toward reveal instead of snapping back upward.
-                .to(cam, { scale: 1.22, xPercent: 2, yPercent: 10, duration: 0.8, ease: "sine.inOut" })
-                // Beat 5: mission reveal with fuller context.
-                .to(cam, { scale: 0.9, xPercent: 0, yPercent: 0, duration: 1.4, ease: "sine.inOut" }, "reveal");
-        });
-
-        mm.add("(max-width: 799px)", () => {
-            // MOBILE ANIMATION: same shot list with tighter crop.
-            gsap.set(cam, { scale: 1.8, xPercent: -12, yPercent: -18 });
-
-            const tlMobile = gsap.timeline({
-                scrollTrigger: {
-                    trigger: ".track",
-                    start: "top top",
-                    end: "bottom bottom",
-                    scrub: 2.1,
-                }
-            });
-
-            tlMobile
-                .to(cam, { scale: 1.72, xPercent: -2, yPercent: -4, duration: 0.95, ease: "sine.inOut" })
-                .to(cam, { scale: 1.68, xPercent: 3, yPercent: -7, duration: 0.55, ease: "sine.inOut" })
-                .to(cam, { scale: 1.64, xPercent: 8, yPercent: -8, duration: 0.75, ease: "sine.inOut" })
-                .to(cam, { scale: 1.6, xPercent: 6, yPercent: 6, duration: 0.55, ease: "sine.inOut" })
-                .to(cam, { scale: 1.56, xPercent: 3, yPercent: 24, duration: 0.9, ease: "sine.inOut" })
-                .to(cam, { scale: 1.26, xPercent: 2, yPercent: 10, duration: 0.8, ease: "sine.inOut" })
-                .to(cam, { scale: 0.92, xPercent: 0, yPercent: 0, duration: 1.4, ease: "sine.inOut" });
-        });
-
-
-        // 3. TEXT & BUTTON ANIMATION
-        const sections = document.querySelectorAll('.section');
-
-        sections.forEach((section, i) => {
-            const label = section.querySelector('.label');
-            const lines = section.querySelectorAll('.mask-inner');
-            const p = section.querySelector('p');
-            const btnGroup = section.querySelector('.button-group');
-
-            const textTl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: section,
-                    start: "top 60%",
-                    end: "bottom 60%",
-                    toggleActions: "play reverse play reverse"
-                }
-            });
-
-            // [FIX] Check if label exists before animating to prevent errors
-            if (label) {
-                textTl.to(label, { opacity: 1, duration: 0.5 });
+        function initializeLandingMotion() {
+            const gsapApi = window.gsap;
+            const scrollTriggerPlugin = window.ScrollTrigger;
+            const LenisConstructor = window.Lenis;
+            if (!gsapApi || !scrollTriggerPlugin || typeof LenisConstructor !== 'function') {
+                throw new Error('Landing motion dependencies were incomplete.');
             }
 
-            textTl
-                .to(lines, { y: "0%", duration: 1, stagger: 0.1, ease: "power4.out" }, "-=0.2")
-                .to(p, { opacity: 1, y: 0, duration: 1, ease: "power2.out" }, "-=0.8");
+            gsapApi.registerPlugin(scrollTriggerPlugin);
+            document.documentElement.classList.add('landing-motion-ready');
 
-            if (btnGroup) {
-                textTl.to(btnGroup, {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.8,
-                    ease: "back.out(1.7)"
-                }, "-=0.5");
+            // 1. SCROLL SMOOTHING
+            const lenis = new LenisConstructor({
+                duration: 1.8,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smooth: true
+            });
+            landingScrollController = lenis;
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
             }
-        });
+            requestAnimationFrame(raf);
+
+            // 2. CAMERA RIG (OPTIMIZED with MatchMedia)
+            // [FIX] Using MatchMedia ensures the image movement makes sense on both Mobile and Desktop
+            const cam = document.getElementById('cam');
+            const mm = gsapApi.matchMedia();
+
+            mm.add("(min-width: 800px)", () => {
+                // DESKTOP ANIMATION: explicit shot list by section.
+                // Beat 1: right shoulder/upper back, tight and high.
+                gsapApi.set(cam, { scale: 1.7, xPercent: -15, yPercent: -20 });
+
+                const tl = gsapApi.timeline({
+                    scrollTrigger: {
+                        trigger: ".track",
+                        start: "top top",
+                        end: "bottom bottom",
+                        scrub: 2.1,
+                    }
+                });
+
+                tl
+                    // Beat 2: central striped-cap figure.
+                    .to(cam, { scale: 1.66, xPercent: -2, yPercent: -4, duration: 0.95, ease: "sine.inOut" }, "players")
+                    // Transition: arc toward left envoy (avoids hard direction flip).
+                    .to(cam, { scale: 1.62, xPercent: 4, yPercent: -7, duration: 0.55, ease: "sine.inOut" })
+                    // Beat 3: left envoy face and hat details.
+                    .to(cam, { scale: 1.58, xPercent: 9, yPercent: -8, duration: 0.75, ease: "sine.inOut" }, "stakes")
+                    // Transition: descend gradually before the lower-corridor beat.
+                    .to(cam, { scale: 1.56, xPercent: 7, yPercent: 6, duration: 0.55, ease: "sine.inOut" })
+                    // Beat 4: lower corridor toward arms/handshake zone.
+                    .to(cam, { scale: 1.54, xPercent: 4, yPercent: 24, duration: 0.9, ease: "sine.inOut" }, "strategy")
+                    // Transition: lift toward reveal instead of snapping back upward.
+                    .to(cam, { scale: 1.22, xPercent: 2, yPercent: 10, duration: 0.8, ease: "sine.inOut" })
+                    // Beat 5: mission reveal with fuller context.
+                    .to(cam, { scale: 0.9, xPercent: 0, yPercent: 0, duration: 1.4, ease: "sine.inOut" }, "reveal");
+            });
+
+            mm.add("(max-width: 799px)", () => {
+                // MOBILE ANIMATION: same shot list with tighter crop.
+                gsapApi.set(cam, { scale: 1.8, xPercent: -12, yPercent: -18 });
+
+                const tlMobile = gsapApi.timeline({
+                    scrollTrigger: {
+                        trigger: ".track",
+                        start: "top top",
+                        end: "bottom bottom",
+                        scrub: 2.1,
+                    }
+                });
+
+                tlMobile
+                    .to(cam, { scale: 1.72, xPercent: -2, yPercent: -4, duration: 0.95, ease: "sine.inOut" })
+                    .to(cam, { scale: 1.68, xPercent: 3, yPercent: -7, duration: 0.55, ease: "sine.inOut" })
+                    .to(cam, { scale: 1.64, xPercent: 8, yPercent: -8, duration: 0.75, ease: "sine.inOut" })
+                    .to(cam, { scale: 1.6, xPercent: 6, yPercent: 6, duration: 0.55, ease: "sine.inOut" })
+                    .to(cam, { scale: 1.56, xPercent: 3, yPercent: 24, duration: 0.9, ease: "sine.inOut" })
+                    .to(cam, { scale: 1.26, xPercent: 2, yPercent: 10, duration: 0.8, ease: "sine.inOut" })
+                    .to(cam, { scale: 0.92, xPercent: 0, yPercent: 0, duration: 1.4, ease: "sine.inOut" });
+            });
+
+            // 3. TEXT & BUTTON ANIMATION
+            const sections = document.querySelectorAll('.section');
+
+            sections.forEach((section) => {
+                const label = section.querySelector('.label');
+                const lines = section.querySelectorAll('.mask-inner');
+                const p = section.querySelector('p');
+                const btnGroup = section.querySelector('.button-group');
+
+                const textTl = gsapApi.timeline({
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 60%",
+                        end: "bottom 60%",
+                        toggleActions: "play reverse play reverse"
+                    }
+                });
+
+                if (label) {
+                    textTl.to(label, { opacity: 1, duration: 0.5 });
+                }
+
+                textTl
+                    .to(lines, { y: "0%", duration: 1, stagger: 0.1, ease: "power4.out" }, "-=0.2")
+                    .to(p, { opacity: 1, y: 0, duration: 1, ease: "power2.out" }, "-=0.8");
+
+                if (btnGroup) {
+                    textTl.to(btnGroup, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.8,
+                        ease: "back.out(1.7)"
+                    }, "-=0.5");
+                }
+            });
+        }
+
+        async function loadLandingMotion() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                setLandingMotionStatus('reduced');
+                return;
+            }
+
+            setLandingMotionStatus('loading');
+            try {
+                for (const src of LANDING_MOTION_SCRIPTS) {
+                    await loadLandingMotionScript(src);
+                }
+                initializeLandingMotion();
+                setLandingMotionStatus('ready');
+            } catch (error) {
+                document.documentElement.classList.remove('landing-motion-ready');
+                landingScrollController = staticScrollController;
+                setLandingMotionStatus('fallback');
+                console.warn('Landing motion unavailable; continuing with the static entry experience.');
+            }
+        }
+
+        setLandingMotionStatus('static');
+        window.addEventListener('load', () => {
+            window.setTimeout(loadLandingMotion, 0);
+        }, { once: true });
 
 
         // 4. ENTRY + MODAL FUNCTIONALITY
@@ -1524,7 +1614,7 @@
             const anyModalOpen = aboutOpen || mobileGateOpen;
 
             if (anyModalOpen) {
-                lenis.stop();
+                landingScrollController.stop();
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
                 return;
@@ -1532,7 +1622,7 @@
 
             document.documentElement.style.overflow = '';
             if (!document.body.classList.contains('game-active')) {
-                lenis.start();
+                landingScrollController.start();
                 document.body.style.overflow = '';
             }
         }
@@ -1690,7 +1780,7 @@
 
             if (!introVideoOverlay || !introVideo) {
                 activateGameInterface();
-                lenis.stop();
+                landingScrollController.stop();
                 setIntroPlaybackLock(false);
                 return;
             }
@@ -1701,7 +1791,7 @@
 
             window.setTimeout(() => {
                 activateGameInterface();
-                lenis.stop();
+                landingScrollController.stop();
                 setIntroPlaybackLock(false);
 
                 window.setTimeout(() => {
@@ -1838,7 +1928,7 @@
             } else {
                 introCompleted = true;
                 activateGameInterface();
-                lenis.stop();
+                landingScrollController.stop();
             }
         }
 

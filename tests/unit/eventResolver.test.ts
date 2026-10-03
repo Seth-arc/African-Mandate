@@ -140,4 +140,213 @@ describe('eventResolver', () => {
     expect(penaltyLog).toBeDefined()
     expect(penaltyLog?.resolution_timing).toBe('end_turn')
   })
+
+  it('resolves an active crisis before expiry when its authored resolution condition is met', () => {
+    const violence = findEvent('security_intercommunal_violence')
+    const success = findEvent('security_intercommunal_mediation_success')
+    const failure = findEvent('security_intercommunal_mediation_failure')
+    const triggered = resolveRuntimeEvents(buildState([violence, success, failure], {
+      session: { turn: 1 },
+    })).state
+    const before = triggered.session.metrics
+
+    const resolved = resolveRuntimeEvents({
+      ...triggered,
+      session: {
+        ...triggered.session,
+        turn: 2,
+      },
+      narrative_flags: {
+        ...(triggered.narrative_flags ?? {}),
+        mediation_action_success: true,
+      },
+      narrative_flag_turns: {
+        ...(triggered.narrative_flag_turns ?? {}),
+        mediation_action_success: 2,
+      },
+    })
+
+    const result = resolveRuntimeEvents({
+      ...resolved.state,
+      session: {
+        ...resolved.state.session,
+        turn: 4,
+      },
+    })
+
+    const activeEvent = result.state.active_events?.find((event) => event.event_id === violence.event_id)
+    expect(activeEvent?.status).toBe('resolved')
+    expect(result.deadlineFailReason).toBeUndefined()
+    expect(result.state.session.metrics.civilian_support).toBe(before.civilian_support + 6)
+    expect(result.state.session.metrics.stability).toBe(before.stability + 4)
+    expect(result.state.session.metrics.insurgency).toBe(before.insurgency - 4)
+    expect(result.state.event_log?.some((entry) => entry.event_id === success.event_id)).toBe(true)
+    expect(result.state.event_log?.some((entry) => entry.event_id === failure.event_id)).toBe(false)
+    expect(result.state.event_log?.some(
+      (entry) => entry.event_id === violence.event_id && entry.source === 'penalty'
+    )).toBe(false)
+  })
+
+  it('applies the intercommunal missed-deadline damage exactly once', () => {
+    const violence = findEvent('security_intercommunal_violence')
+    const success = findEvent('security_intercommunal_mediation_success')
+    const failure = findEvent('security_intercommunal_mediation_failure')
+    const triggered = resolveRuntimeEvents(buildState([violence, success, failure], {
+      session: { turn: 1 },
+    })).state
+    const before = triggered.session.metrics
+
+    const result = resolveRuntimeEvents({
+      ...triggered,
+      session: {
+        ...triggered.session,
+        turn: 4,
+      },
+    })
+
+    const activeEvent = result.state.active_events?.find((event) => event.event_id === violence.event_id)
+    expect(activeEvent?.status).toBe('expired')
+    expect(result.state.session.metrics.civilian_support).toBe(before.civilian_support - 8)
+    expect(result.state.session.metrics.stability).toBe(before.stability - 6)
+    expect(result.state.session.metrics.insurgency).toBe(before.insurgency + 6)
+    expect(result.state.event_log?.filter(
+      (entry) => entry.event_id === violence.event_id && entry.source === 'penalty'
+    )).toHaveLength(1)
+    expect(result.state.event_log?.some((entry) => entry.event_id === failure.event_id)).toBe(true)
+  })
+
+  it('does not treat a mediation flag set after the crisis deadline as a successful resolution', () => {
+    const violence = findEvent('security_intercommunal_violence')
+    const success = findEvent('security_intercommunal_mediation_success')
+    const failure = findEvent('security_intercommunal_mediation_failure')
+    const triggered = resolveRuntimeEvents(buildState([violence, success, failure], {
+      session: { turn: 1 },
+    })).state
+
+    const result = resolveRuntimeEvents({
+      ...triggered,
+      session: {
+        ...triggered.session,
+        turn: 4,
+      },
+      narrative_flags: {
+        ...(triggered.narrative_flags ?? {}),
+        mediation_action_success: true,
+      },
+    })
+
+    const activeEvent = result.state.active_events?.find((event) => event.event_id === violence.event_id)
+    expect(activeEvent?.status).toBe('expired')
+    expect(result.state.event_log?.some((entry) => entry.event_id === success.event_id)).toBe(false)
+    expect(result.state.event_log?.some((entry) => entry.event_id === failure.event_id)).toBe(true)
+  })
+
+  it('prevents the procurement leak when civil-society monitoring is active', () => {
+    const procurementLeak = findEvent('corruption_procurement_leak')
+    const base = buildState([procurementLeak], {
+      session: {
+        turn: 1,
+        resources: { political_capital: 30 },
+        metrics: { civilian_support: 35 },
+      },
+    })
+
+    const exposed = resolveRuntimeEvents(base)
+    expect(exposed.state.event_log?.some((entry) => entry.event_id === procurementLeak.event_id)).toBe(true)
+
+    const protectedState = {
+      ...base,
+      narrative_flags: { anti_corruption_monitoring_active: true },
+      narrative_flag_turns: { anti_corruption_monitoring_active: 1 },
+    }
+    const protectedResult = resolveRuntimeEvents(protectedState)
+    expect(protectedResult.state.event_log?.some((entry) => entry.event_id === procurementLeak.event_id)).toBe(false)
+  })
+
+  it('resolves an active governance crisis through an authored oversight response', () => {
+    const governance = findEvent('governance_crisis')
+    const corruptionEvent = findEvent('corruption_procurement_leak')
+    const triggered = resolveRuntimeEvents(buildState([governance], {
+      session: {
+        turn: 1,
+        resources: { political_capital: 30 },
+      },
+      active_events: [{
+        event_id: corruptionEvent.event_id,
+        event_type: corruptionEvent.event_type,
+        category: corruptionEvent.category,
+        trigger_turn: 1,
+        deadline_turn: 3,
+        failure_on_deadline: false,
+        status: 'active',
+      }],
+    })).state
+
+    expect(triggered.active_events?.some(
+      (event) => event.event_id === governance.event_id && event.status === 'active'
+    )).toBe(true)
+
+    const resolved = resolveRuntimeEvents({
+      ...triggered,
+      session: {
+        ...triggered.session,
+        turn: 2,
+      },
+      narrative_flags: {
+        ...(triggered.narrative_flags ?? {}),
+        anti_corruption_monitoring_active: true,
+      },
+      narrative_flag_turns: {
+        ...(triggered.narrative_flag_turns ?? {}),
+        anti_corruption_monitoring_active: 2,
+      },
+    }).state
+
+    const afterDeadline = resolveRuntimeEvents({
+      ...resolved,
+      session: {
+        ...resolved.session,
+        turn: 4,
+      },
+    })
+    const governanceState = afterDeadline.state.active_events?.find(
+      (event) => event.event_id === governance.event_id
+    )
+    expect(governanceState?.status).toBe('resolved')
+    expect(afterDeadline.deadlineFailReason).toBeUndefined()
+  })
+
+  it('resolves an active corridor failure when the humanitarian corridor opens before deadline', () => {
+    const corridorFailure = findEvent('humanitarian_corridor_failure')
+    const state = buildState([corridorFailure], {
+      session: { turn: 6 },
+      narrative_flags: {
+        idp_surge_escalated: true,
+        humanitarian_corridor_open: true,
+      },
+      active_events: [{
+        event_id: corridorFailure.event_id,
+        event_type: corridorFailure.event_type,
+        category: corridorFailure.category,
+        trigger_turn: 5,
+        deadline_turn: 7,
+        failure_on_deadline: true,
+        status: 'active',
+      }],
+    })
+
+    const resolved = resolveRuntimeEvents(state)
+    const afterDeadline = resolveRuntimeEvents({
+      ...resolved.state,
+      session: {
+        ...resolved.state.session,
+        turn: 8,
+      },
+    })
+    const corridorState = afterDeadline.state.active_events?.find(
+      (event) => event.event_id === corridorFailure.event_id
+    )
+    expect(corridorState?.status).toBe('resolved')
+    expect(afterDeadline.deadlineFailReason).toBeUndefined()
+  })
 })

@@ -81,6 +81,7 @@ events:
   priority: 15
   trigger_conditions: zone.multi_ethnic == true AND zone.civilian_support < 50 AND
     zone.insurgency > 60
+  resolution_conditions: mediation_action_success == true
   trigger_turn: 0
   deadline_turn: null
   deadline_offset: 2
@@ -111,8 +112,8 @@ events:
   event_type: crisis
   category: security
   priority: 16
-  trigger_conditions: intercommunal_violence_active == true AND mediation_action_success
-    == true
+  trigger_conditions: active_events.security_intercommunal_violence.status == resolved
+    AND mediation_action_success == true
   trigger_turn: 0
   deadline_turn: 0
   deadline_offset: null
@@ -145,10 +146,7 @@ events:
   narrative_text_key: loc.event.tribalism.failure.title
   outcomes:
     effects:
-      metrics:
-        civilian_support: -8
-        stability: -6
-        insurgency: 6
+      metrics: {}
       resources: {}
     followup_events: []
     flags:
@@ -310,7 +308,8 @@ events:
   event_type: crisis
   category: corruption
   priority: 20
-  trigger_conditions: resources.political_capital < 40 AND civilian_support < 50
+  trigger_conditions: resources.political_capital < 40 AND civilian_support < 50 AND
+    oversight_level.level == none AND anti_corruption_monitoring_active != true
   trigger_turn: 0
   deadline_turn: null
   deadline_offset: 2
@@ -419,7 +418,7 @@ events:
   category: corruption
   priority: 25
   trigger_conditions: humanitarian_aid_spend_high == true AND oversight_level.level
-    == 'none'
+    == none AND anti_corruption_monitoring_active != true
   trigger_turn: 0
   deadline_turn: null
   deadline_offset: 2
@@ -472,7 +471,10 @@ events:
   category: governance
   priority: 10
   trigger_conditions: resources.political_capital < 35 AND corruption_unresolved ==
+    true AND oversight_level.level == none AND anti_corruption_monitoring_active !=
     true
+  resolution_conditions: anti_corruption_monitoring_active == true OR oversight_level.level
+    != none OR audit_status.status == pending
   trigger_turn: 0
   deadline_turn: null
   deadline_offset: 2
@@ -598,6 +600,8 @@ events:
   category: humanitarian
   priority: 15
   trigger_conditions: climate_shock_active == true OR zone.threat_level >= 75
+  resolution_conditions: humanitarian_corridor_open == true OR humanitarian_major_win
+    == true OR corridor_open == true
   trigger_turn: 0
   deadline_turn: null
   deadline_offset: 2
@@ -651,6 +655,8 @@ events:
   category: humanitarian
   priority: 20
   trigger_conditions: idp_surge_escalated == true
+  resolution_conditions: humanitarian_corridor_open == true OR humanitarian_major_win
+    == true OR corridor_open == true
   trigger_turn: 0
   deadline_turn: null
   deadline_offset: 2

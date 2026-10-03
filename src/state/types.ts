@@ -553,6 +553,7 @@ export interface EventData {
   category: string
   priority: number
   trigger_conditions: string
+  resolution_conditions?: string
   trigger_turn: number
   deadline_turn: number | null
   deadline_offset: number | null

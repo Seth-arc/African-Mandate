@@ -118,7 +118,7 @@
       "actor_key": "civil_society_konate",
       "trigger_condition": "civil_society_partnership_active == true",
       "unlock_action": "civil_society_partnership",
-      "available_turns": [5, 6, 7, 8, 9, 10],
+      "available_turns": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "node_graph": {
         "root": {
           "speaker_key": "civil_society_konate",
@@ -141,7 +141,11 @@
                 "metrics": {
                   "civilian_support": 6
                 },
-                "flags": ["civil_society_partnership_full", "community_mediation_unlocked"],
+                "flags": [
+                  "civil_society_partnership_full",
+                  "community_mediation_unlocked",
+                  "anti_corruption_monitoring_active"
+                ],
                 "modifiers": {
                   "tribalism_severity": -0.25
                 }
