@@ -29,12 +29,72 @@ function resolveInitialScriptPath(html) {
   return scriptMatch[1]
 }
 
+export function resolveLocalStylesheetUrls(html) {
+  const stylesheetUrls = []
+
+  for (const match of html.matchAll(/<link\b[^>]*>/gi)) {
+    const linkTag = match[0]
+    const rel = linkTag.match(/\brel=["']([^"']+)["']/i)?.[1] ?? ''
+    const href = linkTag.match(/\bhref=["']([^"']+)["']/i)?.[1]
+
+    if (!rel.toLowerCase().split(/\s+/).includes('stylesheet') || !href) continue
+    if (/^(?:[a-z]+:)?\/\//i.test(href) || href.startsWith('data:')) continue
+
+    stylesheetUrls.push(href)
+  }
+
+  return stylesheetUrls
+}
+
+export function validateBuiltStylesheetSource(source, stylesheetUrl) {
+  if (/@import\b/i.test(source)) {
+    throw new Error(
+      `Built stylesheet ${stylesheetUrl} contains an @import rule; CSS dependencies must be bundled before browser delivery.`
+    )
+  }
+}
+
+export async function validateBuiltStylesheets(html, distDirectory) {
+  const stylesheetUrls = resolveLocalStylesheetUrls(html)
+  if (stylesheetUrls.length === 0) {
+    throw new Error('Unable to identify a local stylesheet in dist/index.html.')
+  }
+
+  for (const stylesheetUrl of stylesheetUrls) {
+    const stylesheetPath = path.resolve(
+      distDirectory,
+      decodeURIComponent(stylesheetUrl.split(/[?#]/, 1)[0] ?? '').replace(/^\/+/, '')
+    )
+    const relativeStylesheetPath = path.relative(distDirectory, stylesheetPath)
+
+    if (relativeStylesheetPath.startsWith('..') || path.isAbsolute(relativeStylesheetPath)) {
+      throw new Error(`Built stylesheet URL resolves outside dist/: ${stylesheetUrl}`)
+    }
+
+    let source
+    try {
+      source = await readFile(stylesheetPath, 'utf8')
+    } catch {
+      throw new Error(
+        `Built stylesheet referenced by dist/index.html is missing: ${stylesheetUrl}`
+      )
+    }
+    validateBuiltStylesheetSource(source, stylesheetUrl)
+  }
+
+  return stylesheetUrls
+}
+
 export async function validateBuiltDemoBundle(distDirectory) {
   const indexPath = path.join(distDirectory, 'index.html')
   const html = await readFile(indexPath, 'utf8')
   const initialScriptUrl = resolveInitialScriptPath(html)
   const initialScriptPath = path.join(distDirectory, initialScriptUrl.replace(/^\//, ''))
-  const [source, fileStats] = await Promise.all([readFile(initialScriptPath), stat(initialScriptPath)])
+  const [source, fileStats, stylesheetUrls] = await Promise.all([
+    readFile(initialScriptPath),
+    stat(initialScriptPath),
+    validateBuiltStylesheets(html, distDirectory),
+  ])
   const measurements = {
     rawBytes: fileStats.size,
     gzipBytes: gzipSync(source).byteLength,
@@ -43,7 +103,8 @@ export async function validateBuiltDemoBundle(distDirectory) {
   validateBundleMeasurements(measurements)
   process.stdout.write(
     `Demo bundle budget passed: ${measurements.rawBytes} raw bytes / ${measurements.gzipBytes} gzip bytes ` +
-      `(budgets: ${DEMO_BUNDLE_BUDGET.rawBytes} / ${DEMO_BUNDLE_BUDGET.gzipBytes}).\n`
+      `(budgets: ${DEMO_BUNDLE_BUDGET.rawBytes} / ${DEMO_BUNDLE_BUDGET.gzipBytes}); ` +
+      `${stylesheetUrls.length} local stylesheet reference${stylesheetUrls.length === 1 ? '' : 's'} verified.\n`
   )
   return measurements
 }
