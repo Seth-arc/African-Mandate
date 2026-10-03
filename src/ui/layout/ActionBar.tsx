@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { useUiStore } from '../../state/uiStore'
 import { advanceTurn } from '../../systems/turnEngine'
+import { recordTelemetryEvent } from '../../utils/telemetry'
+import { runCommandSafely } from '../commandExecution'
 import { deriveOperationalPressure, formatDeadlineSignal } from '../operationalPressure'
 
 export function ActionBar(): ReactNode {
@@ -12,6 +14,8 @@ export function ActionBar(): ReactNode {
   const openModal = useUiStore((s) => s.openModal)
   const setPendingTurnTransition = useUiStore((s) => s.setPendingTurnTransition)
   const [pendingCommand, setPendingCommand] = useState<'action' | 'turn' | null>(null)
+  const [turnError, setTurnError] = useState<string | null>(null)
+  const pendingCommandRef = useRef<'action' | 'turn' | null>(null)
   const pendingTimerRef = useRef<number | null>(null)
 
   useEffect(
@@ -19,37 +23,66 @@ export function ActionBar(): ReactNode {
       if (typeof window !== 'undefined' && pendingTimerRef.current !== null) {
         window.clearTimeout(pendingTimerRef.current)
       }
+      pendingCommandRef.current = null
     },
     []
   )
 
+  const releasePendingCommand = (): void => {
+    pendingCommandRef.current = null
+    setPendingCommand(null)
+  }
+
   const queueCommand = (kind: 'action' | 'turn', delayMs: number, run: () => void): void => {
-    if (pendingCommand !== null) return
+    if (pendingCommandRef.current !== null) return
+    pendingCommandRef.current = kind
     setPendingCommand(kind)
 
     if (typeof window === 'undefined') {
-      run()
-      setPendingCommand(null)
+      runCommandSafely(run, () => undefined, releasePendingCommand)
       return
     }
 
     pendingTimerRef.current = window.setTimeout(() => {
       pendingTimerRef.current = null
-      run()
-      setPendingCommand(null)
+      runCommandSafely(
+        run,
+        (error) => {
+          const message = error instanceof Error ? error.message : 'Unknown deferred command error'
+          setTurnError('Command failed (COMMAND_EXECUTION_FAILED). No state was changed. Retry the command.')
+          recordTelemetryEvent('e2e_critical_error', {
+            surface: 'action_bar_command',
+            command: kind,
+            message,
+          })
+        },
+        releasePendingCommand
+      )
     }, delayMs)
   }
 
   const handleEndTurn = (): void => {
-    if (pendingCommand !== null) return
+    if (pendingCommandRef.current !== null) return
     if (endingType) {
       openModal('campaign_outcome')
       return
     }
-    const next = advanceTurn(state)
+    setTurnError(null)
     queueCommand('turn', 520, () => {
-      setPendingTurnTransition({ nextState: next })
-      openModal('turn_loading')
+      try {
+        const currentState = useGameStore.getState().state
+        const nextState = advanceTurn(currentState)
+        setPendingTurnTransition({ nextState })
+        openModal('turn_loading')
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown turn resolution error'
+        setTurnError('Turn could not be resolved (TURN_RESOLUTION_FAILED). No state was changed. Retry End turn.')
+        recordTelemetryEvent('e2e_critical_error', {
+          surface: 'turn_resolution',
+          turn: useGameStore.getState().state.session.turn,
+          message,
+        })
+      }
     })
   }
 
@@ -64,7 +97,8 @@ export function ActionBar(): ReactNode {
       : `${pressure.criticalZoneCount}`
 
   const openActionConfig = (): void => {
-    if (pendingCommand !== null) return
+    if (pendingCommandRef.current !== null) return
+    setTurnError(null)
     queueCommand('action', 340, () => {
       openModal('action_config')
     })
@@ -107,10 +141,11 @@ export function ActionBar(): ReactNode {
           className={endTurnClassName}
           id="btn-end-turn"
           data-ui-tooltip="action_bar.end_turn"
-          disabled={Boolean(endingType) || pendingCommand !== null}
+          disabled={pendingCommand !== null}
           onClick={handleEndTurn}
+          aria-describedby={turnError ? 'turn-command-error' : undefined}
         >
-          End turn
+          {endingType ? 'View outcome' : 'End turn'}
         </button>
         {pendingCommand !== null && (
           <span className="game-action-command-status">
@@ -122,6 +157,11 @@ export function ActionBar(): ReactNode {
         )}
         {endingType && <span className="game-text-muted">Campaign complete. Open outcome report.</span>}
         {!hasActions && <span className="game-text-muted">No actions loaded</span>}
+        {turnError && (
+          <span className="game-action-command-status is-error" id="turn-command-error" role="alert">
+            {turnError}
+          </span>
+        )}
       </div>
     </footer>
   )

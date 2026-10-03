@@ -6,7 +6,7 @@ This document is the canonical production support contract for African Mandate: 
 
 The supported release target is the **v0.1 public web release for desktop and laptop browsers**. It is a production-supported public game surface for the device classes listed below. It is not a phone release, tablet release, native app, multiplayer product, paid product, or durable analytics release.
 
-Data posture remains synthetic scenario content, local QA-only telemetry, guest browser saves, and optional Supabase-backed authenticated saves. No service-role key or backend credential may be placed in a `VITE_*` variable.
+Data posture remains synthetic scenario content, local QA-only telemetry, and guest browser saves. Supabase-backed authenticated saves are Experimental and outside the controlled-demo guarantee. No service-role key or backend credential may be placed in a `VITE_*` variable.
 
 ## Release Support Matrix
 
@@ -16,7 +16,7 @@ Data posture remains synthetic scenario content, local QA-only telemetry, guest 
 | Supported device class | Desktop or laptop with viewport at least 1280 x 720 CSS pixels, visible keyboard available, and fine pointer input through mouse, trackpad, or equivalent. Touch-capable laptops are supported only when a fine pointer and keyboard are available. | Viewports below 1280 x 720, phones, tablets, touch-only devices, kiosk/webview shells, and any device where the player cannot use keyboard plus fine pointer input. | E2E supported-desktop cases at standard and minimum supported viewport sizes. |
 | Pointer and keyboard | All production play assumes keyboard access plus precise pointer selection for map, action review, session manager, modals, and save controls. Keyboard focus order and Escape handling are part of the support contract. | Touch-only play, controller-only play, screen-keyboard-only play, and stylus-only play are not supported production journeys for v0.1. | E2E keyboard modal flow and release-support gate cases for phone, tablet, and narrow desktop. |
 | Audio and video | Muted intro video and optional in-game audio may load. Audio is never required for game-state comprehension. Players may keep audio blocked or muted and still play. | Browsers unable to load the shipped MP4 intro media are gated because the production entry flow depends on HTML5 video readiness/fallback behavior. | Static asset validation, production build, and release-support preflight. |
-| Storage and saves | Guest saves require writable browser local storage in the current browser profile. Authenticated cloud saves require Supabase Auth, Supabase database availability, and correct RLS configuration. | Private browsing cleanup, disabled storage, cleared site data, browser changes, or blocked Supabase network can remove or prevent saves. Storage-disabled browsers are gated before campaign start. | Unit save-service tests, manual guest-save smoke, and staged Supabase auth/cloud-save smoke before production promotion. |
+| Storage and saves | Guest saves require writable browser local storage in the current browser profile. This is the supported demo persistence path. | Private browsing cleanup, disabled storage, cleared site data, or browser changes can remove or prevent guest saves. Authenticated cloud save/restore is Experimental and outside the supported demo contract. Storage-disabled browsers are gated before campaign start. | Unit save-service tests, focused guest-session E2E, and manual guest-save smoke before production promotion. |
 | Network | Initial page load requires HTTPS network access to the deployed app and shipped static assets. Authenticated play requires Supabase network access. Guest play may continue after assets load, but offline entry is not a supported production start path. | Offline entry, captive portals, blocked static assets, blocked Supabase endpoints, or corporate filters that prevent media/assets from loading. Offline entry is gated when `navigator.onLine` reports offline. | Build asset validation, deployment smoke, and manual online/offline save recovery check. |
 | Telemetry | Local QA telemetry is opt-in and stored only in the browser runtime queue. It is for QA inspection, not production observability. | Durable production analytics, remote player monitoring, ad tracking, payment analytics, or retention analytics are not enabled in v0.1. | `dev_docs/TELEMETRY_REQUIREMENTS.md` remains aligned with this contract. |
 
@@ -40,7 +40,7 @@ Closing the gate may return the user to the landing page, but it must not start 
 ## Save Behavior
 
 - Guest play stores saves in the current browser through local storage. Clearing site data, private browsing cleanup, or changing browsers can remove guest saves.
-- Authenticated play uses Google OAuth through Supabase and stores cloud saves under the authenticated user.
+- Google OAuth and authenticated Supabase saves are Experimental. They must not be represented as supported until staged OAuth/session restore, failure recovery, and cross-user RLS evidence passes.
 - Autosave runs after important state changes including actions, dialogue, intel interactions, and end-turn resolution when autosave is enabled.
 - Manual save is available from the session menu.
 - A failed save shows an in-game error banner with retry. The game state remains active; the player should retry before closing the tab.
@@ -53,7 +53,7 @@ Closing the gate may return the user to the landing page, but it must not start 
 - Durable production analytics are not enabled; telemetry is local QA-only and opt-in.
 - Cutscenes currently reuse shipped video and still assets until the final dedicated media set is produced.
 - Phone, tablet, and touch-only play are blocked, not degraded.
-- Cloud saves depend on Supabase availability and correct environment configuration.
+- Experimental cloud saves depend on Supabase availability and correct environment configuration and are not part of the controlled-demo guarantee.
 - Guest saves are browser-local and cannot be recovered after local storage deletion.
 
 ## Demo Bundle Budget
@@ -76,10 +76,10 @@ Repository administrators must keep **Settings → Pages → Source** set to **G
 - Missing or empty static asset: run `npm run validate:assets`, restore the referenced file under `public/`, or update the source/content reference to a shipped asset.
 - Browser reports an ignored CSS `@import` or a failed `/assets/index-*.css` request: run `npm run build` and require the stylesheet-reference check to pass, then inspect the generated `dist/index.html` CSS URL and confirm that exact file exists under `dist/`. Redeploy the complete `dist/` artifact; do not upload `index.html` separately. After deployment, verify the generated CSS URL returns HTTP 200 with a `text/css` content type before treating the release as healthy.
 - Broken content reference: run `npm run test:run -- tests/unit/contentContracts.test.ts` and update the JSON, localization key, actor/action/dialogue reference, or test contract together.
-- Supabase auth or cloud save failure: confirm `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, verify Supabase project health, verify Auth providers, and retry the save from the in-game banner.
+- Experimental Supabase auth or cloud save failure: return to guest mode for the supported demo path. Operators may confirm `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, project health, Auth providers, and RLS in a non-production test environment, but must not promote cloud support without the staged evidence gate.
 - Guest save issue: keep the tab open, retry manual save, and avoid clearing site data. If local storage was cleared, the guest save cannot be restored.
 - README or Jekyll content appears at the public URL: confirm Pages Source is **GitHub Actions**, confirm the custom domain is `africanmandate.org`, run `npm run validate:pages`, and inspect the latest `Deploy to GitHub Pages` workflow before retrying deployment.
-- Failed deployment smoke: run `npm run verify:demo`; redeploy only after the failing gate is fixed. The script runs typecheck, zero-warning lint, non-watch unit tests, static asset validation plus the production build and bundle-budget check, then the retry-free Playwright suite.
+- Failed deployment smoke: run `npm run verify:demo`; redeploy only after the failing gate is fixed. The script runs typecheck, zero-warning lint, non-watch unit tests, static asset validation plus the production build and bundle-budget check, then retry-free bundled Chromium against the built `dist` artifact.
 - Bad release: roll back to the previous known-good deployment artifact and keep the current failing build out of production until the gate failure is reproduced and fixed.
 
 ## Release Gate
@@ -91,6 +91,10 @@ npm ci
 npm audit
 npm audit --omit=dev
 npm run verify:demo
+npm run test:e2e:preview -- --project=chrome
+npm run test:e2e:preview -- --project=edge
 ```
 
-For an individually inspectable gate, `npm run test:run` is the non-watch unit command, and `npm run lint -- --max-warnings=0` fails on any warning. `npm run build` includes static asset validation, the Pages deployment contract, typecheck, the Vite production build, and the raw/gzip bundle-budget validator. Playwright is configured with zero retries and writes reports and test artifacts under ignored `tmp/` paths, so verification does not rewrite tracked evidence files. CI installs Chromium, runs both audits, and invokes the same `npm run verify:demo` command.
+For an individually inspectable gate, `npm run test:run` is the non-watch unit command, and `npm run lint -- --max-warnings=0` fails on any warning. `npm run build` includes static asset validation, the Pages deployment contract, typecheck, the Vite production build, and the raw/gzip bundle-budget validator. `npm run test:e2e:preview -- --project=<name>` serves `dist` on strict port 4173 without reusing an existing server. Playwright is configured with zero retries and writes reports and test artifacts under ignored `tmp/` paths, so verification does not rewrite tracked evidence files. CI and the Pages deployment workflow install Chromium, run both audits, and invoke the same production-preview Chromium gate through `npm run verify:demo`; installed Chrome and Edge remain required human promotion evidence.
+
+Automated success is necessary but not sufficient. Promotion also requires signed human records from the same candidate commit for the security-heavy, diplomacy-heavy, and balanced scripts in `dev_docs/STRATEGY_PLAYTHROUGH_RUNBOOK.md`, the guest save/resume/recovery journey, and the complete stakeholder journey in stable Chrome and Edge. Evidence belongs under `dev_docs/demo_evidence/<YYYY-MM-DD>/` only after the operator has performed the run.

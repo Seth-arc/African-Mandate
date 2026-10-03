@@ -256,7 +256,7 @@ export function GameLayout(): ReactNode {
           <div className="game-header-badges">
             <span className="game-demo-badge" data-ui-tooltip="shell.demo_mode">Desktop Public Demo - Synthetic Data</span>
             <span className="game-mode-status" data-ui-tooltip="shell.mode_status">
-              {authMode === 'authenticated' ? 'Cloud Mode' : 'Guest Mode'}
+              {authMode === 'authenticated' ? 'Cloud Mode - Experimental' : 'Guest Mode'}
             </span>
           </div>
         </div>

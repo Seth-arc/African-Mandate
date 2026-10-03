@@ -13,7 +13,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "playwright test",
-    "verify:demo": "npm run typecheck && npm run lint -- --max-warnings=0 && npm run test:run && npm run build && npm run test:e2e",
+    "test:e2e:preview": "playwright test --config=playwright.preview.config.ts",
+    "verify:demo": "npm run typecheck && npm run lint -- --max-warnings=0 && npm run test:run && npm run build && npm run test:e2e:preview -- --project=chromium",
     "validate:assets": "node scripts/validate-static-assets.mjs",
     "validate:pages": "node scripts/validate-pages-deployment.mjs",
     "validate": "tsc --noEmit"

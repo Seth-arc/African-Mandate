@@ -34,8 +34,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build production site
-        run: npm run build
+      - name: Audit full dependency tree
+        run: npm audit
+
+      - name: Audit production dependency tree
+        run: npm audit --omit=dev
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify and build production site
+        run: npm run verify:demo
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

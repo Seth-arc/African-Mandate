@@ -494,6 +494,7 @@ export function DemoTourOverlay(): ReactNode {
                         </div>
                       </div>
                       <audio
+                        key={currentStep.path}
                         ref={audioRef}
                         className="demo-tour-audio-native"
                         preload="metadata"

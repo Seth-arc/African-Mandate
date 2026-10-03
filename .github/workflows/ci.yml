@@ -31,5 +31,5 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Verify controlled desktop demo
+      - name: Verify controlled desktop demo against production preview
         run: npm run verify:demo

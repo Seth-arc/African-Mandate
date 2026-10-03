@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 export interface TourStep {
@@ -105,11 +105,40 @@ export function TourProvider({ children }: PropsWithChildren): ReactNode {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState(0)
+  const launcherRef = useRef<HTMLElement | null>(null)
+  const focusRestoreFrameRef = useRef<number | null>(null)
 
   const steps = DEFAULT_STEPS
 
+  const closeTour = useCallback((): void => {
+    setIsOpen(false)
+    if (typeof window === 'undefined') return
+    if (focusRestoreFrameRef.current !== null) {
+      window.cancelAnimationFrame(focusRestoreFrameRef.current)
+    }
+    focusRestoreFrameRef.current = window.requestAnimationFrame(() => {
+      focusRestoreFrameRef.current = null
+      const launcher = launcherRef.current
+      if (launcher?.isConnected) {
+        launcher.focus()
+      }
+    })
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (typeof window !== 'undefined' && focusRestoreFrameRef.current !== null) {
+        window.cancelAnimationFrame(focusRestoreFrameRef.current)
+      }
+    },
+    []
+  )
+
   const start = useCallback(
     (fromStep = 0) => {
+      if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+        launcherRef.current = document.activeElement
+      }
       const nextStep = clampStep(fromStep, steps.length)
       setStep(nextStep)
       setIsOpen(true)
@@ -124,40 +153,33 @@ export function TourProvider({ children }: PropsWithChildren): ReactNode {
 
   const next = useCallback(() => {
     if (!steps.length) return
-    setStep((currentStep) => {
-      const followingStep = currentStep + 1
-      if (followingStep >= steps.length) {
-        setIsOpen(false)
-        return currentStep
-      }
-      const nextPath = steps[followingStep]?.path
-      const currentRoute = routeFromLocation(location.pathname, location.search)
-      if (nextPath && nextPath !== currentRoute) {
-        navigate(nextPath)
-      }
-      return followingStep
-    })
-  }, [location.pathname, location.search, navigate, steps])
+    const followingStep = step + 1
+    if (followingStep >= steps.length) {
+      closeTour()
+      return
+    }
+    const nextPath = steps[followingStep]?.path
+    const currentRoute = routeFromLocation(location.pathname, location.search)
+    if (nextPath && nextPath !== currentRoute) {
+      navigate(nextPath)
+    }
+    setStep(followingStep)
+  }, [closeTour, location.pathname, location.search, navigate, step, steps])
 
   const prev = useCallback(() => {
     if (!steps.length) return
-    setStep((currentStep) => {
-      const previousStep = currentStep - 1
-      if (previousStep < 0) {
-        return 0
-      }
-      const previousPath = steps[previousStep]?.path
-      const currentRoute = routeFromLocation(location.pathname, location.search)
-      if (previousPath && previousPath !== currentRoute) {
-        navigate(previousPath)
-      }
-      return previousStep
-    })
-  }, [location.pathname, location.search, navigate, steps])
+    const previousStep = Math.max(0, step - 1)
+    const previousPath = steps[previousStep]?.path
+    const currentRoute = routeFromLocation(location.pathname, location.search)
+    if (previousPath && previousPath !== currentRoute) {
+      navigate(previousPath)
+    }
+    setStep(previousStep)
+  }, [location.pathname, location.search, navigate, step, steps])
 
   const skip = useCallback(() => {
-    setIsOpen(false)
-  }, [])
+    closeTour()
+  }, [closeTour])
 
   const currentStep = steps[step] ?? null
 

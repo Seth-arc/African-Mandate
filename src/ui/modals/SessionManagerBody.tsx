@@ -172,13 +172,13 @@ export function SessionManagerBody(): ReactNode {
             </h3>
             <p className="session-manager-banner-text">
               Select a card to resume a saved mandate or start a fresh campaign. Guest mode keeps saves in this browser.
-              Google sign-in enables cloud save and restore.
+              Google sign-in and cloud save are Experimental and outside the supported demo guarantee.
             </p>
           </div>
           <div className="session-manager-meta" aria-label="Session overview">
             <span className="session-manager-meta-pill">{isAuthenticated ? 'Signed in' : 'Guest mode'}</span>
             <span className="session-manager-meta-pill">
-              {isAuthenticated ? 'Cloud saves' : 'Browser saves'}: {sessionStore.sessions.length}
+              {isAuthenticated ? 'Experimental cloud saves' : 'Browser saves'}: {sessionStore.sessions.length}
             </span>
             <span className="session-manager-meta-pill">
               Difficulty: {sessionStore.preferences.difficulty_mode}
@@ -189,12 +189,12 @@ export function SessionManagerBody(): ReactNode {
         <div className="session-manager-account-strip">
           <div className="session-manager-account-copy">
             <span className="session-manager-account-label">
-              {isAuthenticated ? 'Cloud save is available' : 'Guest mode is active'}
+              {isAuthenticated ? 'Experimental cloud mode' : 'Guest mode is active'}
             </span>
             <p className="session-manager-account-text">
               {isAuthenticated
-                ? `Signed in as ${sessionStore.user_display_name ?? sessionStore.user_email ?? sessionStore.user_id}.`
-                : 'Continue in this browser, or sign in with Google when you want cloud persistence.'}
+                ? `Signed in as ${sessionStore.user_display_name ?? sessionStore.user_email ?? sessionStore.user_id}. Cloud persistence is Experimental.`
+                : 'Continue in this browser for the supported demo. Google cloud persistence is Experimental.'}
             </p>
           </div>
           {isAuthenticated ? (
@@ -214,7 +214,7 @@ export function SessionManagerBody(): ReactNode {
               disabled={sessionStore.loading}
             >
               <span className="session-auth-google-icon" aria-hidden="true">G</span>
-              Continue with Google
+              Continue with Google (Experimental)
             </button>
           )}
         </div>
@@ -245,8 +245,8 @@ export function SessionManagerBody(): ReactNode {
             </div>
             <p className="session-launch-copy">
               {latestSession
-                ? `Resume the most recent ${isAuthenticated ? 'cloud' : 'browser'} save immediately.`
-                : `A ${isAuthenticated ? 'cloud' : 'browser'} save will appear here after your first manual or autosave.`}
+                ? `Resume the most recent ${isAuthenticated ? 'Experimental cloud' : 'browser'} save immediately.`
+                : `A ${isAuthenticated ? 'Experimental cloud' : 'browser'} save will appear here after your first manual or autosave.`}
             </p>
             <div className="session-entry-actions">
               <button
@@ -396,7 +396,7 @@ export function SessionManagerBody(): ReactNode {
             <span className="session-manager-disclosure-copy">
               <span className="session-manager-disclosure-title">Saved mandates</span>
               <span className="session-manager-disclosure-text">
-                Review, rename, and restore {isAuthenticated ? 'cloud' : 'browser'} sessions.
+                Review, rename, and restore {isAuthenticated ? 'Experimental cloud' : 'browser'} sessions.
               </span>
             </span>
             <span className="session-manager-disclosure-indicator" aria-hidden="true">Expand</span>
@@ -414,7 +414,7 @@ export function SessionManagerBody(): ReactNode {
                     <article key={session.session_id} className="action-config-review">
                       <div className="action-config-review-row">
                         <span>{formatSessionLabel(session.session_name, session.turn)}</span>
-                        <strong>{isActive ? 'Active' : isAuthenticated ? 'Cloud' : 'Browser'}</strong>
+                        <strong>{isActive ? 'Active' : isAuthenticated ? 'Experimental cloud' : 'Browser'}</strong>
                       </div>
                       <div className="action-config-review-row">
                         <span>Progress</span>

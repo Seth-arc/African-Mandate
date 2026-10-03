@@ -109,4 +109,16 @@ describe('uiStore map and modal state', () => {
     expect(useUiStore.getState().selectedTarget).toBeNull()
     expect(useUiStore.getState().takeActionSelectionTurn).toBeNull()
   })
+
+  it('allows a missing turn-transition payload to be closed without retaining blocking state', () => {
+    expect(useUiStore.getState().pendingTurnTransition).toBeNull()
+
+    useUiStore.getState().openModal('turn_loading')
+    expect(useUiStore.getState().modal).toBe('turn_loading')
+    expect(useUiStore.getState().pendingTurnTransition).toBeNull()
+
+    useUiStore.getState().closeModal()
+    expect(useUiStore.getState().modal).toBe('none')
+    expect(useUiStore.getState().pendingTurnTransition).toBeNull()
+  })
 })

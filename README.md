@@ -8,6 +8,8 @@ The supported release target is the **v0.1 public web release for desktop and la
 
 Phone, tablet, touch-only, undersized-window, unsupported-browser, offline, and storage-disabled journeys are gated before a campaign can start. Runtime telemetry remains local QA-only behind the in-game telemetry opt-in.
 
+Guest mode with browser-local saves is the supported v0.1 demo path. Google OAuth and Supabase cloud save/restore are **Experimental** and are not part of the controlled-demo guarantee until staged OAuth, recovery, and cross-user row-level-isolation evidence is approved.
+
 ## Quick start
 
 ```bash
@@ -21,6 +23,7 @@ Then open the URL shown (e.g. http://localhost:5174).
 
 See **[BUILD_STEPS.md](./BUILD_STEPS.md)** for the full process from scaffold through engine, map, UI, and release.
 See **[Production Readiness](./dev_docs/PRODUCTION_READINESS.md)** for launch scope, browser/device support, save behavior, known limitations, and recovery steps.
+See **[Strategy Playthrough Runbook](./dev_docs/STRATEGY_PLAYTHROUGH_RUNBOOK.md)** for the three required Turn 20 promotion scripts.
 
 ## Commands
 
@@ -31,6 +34,9 @@ See **[Production Readiness](./dev_docs/PRODUCTION_READINESS.md)** for launch sc
 - `npm run validate:pages` — GitHub Pages deployment contract validation
 - `npm test` — Unit tests
 - `npm run test:e2e` — Playwright E2E player journey and release-support gate suite
+- `npm run test:e2e:preview -- --project=chromium` — test the built `dist` artifact with bundled Chromium
+- `npm run test:e2e:preview -- --project=chrome` — promotion evidence using installed stable Chrome
+- `npm run test:e2e:preview -- --project=edge` — promotion evidence using installed stable Microsoft Edge
 
 ## GitHub Pages deployment
 
@@ -44,6 +50,8 @@ Repository administrators must configure these settings once in **Settings → P
 GitHub ignores repository `CNAME` files for custom Actions workflows; the custom domain must remain configured in the Pages settings. Do not switch the Vite base to `/African-Mandate/` while source files use root-relative `/assets/...` and `/img/...` URLs.
 
 Use `npm run validate:pages` to verify the repository-side deployment contract before pushing.
+
+Production promotion must use `npm run build` followed by all three `test:e2e:preview` projects. The preview configuration owns port 4173 with `--strictPort` and refuses to reuse an existing server, preventing a stale development server from satisfying the release gate.
 
 ## Project root
 

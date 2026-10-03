@@ -11,7 +11,7 @@
     {
       "id": "shell.mode_status",
       "title": "Session mode",
-      "description": "Shows whether this mandate is running in guest browser mode or with authenticated cloud persistence."
+      "description": "Shows whether this mandate is using the supported guest browser path or Experimental authenticated cloud persistence."
     },
     {
       "id": "nav.onboarding",

@@ -1284,6 +1284,14 @@
   text-overflow: ellipsis;
 }
 
+.game-action-command-status.is-error {
+  border-color: var(--alert);
+  color: var(--text);
+  background: var(--bg-elevated);
+  max-width: 360px;
+  text-transform: none;
+}
+
 @keyframes pressure-ribbon-sweep {
   0%,
   100% {

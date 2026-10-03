@@ -6091,7 +6091,9 @@ function TurnLoadingBody(): ReactNode {
   if (!transition) {
     return (
       <div className="action-transition-shell">
-        <p className="action-transition-fallback">Turn transition payload unavailable.</p>
+        <p className="action-transition-fallback" role="alert">
+          Turn transition unavailable (TURN_TRANSITION_MISSING). No state change was committed. Close this message and retry End turn.
+        </p>
         <div className="action-transition-actions">
           <button type="button" className="action-config-confirm" onClick={closeModal}>
             Close
@@ -6166,7 +6168,7 @@ function OnboardingLoadingBody(): ReactNode {
     activeSession?.session_name && activeSession.session_name.trim().length > 0
       ? activeSession.session_name
       : `Mandate - Turn ${sessionTurn}`
-  const restoreLabel = authMode === 'authenticated' ? 'Cloud restore' : 'Browser restore'
+  const restoreLabel = authMode === 'authenticated' ? 'Experimental cloud restore' : 'Browser restore'
 
   const markReady = useCallback(() => {
     setIsReady((current) => (current ? current : true))

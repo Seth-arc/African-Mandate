@@ -195,6 +195,13 @@ test('full player journey covers launch, onboarding, action review, invalid acti
     timeout: 20_000,
   })
   await expect(page.getByRole('dialog', { name: /Campaign outcome/ }).getByText('Mandate Revoked', { exact: true })).toBeVisible()
+  await page.getByRole('dialog', { name: /Campaign outcome/ }).getByRole('button', { name: /Restart campaign|New campaign/i }).click()
+  const restartedBrief = page.getByRole('dialog', { name: /Mission brief/i })
+  await expect(restartedBrief).toBeVisible()
+  await expectVisibleTurnLabel(page, '1/20')
+  await restartedBrief.getByRole('button', { name: 'Close Brief' }).click()
+  await expect(page.getByRole('button', { name: 'End turn' })).toBeEnabled()
+  await expect(page.getByText('Latest action')).toHaveCount(0)
 })
 
 test('direct SPA entry is blocked by the mission entry gate before gameplay is usable', async ({ page }) => {
