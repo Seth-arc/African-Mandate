@@ -137,7 +137,10 @@ for (const strategy of STRATEGIES) {
     const unexpectedErrors = collectUnexpectedErrors(page)
     const snapshots: Awaited<ReturnType<typeof captureTurnSnapshot>>[] = []
     await installMediaHarness(page)
-    await startGuestCampaign(page, { sessionName: `${strategy.name} release run` })
+    await startGuestCampaign(page, {
+      sessionName: `${strategy.name} release run`,
+      difficulty: 'standard',
+    })
 
     for (let turn = 1; turn <= 20; turn += 1) {
       await expectTurn(page, turn)

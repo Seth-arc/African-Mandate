@@ -96,9 +96,10 @@ export async function startGuestCampaign(
   if (options.sessionName) {
     await entryDialog.getByLabel('Session name').first().fill(options.sessionName)
   }
-  if (options.difficulty && options.difficulty !== 'standard') {
-    await entryDialog.getByLabel(options.difficulty, { exact: true }).check()
-  }
+  const difficultyLabel = options.difficulty ?? 'standard'
+  await entryDialog
+    .getByRole('radio', { name: new RegExp(`^${difficultyLabel}`, 'i') })
+    .check()
 
   await entryDialog.getByRole('button', { name: 'Start new campaign' }).click()
   await expect(page.getByRole('button', { name: 'Take action' })).toBeVisible({ timeout: 15_000 })
@@ -121,9 +122,9 @@ export async function dismissPostTurnOverlays(page: Page): Promise<void> {
       continue
     }
 
-    const continueToOperations = page.getByRole('button', { name: /Continue to operations/i })
-    if (await continueToOperations.isVisible().catch(() => false)) {
-      await continueToOperations.click()
+    const actBriefing = page.getByRole('dialog', { name: /Act briefing/i })
+    if (await actBriefing.isVisible().catch(() => false)) {
+      await actBriefing.getByLabel('Close', { exact: true }).click()
       continue
     }
 
@@ -141,7 +142,18 @@ export async function expectTurn(page: Page, turn: number): Promise<void> {
 
 export async function endTurn(page: Page, expectedTurn: number): Promise<void> {
   await page.getByRole('button', { name: 'End turn' }).click()
-  await expectTurn(page, expectedTurn)
+  const expectedTurnIndicator = page
+    .locator('.turn-progress-now-value')
+    .filter({ hasText: `${expectedTurn}/20` })
+  const outcomeDialog = page.getByRole('dialog', { name: /Campaign outcome/ })
+  const transition = await Promise.race([
+    expectedTurnIndicator.waitFor({ state: 'visible', timeout: 15_000 }).then(() => 'turn' as const),
+    outcomeDialog.waitFor({ state: 'visible', timeout: 15_000 }).then(() => 'outcome' as const),
+  ])
+  if (transition === 'outcome') {
+    const outcome = (await outcomeDialog.textContent())?.replace(/\s+/g, ' ').trim() ?? 'Unknown outcome'
+    throw new Error(`Campaign ended before Turn ${expectedTurn}: ${outcome}`)
+  }
   await dismissPostTurnOverlays(page)
 }
 
@@ -159,18 +171,13 @@ export async function performAction(page: Page, scriptedAction: ScriptedAction):
   await expect(confirm).toBeEnabled()
   await confirm.click()
 
-  const fastReveal = page.getByRole('button', { name: 'Fast Reveal', exact: true })
-  if (await fastReveal.isVisible({ timeout: 4_000 }).catch(() => false)) {
-    if (await fastReveal.isEnabled()) {
-      await fastReveal.click()
-    }
-  }
+  const transitionDialog = page.getByRole('dialog', { name: 'Operational Transition' })
+  await expect(transitionDialog).toBeVisible({ timeout: 12_000 })
 
-  const returnControl = page.getByRole('button', { name: /Resume Operations|Return to Command/ })
-  if (await returnControl.isVisible({ timeout: 12_000 }).catch(() => false)) {
-    await returnControl.click()
-  }
-  await waitForNoDialog(page)
+  const resumeOperations = transitionDialog.getByRole('button', { name: 'Resume Operations' })
+  await expect(resumeOperations).toBeEnabled({ timeout: 12_000 })
+  await resumeOperations.click()
+  await expect(transitionDialog).toBeHidden({ timeout: 15_000 })
 }
 
 export async function saveAndResumeGuestCampaign(page: Page, expectedTurn: number): Promise<void> {

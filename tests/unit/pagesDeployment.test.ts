@@ -12,7 +12,7 @@ permissions:
   pages: write
   id-token: write
 steps:
-  - run: npm run build
+  - run: npm run verify:demo
   - uses: actions/configure-pages@v5
   - uses: actions/upload-pages-artifact@v4
     with:
@@ -46,5 +46,14 @@ describe('GitHub Pages deployment contract', () => {
         workflow: validWorkflow.replace('path: ./dist', 'path: .'),
       })
     ).toThrow(/dist artifact path/)
+  })
+
+  it('rejects a workflow that deploys without a production-building gate', () => {
+    expect(() =>
+      validatePagesDeploymentContract({
+        viteConfig: validViteConfig,
+        workflow: validWorkflow.replace('npm run verify:demo', 'npm run test:e2e'),
+      })
+    ).toThrow(/production build/)
   })
 })

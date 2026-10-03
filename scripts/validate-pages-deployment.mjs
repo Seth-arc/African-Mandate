@@ -5,7 +5,7 @@ import path from 'node:path'
 const REQUIRED_WORKFLOW_PATTERNS = Object.freeze([
   ['Pages write permission', /^\s*pages:\s*write\s*$/m],
   ['OIDC token permission', /^\s*id-token:\s*write\s*$/m],
-  ['production build', /^\s*(?:-\s*)?run:\s*npm run build\s*$/m],
+  ['production build', /^\s*(?:-\s*)?run:\s*npm run (?:build|verify:demo)\s*$/m],
   ['Pages configuration action', /actions\/configure-pages@/],
   ['Pages artifact upload action', /actions\/upload-pages-artifact@/],
   ['dist artifact path', /^\s*path:\s*\.\/dist\s*$/m],

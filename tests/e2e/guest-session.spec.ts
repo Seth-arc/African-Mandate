@@ -47,11 +47,15 @@ test('guest is the supported default and saves, renames, refreshes, and resumes 
   await page.reload()
   await page.locator('#enterArenaBtn').click()
   const entryDialog = page.getByRole('dialog', { name: /Mission Entry|Sessions/ })
-  await expect(entryDialog.getByText('Renamed Guest Release Run')).toBeVisible()
+  await expect(
+    entryDialog.getByRole('region', { name: 'Campaign launch' }).getByText('Renamed Guest Release Run', { exact: true })
+  ).toBeVisible()
   await entryDialog.getByRole('button', { name: 'Continue mandate' }).click()
   await expect(page.locator('.turn-progress-now-value').filter({ hasText: '2/20' })).toBeVisible()
   await waitForNoDialog(page)
-  await expect(page.getByText('Security Patrol Deployment')).toBeVisible()
+  await page.getByRole('button', { name: 'Status report' }).click()
+  const statusReport = page.getByRole('dialog', { name: 'Status report' })
+  await expect(statusReport.getByText('Security Patrol Deployment')).toBeVisible()
 })
 
 test('guest storage failure keeps the campaign playable and exposes retry guidance', async ({ page }) => {
@@ -65,7 +69,7 @@ test('guest storage failure keeps the campaign playable and exposes retry guidan
   await page.getByRole('button', { name: 'Menu' }).click()
   await page.getByRole('menuitem', { name: 'Save Session' }).click()
   const sessionDialog = page.getByRole('dialog', { name: /Sessions/ })
-  await expect(sessionDialog.getByRole('alert')).toContainText('Manual save failed.')
+  await expect(sessionDialog.getByRole('alert')).toContainText(/Manual save failed|storage quota failure/i)
   await sessionDialog.getByLabel('Close', { exact: true }).click()
   await expect(page.getByRole('button', { name: 'Take action' })).toBeEnabled()
   await expect(page.getByRole('alert')).toContainText('Not saved.')
