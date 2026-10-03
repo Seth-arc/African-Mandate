@@ -15,6 +15,13 @@ import {
 } from '../../scripts/validate-demo-bundle.mjs'
 
 describe('controlled desktop demo bundle budget', () => {
+  it('keeps landing labels visible before optional motion scripts run', () => {
+    const landingSource = readFileSync(new URL('../../index.html', import.meta.url), 'utf8')
+    const labelRule = landingSource.match(/\.label\s*\{[^}]*\}/s)?.[0]
+
+    expect(labelRule).toMatch(/opacity:\s*1\s*;/)
+  })
+
   it('loads tokens before global declarations without a browser-level CSS import', () => {
     const mainSource = readFileSync(new URL('../../src/main.tsx', import.meta.url), 'utf8')
     const globalsSource = readFileSync(
