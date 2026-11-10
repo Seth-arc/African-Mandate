@@ -40,14 +40,9 @@ See **[Strategy Playthrough Runbook](./dev_docs/STRATEGY_PLAYTHROUGH_RUNBOOK.md)
 
 ## GitHub Pages deployment
 
-The [`Deploy to GitHub Pages`](./.github/workflows/pages.yml) workflow builds the Vite application on every push to `main`, uploads only `dist/`, and deploys that artifact to the `github-pages` environment. The Vite base is `/` because the supported public URL is the custom domain `https://africanmandate.org/`.
+The [`Deploy to GitHub Pages`](./.github/workflows/pages.yml) workflow builds the Vite application on every push to `main`, uploads only `dist/`, and deploys that artifact to the `github-pages` environment. The public URL is https://seth-arc.github.io/African-Mandate/ and the Vite base is `/African-Mandate/`.
 
-Repository administrators must configure these settings once in **Settings → Pages**:
-
-1. Set **Build and deployment → Source** to **GitHub Actions**.
-2. Set **Custom domain** to `africanmandate.org`, save it, and enable **Enforce HTTPS** when GitHub makes that option available.
-
-GitHub ignores repository `CNAME` files for custom Actions workflows; the custom domain must remain configured in the Pages settings. Do not switch the Vite base to `/African-Mandate/` while source files use root-relative `/assets/...` and `/img/...` URLs.
+In **Settings → Pages**, keep **Build and deployment → Source** set to **GitHub Actions** and leave **Custom domain** empty. Static media paths resolve within the project directory, and the router uses the configured Vite base. The game uses a single entry URL, so refreshing does not require server-side route rewrites.
 
 Use `npm run validate:pages` to verify the repository-side deployment contract before pushing.
 

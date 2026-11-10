@@ -34,7 +34,7 @@ function normalizeAssetReference(rawReference) {
 }
 
 function collectReferences(filePath) {
-  const source = readFileSync(filePath, 'utf8')
+  const source = readFileSync(filePath, 'utf8').replaceAll('%BASE_URL%', '/')
   const references = []
 
   for (const pattern of referencePatterns) {

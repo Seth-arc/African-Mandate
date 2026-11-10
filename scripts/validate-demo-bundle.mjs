@@ -63,7 +63,7 @@ export async function validateBuiltStylesheets(html, distDirectory) {
   for (const stylesheetUrl of stylesheetUrls) {
     const stylesheetPath = path.resolve(
       distDirectory,
-      decodeURIComponent(stylesheetUrl.split(/[?#]/, 1)[0] ?? '').replace(/^\/+/, '')
+      decodeURIComponent(stylesheetUrl.split(/[?#]/, 1)[0] ?? '').replace(/^\/African-Mandate\//, '').replace(/^\/+/, '')
     )
     const relativeStylesheetPath = path.relative(distDirectory, stylesheetPath)
 
@@ -89,7 +89,7 @@ export async function validateBuiltDemoBundle(distDirectory) {
   const indexPath = path.join(distDirectory, 'index.html')
   const html = await readFile(indexPath, 'utf8')
   const initialScriptUrl = resolveInitialScriptPath(html)
-  const initialScriptPath = path.join(distDirectory, initialScriptUrl.replace(/^\//, ''))
+  const initialScriptPath = path.join(distDirectory, initialScriptUrl.replace(/^\/African-Mandate\//, '').replace(/^\//, ''))
   const [source, fileStats, stylesheetUrls] = await Promise.all([
     readFile(initialScriptPath),
     stat(initialScriptPath),

@@ -91,7 +91,7 @@ export async function startGuestCampaign(
   page: Page,
   options: { sessionName?: string; difficulty?: 'narrative' | 'standard' | 'expert' } = {}
 ): Promise<void> {
-  await page.goto('/')
+  await page.goto('./')
   await page.locator('#enterArenaBtn').click()
   const entryDialog = page.getByRole('dialog', { name: /Mission Entry|Sessions/ })
   await expect(entryDialog).toBeVisible()

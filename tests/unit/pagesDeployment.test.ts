@@ -3,7 +3,7 @@ import { validatePagesDeploymentContract } from '../../scripts/validate-pages-de
 
 const validViteConfig = `
 export default defineConfig({
-  base: '/',
+  base: '/African-Mandate/',
 })
 `
 
@@ -21,7 +21,7 @@ steps:
 `
 
 describe('GitHub Pages deployment contract', () => {
-  it('accepts the custom-domain Vite base and dist deployment workflow', () => {
+  it('accepts the project-site Vite base and dist deployment workflow', () => {
     expect(() =>
       validatePagesDeploymentContract({
         viteConfig: validViteConfig,
@@ -30,13 +30,13 @@ describe('GitHub Pages deployment contract', () => {
     ).not.toThrow()
   })
 
-  it('rejects a project-site base while the custom domain is the release target', () => {
+  it('rejects a root base while the project site is the release target', () => {
     expect(() =>
       validatePagesDeploymentContract({
-        viteConfig: validViteConfig.replace("base: '/'", "base: '/African-Mandate/'"),
+        viteConfig: validViteConfig.replace("base: '/African-Mandate/'", "base: '/'"),
         workflow: validWorkflow,
       })
-    ).toThrow(/base: '\/'/)
+    ).toThrow(/African-Mandate/)
   })
 
   it('rejects a workflow that publishes the repository instead of dist', () => {

@@ -52,7 +52,7 @@ async function stubMediaPlayback(page: Page): Promise<void> {
 }
 
 async function startNewCampaign(page: Page): Promise<void> {
-  await page.goto('/')
+  await page.goto('./')
   await page.locator('#enterArenaBtn').click()
   await expect(page.locator('body')).toHaveClass(/game-active/)
   await expect(page.getByRole('dialog', { name: /Mission Entry|Sessions/ })).toBeVisible()
@@ -62,7 +62,7 @@ async function startNewCampaign(page: Page): Promise<void> {
 }
 
 async function enterArenaToMissionEntry(page: Page): Promise<void> {
-  await page.goto('/')
+  await page.goto('./')
   await page.locator('#enterArenaBtn').click()
   await expect(page.locator('body')).toHaveClass(/game-active/)
   await expect(page.getByRole('dialog', { name: /Mission Entry|Sessions/ })).toBeVisible()
@@ -205,7 +205,7 @@ test('full player journey covers launch, onboarding, action review, invalid acti
 })
 
 test('direct SPA entry is blocked by the mission entry gate before gameplay is usable', async ({ page }) => {
-  await page.goto('/?code=e2e-direct-entry')
+  await page.goto('./?code=e2e-direct-entry')
   await expect(page.locator('body')).toHaveClass(/game-active/)
   await expect(page.getByRole('dialog', { name: /Mission Entry|Sessions/ })).toBeVisible()
   await expect(page.locator('.game-main')).toHaveAttribute('inert', '')
@@ -215,7 +215,7 @@ test('direct SPA entry is blocked by the mission entry gate before gameplay is u
 test('blocked landing motion CDNs fall back without blocking mission entry', async ({ page }) => {
   await page.route(/(?:cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net)/i, (route) => route.abort())
 
-  await page.goto('/')
+  await page.goto('./')
   await expect(page.locator('html')).toHaveAttribute('data-landing-motion', 'fallback')
   await expect(page.locator('#enterArenaBtn')).toBeVisible()
   await page.locator('#enterArenaBtn').click()
@@ -258,14 +258,14 @@ test.describe('release support gate', () => {
 
   test('blocks undersized desktop windows before the game interface starts', async ({ page }) => {
     await page.setViewportSize({ width: 1279, height: 720 })
-    await page.goto('/')
+    await page.goto('./')
     await page.locator('#enterArenaBtn').click()
     await expectReleaseSupportGate(page, /viewport at least 1280 x 720/i)
   })
 
   test('blocks unsupported direct auth callback entry before the game interface starts', async ({ page }) => {
     await page.setViewportSize({ width: 1279, height: 720 })
-    await page.goto('/?code=e2e-unsupported-entry')
+    await page.goto('./?code=e2e-unsupported-entry')
     await expectReleaseSupportGate(page, /viewport at least 1280 x 720/i)
   })
 
@@ -281,7 +281,7 @@ test.describe('release support gate', () => {
     })
 
     test('blocks phones before the game interface starts', async ({ page }) => {
-      await page.goto('/')
+      await page.goto('./')
       await page.locator('#enterArenaBtn').click()
       await expectReleaseSupportGate(page, /phones, tablets, and touch-only devices/i)
     })
@@ -298,7 +298,7 @@ test.describe('release support gate', () => {
     })
 
     test('blocks tablets before the game interface starts', async ({ page }) => {
-      await page.goto('/')
+      await page.goto('./')
       await page.locator('#enterArenaBtn').click()
       await expectReleaseSupportGate(page, /phones, tablets, and touch-only devices/i)
     })
@@ -311,7 +311,7 @@ test.describe('release support gate', () => {
     })
 
     test('blocks non-Chromium desktop browsers before the game interface starts', async ({ page }) => {
-      await page.goto('/')
+      await page.goto('./')
       await page.locator('#enterArenaBtn').click()
       await expectReleaseSupportGate(page, /Use current stable Chrome or Edge/i)
     })
@@ -327,13 +327,13 @@ test.describe('release support gate', () => {
       })
     })
 
-    await page.goto('/')
+    await page.goto('./')
     await page.locator('#enterArenaBtn').click()
     await expectReleaseSupportGate(page, /Enable browser local storage/i)
   })
 
   test('blocks offline entry before the game interface starts', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
     await page.context().setOffline(true)
     try {
       await page.locator('#enterArenaBtn').click()

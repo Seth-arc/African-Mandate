@@ -2,8 +2,8 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // Production is published at the root of the africanmandate.org custom domain.
-  base: '/',
+  // Publish under the repository path on GitHub Pages.
+  base: '/African-Mandate/',
   plugins: [react()],
   resolve: {},
   build: {

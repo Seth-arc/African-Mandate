@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 
 test('guest is the supported default and saves, renames, refreshes, and resumes locally', async ({ page }) => {
   await page.route(/supabase\.co/i, (route) => route.abort())
-  await page.goto('/')
+  await page.goto('./')
   await page.locator('#enterArenaBtn').click()
   const entryGate = page.getByRole('dialog', { name: /Mission Entry|Sessions/ })
   await expect(entryGate.getByRole('button', { name: 'Continue with Google (Experimental)' })).toBeVisible()

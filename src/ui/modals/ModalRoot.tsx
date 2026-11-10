@@ -66,7 +66,7 @@ type ThemeAudioWindow = Window & {
   __africanMandateThemeAudio?: HTMLAudioElement
 }
 
-const SHARED_THEME_AUDIO_SRC = '/assets/audio/music/Briefing%20Room%20Runway.mp3'
+const SHARED_THEME_AUDIO_SRC = 'assets/audio/music/Briefing%20Room%20Runway.mp3'
 const SHARED_THEME_AUDIO_TARGET_VOLUME = 0.42
 let sharedThemeFadeRaf: number | null = null
 let sharedThemeFadeToken = 0
@@ -260,11 +260,11 @@ function SectionTitle({ children }: { children: ReactNode }): ReactNode {
 }
 
 const TERRITORY_FLAG_FALLBACK: Record<TerritoryKey, string> = {
-  mali: '/assets/flags/Flag_of_Mali.svg',
-  burkina_faso: '/assets/flags/Flag_of_Burkina_Faso.svg',
-  niger: '/assets/flags/Flag_of_Niger.svg',
-  chad: '/assets/flags/Flag_of_Chad.svg',
-  mauritania: '/assets/flags/Flag_of_Mauritania.svg',
+  mali: 'assets/flags/Flag_of_Mali.svg',
+  burkina_faso: 'assets/flags/Flag_of_Burkina_Faso.svg',
+  niger: 'assets/flags/Flag_of_Niger.svg',
+  chad: 'assets/flags/Flag_of_Chad.svg',
+  mauritania: 'assets/flags/Flag_of_Mauritania.svg',
 }
 
 const RELATIONSHIP_ACTOR_TERRITORY_MAP: Partial<Record<string, TerritoryKey>> = {
@@ -322,56 +322,56 @@ type ZoneImageAsset = {
 
 /* Deterministic zone_id -> image mapping using current public/img assets. */
 const ZONE_IMAGE_ASSETS: Record<string, ZoneImageAsset> = {
-  mopti: { src: '/img/Mali/Mopti Trade Hub - Mali.png', dedicated: true },
-  segou: { src: '/img/Mali/Goundam Urban Center - Mali.png', dedicated: false },
-  timbuktu: { src: '/img/Mali/Timbuktu Cultural Center - Mali.png', dedicated: true },
-  gao: { src: '/img/Mali/Kidal Strategic City - Mali.png', dedicated: false },
-  bamako: { src: '/img/Mali/Goundam Urban Center - Mali.png', dedicated: false },
-  burkina_north: { src: '/img/Burkina Faso/Burkina North - Burkina Faso.png', dedicated: true },
-  burkina_east: { src: '/img/Burkina Faso/Burkina East - Burkina Faso.png', dedicated: true },
-  ouagadougou: { src: '/img/Burkina Faso/Ouagadougou - Burkina Faso.png', dedicated: true },
-  niger_west: { src: '/img/Niger/Agadez Desert City - Niger.png', dedicated: false },
-  niamey: { src: '/img/Niger/Niamey - Niger.png', dedicated: true },
-  niger_south: { src: '/img/Niger/Niger South - Niger.png', dedicated: true },
-  lake_chad: { src: '/img/Chad/Lake Chad Basin Strategic Region - Chad.png', dedicated: true },
-  ndjamena: { src: "/img/Chad/N'Djamena Capital City - Chad.png", dedicated: true },
-  mauritania_south: { src: '/img/Mauritania/Mauritania South - Mauritania.png', dedicated: true },
-  nouakchott: { src: '/img/Mauritania/Nouakchott Capital City - Mauritania.png', dedicated: true },
+  mopti: { src: 'img/Mali/Mopti Trade Hub - Mali.png', dedicated: true },
+  segou: { src: 'img/Mali/Goundam Urban Center - Mali.png', dedicated: false },
+  timbuktu: { src: 'img/Mali/Timbuktu Cultural Center - Mali.png', dedicated: true },
+  gao: { src: 'img/Mali/Kidal Strategic City - Mali.png', dedicated: false },
+  bamako: { src: 'img/Mali/Goundam Urban Center - Mali.png', dedicated: false },
+  burkina_north: { src: 'img/Burkina Faso/Burkina North - Burkina Faso.png', dedicated: true },
+  burkina_east: { src: 'img/Burkina Faso/Burkina East - Burkina Faso.png', dedicated: true },
+  ouagadougou: { src: 'img/Burkina Faso/Ouagadougou - Burkina Faso.png', dedicated: true },
+  niger_west: { src: 'img/Niger/Agadez Desert City - Niger.png', dedicated: false },
+  niamey: { src: 'img/Niger/Niamey - Niger.png', dedicated: true },
+  niger_south: { src: 'img/Niger/Niger South - Niger.png', dedicated: true },
+  lake_chad: { src: 'img/Chad/Lake Chad Basin Strategic Region - Chad.png', dedicated: true },
+  ndjamena: { src: "img/Chad/N'Djamena Capital City - Chad.png", dedicated: true },
+  mauritania_south: { src: 'img/Mauritania/Mauritania South - Mauritania.png', dedicated: true },
+  nouakchott: { src: 'img/Mauritania/Nouakchott Capital City - Mauritania.png', dedicated: true },
 }
 
 /* Deterministic actor_present -> avatar mapping for zone key-actor cards. */
 const ACTOR_PRESENT_AVATAR_MAP: Record<string, string | null> = {
-  'Boko Haram remnants': '/assets/actors/Boko Haram Remnants.png',
-  'Border communities': '/assets/actors/Border Communities.png',
-  'Burkina Faso security forces': '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
-  'Chad military forces': '/assets/actors/Amb. Halima Djerma Chad Transitional Government.png',
-  'Civil society coalitions': '/assets/actors/Amina Ouedraogo Burkina Civil Society Network.png',
-  'Displaced civilians in northern camps': '/assets/actors/Northern Camp Civilians.png',
-  'Displaced fishing communities': '/assets/actors/Displaced Fishing Communities.png',
-  'Displaced rural communities': '/assets/actors/Border Communities.png',
-  'Dogon self-defense militias': '/assets/actors/Dogon Self-Defense.png',
-  'ECOWAS envoys': '/assets/actors/ECOWAS Commission.png',
-  'ECOWAS leadership': '/assets/actors/ECOWAS Commission.png',
-  'Fulani Community': '/assets/actors/Fulani Community.png',
-  'Fulani community leaders': '/assets/actors/Fulani Leaders.png',
-  "General Ousmane Sory's government": '/assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
-  'ISGS': '/assets/actors/ISGS Elements.png',
-  'ISGS elements': '/assets/actors/ISGS Elements.png',
-  'JNIM': '/assets/actors/JNIM.png',
-  'Kanuri community militias': '/assets/actors/Kanuri Militias.png',
-  'Mali Transitional Government': '/assets/actors/Col. Assimi Go%C3%AFta.png',
-  'Malian government forces': '/assets/actors/Col. Assimi Go%C3%AFta.png',
-  'Malian refugees': '/assets/actors/Malian Refugees.png',
-  'Mauritania Security Directorate': '/assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
-  'Mauritanian security services': '/assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
-  'National security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
-  'Niger security forces': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
-  'Niger Transitional Government': '/assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
-  'Refugee communities': '/assets/actors/Malian Refugees.png',
-  'Regional intelligence partners': '/assets/actors/AU%20Commissioner.png',
-  'Regional peacekeeping partners': '/assets/actors/AU%20Commissioner.png',
-  'Volunteers for Defense of Homeland (VDP)': '/assets/actors/VDP (Burkina Faso).png',
-  'Wagner Group': '/assets/actors/Wagner Group.png',
+  'Boko Haram remnants': 'assets/actors/Boko Haram Remnants.png',
+  'Border communities': 'assets/actors/Border Communities.png',
+  'Burkina Faso security forces': 'assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
+  'Chad military forces': 'assets/actors/Amb. Halima Djerma Chad Transitional Government.png',
+  'Civil society coalitions': 'assets/actors/Amina Ouedraogo Burkina Civil Society Network.png',
+  'Displaced civilians in northern camps': 'assets/actors/Northern Camp Civilians.png',
+  'Displaced fishing communities': 'assets/actors/Displaced Fishing Communities.png',
+  'Displaced rural communities': 'assets/actors/Border Communities.png',
+  'Dogon self-defense militias': 'assets/actors/Dogon Self-Defense.png',
+  'ECOWAS envoys': 'assets/actors/ECOWAS Commission.png',
+  'ECOWAS leadership': 'assets/actors/ECOWAS Commission.png',
+  'Fulani Community': 'assets/actors/Fulani Community.png',
+  'Fulani community leaders': 'assets/actors/Fulani Leaders.png',
+  "General Ousmane Sory's government": 'assets/actors/Capt. Ousmane Traore Burkina Faso Junta.png',
+  'ISGS': 'assets/actors/ISGS Elements.png',
+  'ISGS elements': 'assets/actors/ISGS Elements.png',
+  'JNIM': 'assets/actors/JNIM.png',
+  'Kanuri community militias': 'assets/actors/Kanuri Militias.png',
+  'Mali Transitional Government': 'assets/actors/Col. Assimi Go%C3%AFta.png',
+  'Malian government forces': 'assets/actors/Col. Assimi Go%C3%AFta.png',
+  'Malian refugees': 'assets/actors/Malian Refugees.png',
+  'Mauritania Security Directorate': 'assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
+  'Mauritanian security services': 'assets/actors/Minister Lamine Ould Mauritania Security Directorate.png',
+  'National security forces': 'assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
+  'Niger security forces': 'assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
+  'Niger Transitional Government': 'assets/actors/Gen. Abdou Karim Niger Transitional Council.png',
+  'Refugee communities': 'assets/actors/Malian Refugees.png',
+  'Regional intelligence partners': 'assets/actors/AU%20Commissioner.png',
+  'Regional peacekeeping partners': 'assets/actors/AU%20Commissioner.png',
+  'Volunteers for Defense of Homeland (VDP)': 'assets/actors/VDP (Burkina Faso).png',
+  'Wagner Group': 'assets/actors/Wagner Group.png',
 }
 
 function keyActorAvatarForName(actorName: string): string | null {
@@ -794,7 +794,7 @@ function resolveOpeningStatementAudioAsset(
     }
   }
   return {
-    src: `/assets/audio/opening_statements/${encodeURIComponent(expectedFilename)}`,
+    src: `assets/audio/opening_statements/${encodeURIComponent(expectedFilename)}`,
     expectedFilename,
   }
 }
@@ -2042,7 +2042,7 @@ const DOSSIER_ARTICLES: DossierArticle[] = [
     location: 'Northern Burkina Faso',
     source: 'AU Field Intelligence',
     urgencyBadge: 'URGENT',
-    image: '/img/Wagner Group contractors have been observed operating in multiple Sahel nations since 2021.png',
+    image: 'img/Wagner Group contractors have been observed operating in multiple Sahel nations since 2021.png',
     imageCaption: 'Wagner Group contractors have been observed operating in multiple Sahel nations since 2021',
     feedTime: '3 hours ago',
     feedSummary:
@@ -2076,7 +2076,7 @@ const DOSSIER_ARTICLES: DossierArticle[] = [
     location: 'Abuja, Nigeria',
     source: 'ECOWAS Communications',
     urgencyBadge: null,
-    image: '/img/ECOWAS headquarters in Abuja.png',
+    image: 'img/ECOWAS headquarters in Abuja.png',
     imageCaption: 'ECOWAS headquarters in Abuja faces escalating pressure on regional cohesion',
     feedTime: '8 hours ago',
     feedSummary:
@@ -2108,7 +2108,7 @@ const DOSSIER_ARTICLES: DossierArticle[] = [
     location: 'Sahel Region-Wide',
     source: 'AU Climate Observatory',
     urgencyBadge: null,
-    image: '/img/Drought conditions across the Sahel.png',
+    image: 'img/Drought conditions across the Sahel.png',
     imageCaption: 'Drought pressure across the Sahel has reached critical multi-year levels',
     feedTime: '12 hours ago',
     feedSummary:
@@ -2142,7 +2142,7 @@ const DOSSIER_ARTICLES: DossierArticle[] = [
     location: 'Niamey, Niger',
     source: 'French Ministry of Defense',
     urgencyBadge: 'URGENT',
-    image: '/img/French forces have maintained Sahel presence since 2013.png',
+    image: 'img/French forces have maintained Sahel presence since 2013.png',
     imageCaption: 'French forces maintained Sahel deployments since 2013 before final withdrawal',
     feedTime: '1 day ago',
     feedSummary: 'French military announces withdrawal of remaining forces from Niger. Security vacuum expected.',
@@ -2504,7 +2504,7 @@ function MissionBriefBody(): ReactNode {
         <p className="mission-brief-subtitle">Operation Sahel Stabilization - Act {act}</p>
         <div className="mission-brief-identity">
           <div className="mission-brief-avatar">
-            <img src="/assets/actors/player.png" alt="Special Envoy avatar" />
+            <img src="assets/actors/player.png" alt="Special Envoy avatar" />
           </div>
           <div className="mission-brief-role">
             <div className="mission-brief-role-subtitle">Player Role</div>
@@ -4620,8 +4620,8 @@ function TerritoryFlagBadge({
 }
 
 type TransitionTone = 'improved' | 'worsened'
-const ACTION_TRANSITION_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
-const ACTION_TRANSITION_LOADING_SFX_SRC = '/assets/audio/effects/scenario_loading.mp3'
+const ACTION_TRANSITION_VIDEO_SRC = 'assets/vid/pre-interface%20loading_video.mp4'
+const ACTION_TRANSITION_LOADING_SFX_SRC = 'assets/audio/effects/scenario_loading.mp3'
 const FAST_REVEAL_AUTO_RETURN_MS = 1100
 
 interface RelationshipRevealChange {
@@ -5940,8 +5940,8 @@ function ActionConfigBody(): ReactNode {
   )
 }
 
-const TURN_LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
-const TURN_LOADING_CLOCK_SFX_SRC = '/assets/audio/effects/slow-cinematic-clock-ticking-357979.mp3'
+const TURN_LOADING_VIDEO_SRC = 'assets/vid/pre-interface%20loading_video.mp4'
+const TURN_LOADING_CLOCK_SFX_SRC = 'assets/audio/effects/slow-cinematic-clock-ticking-357979.mp3'
 const TURN_LOADING_FALLBACK_MS = 5600
 
 function TurnLoadingBody(): ReactNode {
@@ -6138,7 +6138,7 @@ function TurnLoadingBody(): ReactNode {
 }
 
 function OnboardingLoadingBody(): ReactNode {
-  const LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4'
+  const LOADING_VIDEO_SRC = 'assets/vid/pre-interface%20loading_video.mp4'
   const RESUME_LOADING_REVEAL_MS = 2200
   const NEW_LOADING_READY_FALLBACK_MS = 900
   const NEW_LOADING_TIMEOUT_MS = 6800

@@ -15,8 +15,8 @@ const REQUIRED_WORKFLOW_PATTERNS = Object.freeze([
 export function validatePagesDeploymentContract({ viteConfig, workflow }) {
   const failures = []
 
-  if (!/^\s*base:\s*['"]\/['"],?\s*$/m.test(viteConfig)) {
-    failures.push("vite.config.ts must set base: '/' for the africanmandate.org custom domain")
+  if (!/^\s*base:\s*['"]\/African-Mandate\/['"],?\s*$/m.test(viteConfig)) {
+    failures.push("vite.config.ts must set base: '/African-Mandate/' for the GitHub Pages project site")
   }
 
   for (const [label, pattern] of REQUIRED_WORKFLOW_PATTERNS) {

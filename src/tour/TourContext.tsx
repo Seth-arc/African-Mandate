@@ -31,9 +31,9 @@ const DEFAULT_STEPS: TourStep[] = [
     title: 'Opening Brief',
     body: 'Listen to the AU Commissioner briefing before proceeding to command surfaces.',
     focusLabel: 'Commissioner briefing',
-    avatarSrc: '/assets/actors/AU%20Commissioner.png',
+    avatarSrc: 'assets/actors/AU%20Commissioner.png',
     avatarAlt: 'AU Commissioner',
-    audioSrc: '/assets/audio/messages/AU%20Commissioner_envoy_welcome.mp3',
+    audioSrc: 'assets/audio/messages/AU%20Commissioner_envoy_welcome.mp3',
     audioLabel: 'Encrypted voice message to the Special Envoy',
   },
   {

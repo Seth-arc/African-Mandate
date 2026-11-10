@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>African Mandate</title>
-    <link rel="icon" type="image/png" href="/assets/logos/Alliance_of_Sahel_States_Logo.png">
+    <link rel="icon" type="image/png" href="%BASE_URL%assets/logos/Alliance_of_Sahel_States_Logo.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="image" href="/img/hero.png">
+    <link rel="preload" as="image" href="%BASE_URL%img/hero.png">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -640,7 +640,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: url('/assets/actors/player.png') center center / cover no-repeat;
+            background: url('%BASE_URL%assets/actors/player.png') center center / cover no-repeat;
             opacity: 0.5;
             filter: saturate(1.05) contrast(1.05);
             pointer-events: none;
@@ -1009,7 +1009,7 @@
 
     <div class="viewport">
         <div class="image-container" id="cam">
-            <img id="heroImage" src="/img/hero.png" alt="Sahel Desert Landscape" class="hero-img" loading="eager" fetchpriority="high" decoding="async">
+            <img id="heroImage" src="%BASE_URL%img/hero.png" alt="Sahel Desert Landscape" class="hero-img" loading="eager" fetchpriority="high" decoding="async">
         </div>
         <div class="grain"></div>
     </div>
@@ -1157,7 +1157,7 @@
     </div>
     <div class="intro-video-overlay" id="introVideoOverlay" aria-hidden="true">
         <video id="introVideo" class="intro-video" preload="auto" playsinline muted>
-            <source src="/assets/vid/African_Mandate_opening_scene.mp4" type="video/mp4">
+            <source src="%BASE_URL%assets/vid/African_Mandate_opening_scene.mp4" type="video/mp4">
         </video>
         <div class="intro-video-loading" id="introVideoLoading">Loading opening scene...</div>
     </div>
@@ -1400,8 +1400,8 @@
             unknown: 'This setup does not match the v0.1 release support contract.',
         };
         const GLOBAL_MEDIA_VOLUME_SCALE = 0;
-        const PRE_INTERFACE_LOADING_VIDEO_SRC = '/assets/vid/pre-interface%20loading_video.mp4';
-        const GAME_THEME_AUDIO_SRC = '/assets/audio/music/Briefing%20Room%20Runway.mp3';
+        const PRE_INTERFACE_LOADING_VIDEO_SRC = '%BASE_URL%assets/vid/pre-interface%20loading_video.mp4';
+        const GAME_THEME_AUDIO_SRC = '%BASE_URL%assets/audio/music/Briefing%20Room%20Runway.mp3';
         const GAME_THEME_TARGET_VOLUME = 0.42;
         let gameThemeAudio = null;
         let preInterfaceVideoWarmup = null;

@@ -22,7 +22,7 @@ import type {
    CONSTANTS
    ═══════════════════════════════════════════════ */
 
-const GEOJSON_URL = '/assets/sahel_countries.geojson'
+const GEOJSON_URL = 'assets/sahel_countries.geojson'
 const MAP_CENTER: [number, number] = [15, 0]
 const MAP_ZOOM = 5
 
@@ -63,11 +63,11 @@ const LEGACY_KEY_TO_CANONICAL: Record<string, string> = {
 }
 
 const TERRITORY_FLAG_FALLBACK: Record<TerritoryKey, string> = {
-  mali: '/assets/flags/Flag_of_Mali.svg',
-  burkina_faso: '/assets/flags/Flag_of_Burkina_Faso.svg',
-  niger: '/assets/flags/Flag_of_Niger.svg',
-  chad: '/assets/flags/Flag_of_Chad.svg',
-  mauritania: '/assets/flags/Flag_of_Mauritania.svg',
+  mali: 'assets/flags/Flag_of_Mali.svg',
+  burkina_faso: 'assets/flags/Flag_of_Burkina_Faso.svg',
+  niger: 'assets/flags/Flag_of_Niger.svg',
+  chad: 'assets/flags/Flag_of_Chad.svg',
+  mauritania: 'assets/flags/Flag_of_Mauritania.svg',
 }
 
 /* ── Feature type discriminators ── */

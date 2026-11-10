@@ -5,13 +5,13 @@ export type UiSfxKey =
   | 'modal_close'
 
 const UI_SFX_SOURCES: Record<UiSfxKey, string[]> = {
-  active_button_hover: ['/assets/audio/effects/active_button_hover.wav'],
+  active_button_hover: ['assets/audio/effects/active_button_hover.wav'],
   active_button_click: [
-    '/assets/audio/effects/select_click.mp3',
-    '/assets/audio/effects/active_button_hover.wav',
+    'assets/audio/effects/select_click.mp3',
+    'assets/audio/effects/active_button_hover.wav',
   ],
-  modal_open: ['/assets/audio/effects/swipe-255512.mp3'],
-  modal_close: ['/assets/audio/effects/whoosh-07-410877.mp3'],
+  modal_open: ['assets/audio/effects/swipe-255512.mp3'],
+  modal_close: ['assets/audio/effects/whoosh-07-410877.mp3'],
 }
 
 const UI_SFX_VOLUMES: Record<UiSfxKey, number> = {
