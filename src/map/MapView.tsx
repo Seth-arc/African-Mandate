@@ -323,9 +323,7 @@ function resolveTerritoryFlagUrls(
     (item) => item.territory_key === territoryKey
   )
   const primary = territoryRecord?.flag_url
-    ? territoryRecord.flag_url.startsWith('/')
-      ? territoryRecord.flag_url
-      : `/${territoryRecord.flag_url}`
+    ? `${import.meta.env.BASE_URL}${territoryRecord.flag_url.replace(/^\/+/, '')}`
     : null
 
   return {

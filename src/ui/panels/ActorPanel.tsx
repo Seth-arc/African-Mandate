@@ -30,7 +30,7 @@ interface ActorPanelEntry {
 function normalizeAssetSrc(path: string | null | undefined): string | null {
   if (!path) return null
   if (/^(?:https?:)?\/\//i.test(path) || path.startsWith('data:')) return path
-  return path.startsWith('/') ? path : `/${path}`
+  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
 }
 
 function actorInitials(name: string): string {

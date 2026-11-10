@@ -286,7 +286,7 @@ const RELATIONSHIP_INSTITUTION_SCOPE_MAP: Partial<Record<string, 'Regional' | 'C
 function normalizeAssetSrc(path: string | null | undefined): string | null {
   if (!path) return null
   if (/^(?:https?:)?\/\//i.test(path) || path.startsWith('data:')) return path
-  return path.startsWith('/') ? path : `/${path}`
+  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
 }
 
 function resolveTerritoryFlagPaths(
